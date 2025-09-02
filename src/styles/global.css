@@ -1,0 +1,232 @@
+/* Base styles for the minimalist theme */
+* {
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: lowercase; /* enforce lowercase everywhere */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Base body styles - designed for a dark theme from the start */
+body {
+    background-color: #000; /* Pure black background by default */
+    color: #fff; /* Pure white text by default for general content */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    /* Smooth transition for background/color when dark mode toggles (if you had a light mode alternative) */
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+/* The 'dark' class on body is now redundant if body is always dark,
+   but keep it if you plan to implement a light mode toggle later.
+   For now, it just re-confirms the dark styles. */
+body.dark {
+    background-color: #000 !important;
+    color: #fff !important;
+}
+
+/* Glassy overlay effect for cards/sections */
+/* Renamed to 'glass' to match your HTML class name */
+.glass {
+    background-color: rgba(255, 255, 255, 0.05); /* very subtle white tint for glass */
+    backdrop-filter: blur(5px); /* light blur */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* thin white border */
+    border-radius: 0.25rem; /* slight rounding */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* subtle shadow for depth */
+    transition: all 0.2s ease-in-out;
+    /* Ensure text within glass elements is readable on this transparent dark background */
+    color: #fff; /* Explicitly set text to white for content inside .glass */
+}
+
+/* General button styling */
+.btn {
+    background-color: transparent;
+    border: 1px solid #fff;
+    color: #fff; /* White text for default buttons */
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none; /* ensure no underline on buttons */
+    white-space: nowrap; /* Prevent text wrapping */
+}
+.btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+.btn-primary {
+    background-color: #fff; /* White background for primary button */
+    color: #000; /* Black text for primary button to contrast with white background */
+}
+.btn-primary:hover {
+    background-color: #eee;
+}
+
+/* Link styling */
+.link {
+    color: #fff; /* White links for the dark theme */
+    text-decoration: underline;
+    transition: color 0.1s ease-in-out;
+}
+.link:hover {
+    color: #ccc;
+}
+
+/* Toast notifications */
+#toast-container {
+    pointer-events: none; /* Allows clicks to pass through */
+}
+.toast {
+    background-color: #333;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto; /* Re-enable pointer events for the toast itself */
+    min-width: 200px;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+.toast-info {
+    background-color: #2196F3;
+}
+.toast-success {
+    background-color: #4CAF50;
+}
+.toast-error {
+    background-color: #F44336;
+}
+
+/* General form element styling */
+.form-label {
+    color: #fff; /* White labels for the dark theme */
+    display: block;
+    font-size: 0.875rem; /* sm:text-sm */
+    font-weight: 500; /* medium */
+    margin-bottom: 0.25rem;
+}
+
+.form-input, .form-select, .form-textarea {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem; /* px-3 py-2 */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Lighter border for inputs */
+    border-radius: 0.375rem; /* rounded-md */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+    outline: none;
+    background-color: rgba(0, 0, 0, 0.6); /* Darker background for inputs */
+    color: #fff; /* White text inside inputs */
+    font-size: 0.875rem; /* sm:text-sm */
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: #007bff; /* Focus ring color */
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25); /* Focus ring */
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px; /* Example min height */
+}
+
+/* File drop zone specific styles */
+.file-drop-zone {
+    min-height: 100px; /* Adjust as needed */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    /* Specific styles for the dropzone's dark theme appearance */
+    border: 2px dashed rgba(255, 255, 255, 0.4); /* White dashed border */
+    background-color: rgba(0, 0, 0, 0.4); /* Dark background */
+    color: #fff; /* White text for dropzone */
+}
+.file-drop-zone:hover {
+    background-color: rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* Specific styling for member-card (for team.html) */
+.member-card {
+    /* Apply the glass effect */
+    @apply glass p-4 rounded-sm text-center;
+    /* Ensure content inside is readable */
+    color: #fff;
+}
+
+/* Map specific adjustments */
+#map {
+    height: calc(100vh - 64px - 4rem); /* Adjust for fixed navbar height (64px) and some bottom margin (4rem) */
+    width: 100%;
+    /* Apply glass effect to map container for consistency */
+    @apply glass;
+}
+
+/* Adjustments for text within the navbar for contrast */
+nav .link {
+    color: #fff; /* Ensure nav links are white */
+}
+nav .link:hover {
+    background-color: #333; /* Darker hover for nav links */
+    color: #fff; /* Keep text white on hover */
+}
+
+/* Adjustments for the filter dropdown */
+#issueFilter {
+    /* Apply glass effect for consistency */
+    @apply glass;
+    background-color: rgba(0, 0, 0, 0.6); /* Darker background for the select */
+    color: #fff; /* White text for the select */
+    border-color: rgba(255, 255, 255, 0.3); /* Lighter border */
+}
+#issueFilter option {
+    background-color: #333; /* Dark background for dropdown options */
+    color: #fff; /* White text for dropdown options */
+}
+
+
+/* Adjust the main descriptive section at the bottom */
+body section.max-w-2xl.mx-auto.p-6.glass.text-center.text-base.mb-8 {
+    color: #fff; /* Ensure text is white within this glass section */
+}
+body section.max-w-2xl.mx-auto.p-6.glass.text-center.text-base.mb-8 .font-semibold.text-blue-700 {
+    color: #8be9fd; /* A light blue for emphasis in dark theme */
+}
+
+/* Moderator Panel Adjustments */
+#modSection h2 {
+    color: #fff; /* Ensure heading is white */
+}
+#modList {
+    color: #fff; /* Ensure content in mod list is white */
+    /* Adjust divider color if needed for dark theme */
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* For popup content on map markers (Leaflet popups) */
+.leaflet-popup-content-wrapper {
+    background-color: rgba(0, 0, 0, 0.8) !important; /* Dark background for popups */
+    color: #fff !important; /* White text for popups */
+    border-radius: 0.25rem !important;
+}
+.leaflet-popup-tip {
+    background-color: rgba(0, 0, 0, 0.8) !important; /* Dark tip for popups */
+}
+
+/* Hide the body gradient background since we want pure black */
+body.bg-gradient-to-br {
+    background-image: none !important;
+}
