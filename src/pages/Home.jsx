@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { SiGoogledocs } from "react-icons/si";
+import { useNavigate } from 'react-router-dom';
 
 
 // ✅ Proper Leaflet imports
@@ -24,13 +25,15 @@ function Home() {
   const [allIssues, setAllIssues] = useState({});
   const [selectedType, setSelectedType] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [showModeration, setShowModeration] = useState(false);
   const [formData, setFormData] = useState({
     type: 'Pothole',
+    severity: 'Low',
     desc: '',
-    image: null
+    image: null,
+    status: 'new'
   });
   const [userLocationMarker, setUserLocationMarker] = useState(null);
+  const navigate = useNavigate();
 
   // Cloudinary credentials
   const CLOUDINARY_CREDENTIALS = [
@@ -41,12 +44,11 @@ function Home() {
   // ✅ Initialize map safely
   useEffect(() => {
     if (mapRef.current && !map) {
-      // Prevent reinitialization error
       if (mapRef.current._leaflet_id) {
         mapRef.current._leaflet_id = null;
       }
 
-      const mapInstance = L.map(mapRef.current).setView([15.8281, 78.0373], 13);
+      const mapInstance = L.map(mapRef.current, { dragging: true }).setView([15.8281, 78.0373], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(mapInstance);
@@ -83,7 +85,8 @@ function Home() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const newIssues = {};
       snapshot.forEach((doc) => {
-        newIssues[doc.id] = { id: doc.id, ...doc.data() };
+        const data = { id: doc.id, ...doc.data() };
+        newIssues[doc.id] = data;
       });
       setAllIssues(newIssues);
     });
@@ -95,18 +98,45 @@ function Home() {
   useEffect(() => {
     if (!map) return;
 
+    // Custom icons for severity levels
+    const lowIcon = L.divIcon({ className: 'custom-div-icon low-severity' });
+    const mediumIcon = L.divIcon({ className: 'custom-div-icon medium-severity' });
+    const highIcon = L.divIcon({ className: 'custom-div-icon high-severity' });
+    const criticalIcon = L.divIcon({ className: 'custom-div-icon critical-severity' });
+
     // Clear old markers
     Object.values(markers).forEach(marker => map.removeLayer(marker));
     const newMarkers = {};
 
     Object.entries(allIssues).forEach(([id, issue]) => {
       if (!selectedType || issue.type.toLowerCase() === selectedType.toLowerCase()) {
-        const marker = L.marker([issue.lat, issue.lng]).addTo(map);
+        
+        let icon;
+        switch (issue.severity) {
+          case 'Low':
+            icon = lowIcon;
+            break;
+          case 'Medium':
+            icon = mediumIcon;
+            break;
+          case 'High':
+            icon = highIcon;
+            break;
+          case 'Critical':
+            icon = criticalIcon;
+            break;
+          default:
+            icon = L.divIcon({ className: 'custom-div-icon default-severity' });
+        }
+        
+        const marker = L.marker([issue.lat, issue.lng], { icon: icon }).addTo(map);
 
         const timestamp = issue.ts ? new Date(issue.ts.toDate()).toLocaleString() : 'N/A';
         marker.bindPopup(`
           <div class="text-sm">
             <b>${issue.type}</b><br>
+            <b>Severity:</b> ${issue.severity}<br>
+            <b>Status:</b> ${issue.status || 'N/A'}<br>
             ${issue.desc}<br>
             <span class="text-xs text-gray-500">Lat: ${issue.lat.toFixed(5)}, Lng: ${issue.lng.toFixed(5)}</span><br>
             <span class="text-xs text-gray-500">Reported: ${timestamp}</span><br>
@@ -184,8 +214,11 @@ function Home() {
         showToast('Uploading image...', 'info');
         const imageUrl = await uploadToCloudinary(formData.image);
 
-        await addDoc(collection(db, 'issues'), {
+        // Store the report and get its unique ID
+        const docRef = await addDoc(collection(db, 'issues'), {
           type: formData.type,
+          severity: formData.severity,
+          status: formData.status,
           desc: formData.desc,
           lat,
           lng,
@@ -193,9 +226,10 @@ function Home() {
           ts: serverTimestamp()
         });
 
-        showToast('Report submitted successfully!', 'success');
+        // Display the unique ID to the user
+        showToast('Report submitted successfully! Your ID is: ' + docRef.id, 'success');
         setShowForm(false);
-        setFormData({ type: 'Pothole', desc: '', image: null });
+        setFormData({ type: 'Pothole', severity: 'Low', desc: '', image: null, status: 'new' });
       } catch (error) {
         console.error('Error submitting report:', error);
         showToast('Failed to submit report: ' + error.message, 'error');
@@ -210,15 +244,15 @@ function Home() {
     <div>
       <div className="h-20"></div> {/* Navbar spacing */}
 
-      {/* ✅ Report Form Modal (unchanged) */}
+      {/* Report Form Modal */}
       {showForm && (
          <div className="fixed inset-0 z-[9999] flex items-center justify-center">
     {/* Backdrop */}
-    <div 
-      className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
-      onClick={() => setShowForm(false)} 
+    <div
+      className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      onClick={() => setShowForm(false)}
     />
-    
+
     {/* Modal Content */}
     <div className="bg-white dark:bg-gray-900 max-w-lg w-full mx-4 p-8 rounded-lg relative">
       <button
@@ -248,6 +282,23 @@ function Home() {
                   <option>Streetlight Outage</option>
                   <option>Public Nuisance</option>
                   <option>Other</option>
+                </select>
+              </div>
+
+              {/* Added Severity selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Severity
+                </label>
+                <select
+                  value={formData.severity}
+                  onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                >
+                  <option>Low</option>
+                  <option>Medium</option>
+                  <option>High</option>
+                  <option>Critical</option>
                 </select>
               </div>
 
@@ -307,8 +358,9 @@ function Home() {
             >
               <SiGoogledocs/> Report Issue
             </button>
+            {/* Updated Moderation button to navigate to Dashboard */}
             <button
-              onClick={() => setShowModeration(!showModeration)}
+              onClick={() => navigate('/dashboard')}
               className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition"
             >
               🔧 Moderation
@@ -318,7 +370,7 @@ function Home() {
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm bg-white/80 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm bg-white/10 dark:bg-gray-700 dark:border-gray-600 dark:text-white backdrop-blur-sm"
           >
             <option value="">All types</option>
             <option>Pothole</option>
@@ -334,12 +386,12 @@ function Home() {
         <div
           ref={mapRef}
           style={{ height: "500px", width: "100%" }}
-          className="mb-10 rounded-2xl shadow-2xl border border-white/40"
+          className="mb-10 rounded-2xl shadow-2xl border border-white/40 glass"
         ></div>
 
-        
 
-        <section className="max-w-2xl mx-auto p-6 bg-white/80 dark:bg-gray-900 text-center text-base mb-8 rounded-lg shadow-lg">
+
+        <section className="max-w-2xl mx-auto p-6 bg-white/10 dark:bg-gray-900 text-center text-base mb-8 rounded-lg shadow-lg">
           <span className="font-semibold text-blue-700 dark:text-blue-400">Fixit</span> is a
           student-built civic tracker for reporting and mapping local issues in your community.
         </section>

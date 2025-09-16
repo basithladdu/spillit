@@ -9,6 +9,8 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Team from "./pages/Team";
 import NotFound from "./pages/NotFound";
+import Report from "./pages/Report";
+import Gallery from "./pages/Gallery"; // New Import
 import "./App.css";
 
 function App() {
@@ -20,6 +22,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/report/:id" element={<Report />} />
+          <Route path="/gallery" element={<Gallery />} /> {/* New Route */}
           <Route 
             path="/dashboard" 
             element={

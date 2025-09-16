@@ -161,42 +161,38 @@ body.dark {
 
 /* Specific styling for member-card (for team.html) */
 .member-card {
-    /* Apply the glass effect */
-    @apply glass p-4 rounded-sm text-center;
-    /* Ensure content inside is readable */
-    color: #fff;
+  color: #fff;
+  /* Apply the glass effect */
+  @apply glass p-4 rounded-sm text-center;
 }
 
 /* Map specific adjustments */
 #map {
-    height: calc(100vh - 64px - 4rem); /* Adjust for fixed navbar height (64px) and some bottom margin (4rem) */
-    width: 100%;
-    /* Apply glass effect to map container for consistency */
-    @apply glass;
+  height: calc(100vh - 64px - 4rem);
+  width: 100%;
 }
+@apply glass;
 
 /* Adjustments for text within the navbar for contrast */
 nav .link {
-    color: #fff; /* Ensure nav links are white */
+  color: #fff;
 }
 nav .link:hover {
-    background-color: #333; /* Darker hover for nav links */
-    color: #fff; /* Keep text white on hover */
+  background-color: #333;
+  color: #fff;
 }
 
 /* Adjustments for the filter dropdown */
 #issueFilter {
-    /* Apply glass effect for consistency */
-    @apply glass;
-    background-color: rgba(0, 0, 0, 0.6); /* Darker background for the select */
-    color: #fff; /* White text for the select */
-    border-color: rgba(255, 255, 255, 0.3); /* Lighter border */
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 #issueFilter option {
-    background-color: #333; /* Dark background for dropdown options */
-    color: #fff; /* White text for dropdown options */
+  background-color: #333;
+  color: #fff;
 }
-
+@apply glass;
 
 /* Adjust the main descriptive section at the bottom */
 body section.max-w-2xl.mx-auto.p-6.glass.text-center.text-base.mb-8 {
@@ -229,4 +225,32 @@ body section.max-w-2xl.mx-auto.p-6.glass.text-center.text-base.mb-8 .font-semibo
 /* Hide the body gradient background since we want pure black */
 body.bg-gradient-to-br {
     background-image: none !important;
+}
+
+/* Custom icon for map markers */
+.custom-div-icon {
+    background-color: white;
+    width: 24px;
+    height: 24px;
+    display: block;
+    position: relative;
+    border-radius: 50%;
+    border: 2px solid #555;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+.low-severity {
+    background-color: #4CAF50; /* Green */
+}
+
+.medium-severity {
+    background-color: #FFC107; /* Yellow */
+}
+
+.high-severity {
+    background-color: #FF9800; /* Orange */
+}
+
+.critical-severity {
+    background-color: #F44336; /* Red */
 }

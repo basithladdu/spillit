@@ -1,10 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { FaMap, FaChartBar, FaUsers, FaSun, FaMoon, FaUser, FaSignInAlt, FaSignOutAlt, FaLocationArrow, FaTools } from 'react-icons/fa';
+import { FaMap, FaChartBar, FaUsers, FaSun, FaMoon, FaUser, FaSignInAlt, FaSignOutAlt, FaLocationArrow, FaTools, FaSearch } from 'react-icons/fa';
 
 function Navbar() {
   const [darkMode, setDarkMode] = useState(false);
+  const [searchId, setSearchId] = useState('');
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -62,8 +63,16 @@ function Navbar() {
     );
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchId) {
+      navigate(`/report/${searchId}`);
+      setSearchId('');
+    }
+  };
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black text-white shadow-lg flex items-center justify-between px-4 py-3 font-semibold border-b border-gray-800 dark:bg-gray-900">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-sm text-white shadow-lg flex items-center justify-between px-4 py-3 font-semibold border-b border-gray-800 dark:bg-gray-900">
       <div className="flex items-center space-x-3">
         <Link to="/" className="text-2xl font-extrabold tracking-tight drop-shadow flex items-center gap-2">
           <FaTools className="text-blue-500" />
@@ -77,6 +86,13 @@ function Navbar() {
           <FaMap /> <span className="hidden sm:inline">Map</span>
         </Link>
         <Link
+          to="/gallery"
+          className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1"
+          title="Gallery"
+        >
+          <FaUsers /> <span className="hidden sm:inline">Gallery</span>
+        </Link>
+        <Link
           to="/dashboard"
           className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1"
           title="Dashboard"
@@ -85,7 +101,7 @@ function Navbar() {
         </Link>
         <Link
           to="/team"
-          className="text-base font-medium px-3 no-underline py-1 rounded hover:bg-blue-800 transition flex items-center gap-1"
+          className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1"
           title="Team"
         >
           <FaUsers /> <span className="hidden sm:inline">Team</span>
@@ -93,6 +109,21 @@ function Navbar() {
       </div>
       
       <div className="flex items-center space-x-2">
+        <form onSubmit={handleSearch} className="hidden sm:flex items-center">
+          <input
+            type="text"
+            value={searchId}
+            onChange={(e) => setSearchId(e.target.value)}
+            placeholder="search by id..."
+            className="bg-white/10 text-white border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-l-lg py-1 px-3 text-sm"
+          />
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-r-lg px-3 py-1 text-sm transition"
+          >
+            <FaSearch />
+          </button>
+        </form>
         <button
           onClick={locateUser}
           className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm transition flex items-center gap-1"
