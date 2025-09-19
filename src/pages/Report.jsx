@@ -1,14 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import NotFound from './NotFound';
+
+import L from "leaflet";
+// "leaflet/dist/leaflet.css" is now imported in App.jsx
 
 function Report() {
   const { id } = useParams();
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const mapRef = useRef(null);
+  const [map, setMap] = useState(null);
 
   useEffect(() => {
     if (!id) {
@@ -37,6 +42,41 @@ function Report() {
     fetchReport();
   }, [id]);
 
+  useEffect(() => {
+    if (report && !map) {
+      if (mapRef.current._leaflet_id) {
+        mapRef.current._leaflet_id = null;
+      }
+      const mapInstance = L.map(mapRef.current, { dragging: true }).setView([report.lat, report.lng], 16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(mapInstance);
+      setMap(mapInstance);
+
+      let icon;
+      switch (report.severity) {
+        case 'Low':
+          icon = L.divIcon({ className: 'custom-div-icon low-severity' });
+          break;
+        case 'Medium':
+          icon = L.divIcon({ className: 'custom-div-icon medium-severity' });
+          break;
+        case 'High':
+          icon = L.divIcon({ className: 'custom-div-icon high-severity' });
+          break;
+        case 'Critical':
+          icon = L.divIcon({ className: 'custom-div-icon critical-severity' });
+          break;
+        default:
+          icon = L.divIcon({ className: 'custom-div-icon default-severity' });
+      }
+
+      L.marker([report.lat, report.lng], { icon: icon }).addTo(mapInstance)
+        .bindPopup(report.type)
+        .openPopup();
+    }
+  }, [report, map]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -51,12 +91,13 @@ function Report() {
 
   return (
     <div className="container mx-auto p-4 max-w-2xl text-center">
-      <div className="h-20"></div> {/* Navbar spacing */}
+      <div className="h-20"></div>
       <h1 className="text-3xl font-bold text-gray-800 dark:text-white mt-8 mb-4">
         Report Details
       </h1>
       
       <div className="bg-white/80 dark:bg-gray-900 p-8 rounded-xl shadow-lg space-y-4">
+        <div ref={mapRef} style={{ height: "300px", width: "100%" }} className="rounded-lg shadow-md"></div>
         <div>
           <span className="font-semibold text-gray-700 dark:text-gray-300">Report ID: </span>
           <span className="font-mono text-gray-900 dark:text-white break-all">{report.id}</span>

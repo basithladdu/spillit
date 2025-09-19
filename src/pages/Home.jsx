@@ -7,16 +7,19 @@ import {
   doc,
   serverTimestamp,
   orderBy,
-  query
+  query,
+  where,
+  getDocs
 } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { SiGoogledocs } from "react-icons/si";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 
 // ✅ Proper Leaflet imports
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+// "leaflet/dist/leaflet.css" is now imported in App.jsx
 
 function Home() {
   const mapRef = useRef(null);
@@ -25,6 +28,8 @@ function Home() {
   const [allIssues, setAllIssues] = useState({});
   const [selectedType, setSelectedType] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  const [summaryData, setSummaryData] = useState(null);
   const [formData, setFormData] = useState({
     type: 'Pothole',
     severity: 'Low',
@@ -34,6 +39,7 @@ function Home() {
   });
   const [userLocationMarker, setUserLocationMarker] = useState(null);
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   // Cloudinary credentials
   const CLOUDINARY_CREDENTIALS = [
@@ -193,6 +199,52 @@ function Home() {
     throw lastError || new Error('All uploads failed');
   };
 
+  // ✅ Duplicate report detection logic
+  const checkDuplicateReports = async (lat, lng) => {
+    const issuesRef = collection(db, 'issues');
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const q = query(issuesRef, where('ts', '>', twoHoursAgo));
+    const snapshot = await getDocs(q);
+
+    let isDuplicate = false;
+    snapshot.forEach(doc => {
+      const issue = doc.data();
+      const distance = getDistance(lat, lng, issue.lat, issue.lng);
+      if (distance < 50) {
+        isDuplicate = true;
+      }
+    });
+    return isDuplicate;
+  };
+
+  // Helper function to calculate distance between two points (Haversine formula)
+  const getDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3;
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const getAssignedDepartment = (issueType) => {
+    switch (issueType) {
+      case 'Garbage':
+        return 'Sanitation';
+      case 'Pothole':
+      case 'Water Leak':
+        return 'Public Works';
+      case 'Streetlight Outage':
+        return 'Electricity';
+      default:
+        return 'Other';
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -209,12 +261,20 @@ function Home() {
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
+      
+      const isDuplicate = await checkDuplicateReports(lat, lng);
+      if (isDuplicate) {
+        showToast('A similar report was recently submitted nearby.', 'error');
+        return;
+      }
 
       try {
         showToast('Uploading image...', 'info');
         const imageUrl = await uploadToCloudinary(formData.image);
 
-        // Store the report and get its unique ID
+        const userId = currentUser ? currentUser.uid : 'guest';
+        const assignedDepartment = getAssignedDepartment(formData.type);
+
         const docRef = await addDoc(collection(db, 'issues'), {
           type: formData.type,
           severity: formData.severity,
@@ -223,12 +283,21 @@ function Home() {
           lat,
           lng,
           imageUrl,
-          ts: serverTimestamp()
+          ts: serverTimestamp(),
+          userId: userId,
+          department: assignedDepartment
         });
 
-        // Display the unique ID to the user
-        showToast('Report submitted successfully! Your ID is: ' + docRef.id, 'success');
+        setSummaryData({
+          id: docRef.id,
+          ...formData,
+          lat,
+          lng,
+          imageUrl,
+          department: assignedDepartment
+        });
         setShowForm(false);
+        setShowSummary(true);
         setFormData({ type: 'Pothole', severity: 'Low', desc: '', image: null, status: 'new' });
       } catch (error) {
         console.error('Error submitting report:', error);
@@ -242,7 +311,7 @@ function Home() {
 
   return (
     <div>
-      <div className="h-20"></div> {/* Navbar spacing */}
+      <div className="h-20"></div>
 
       {/* Report Form Modal */}
       {showForm && (
@@ -349,6 +418,57 @@ function Home() {
         </div>
       )}
 
+      {/* Report Summary Modal */}
+      {showSummary && summaryData && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowSummary(false)}
+          />
+          <div className="bg-white dark:bg-gray-900 max-w-lg w-full mx-4 p-8 rounded-lg relative">
+            <button
+              onClick={() => setShowSummary(false)}
+              className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl font-bold"
+            >
+              ×
+            </button>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 text-center">
+              Report Submitted!
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6 text-center">
+              Thank you for your report. Here is a summary of the issue. You can use the ID below to track its status.
+            </p>
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <span className="font-semibold w-24">ID:</span>
+                <span className="text-gray-700 dark:text-gray-300 font-mono text-sm break-all">{summaryData.id}</span>
+              </div>
+              <div className="flex items-center">
+                <span className="font-semibold w-24">Type:</span>
+                <span className="text-gray-700 dark:text-gray-300">{summaryData.type}</span>
+              </div>
+              <div className="flex items-center">
+                <span className="font-semibold w-24">Severity:</span>
+                <span className="text-gray-700 dark:text-gray-300">{summaryData.severity}</span>
+              </div>
+              <div className="flex items-center">
+                <span className="font-semibold w-24">Coordinates:</span>
+                <span className="text-gray-700 dark:text-gray-300">{summaryData.lat?.toFixed(5)}, {summaryData.lng?.toFixed(5)}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="font-semibold mb-1">Description:</span>
+                <p className="text-gray-700 dark:text-gray-300">{summaryData.desc}</p>
+              </div>
+              {summaryData.imageUrl && (
+                <div className="flex justify-center mt-4">
+                  <img src={summaryData.imageUrl} alt="Reported issue" className="max-w-xs rounded-lg shadow-lg" />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="container mx-auto px-4">
         <div className="flex justify-between items-center mt-6 mb-2">
           <div className="flex space-x-2">
@@ -358,13 +478,14 @@ function Home() {
             >
               <SiGoogledocs/> Report Issue
             </button>
-            {/* Updated Moderation button to navigate to Dashboard */}
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition"
-            >
-              🔧 Moderation
-            </button>
+            {currentUser && (
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition"
+              >
+                🔧 Moderation
+              </button>
+            )}
           </div>
 
           <select
@@ -382,14 +503,11 @@ function Home() {
           </select>
         </div>
 
-        {/* ✅ Map container with fixed size */}
         <div
           ref={mapRef}
           style={{ height: "500px", width: "100%" }}
           className="mb-10 rounded-2xl shadow-2xl border border-white/40 glass"
         ></div>
-
-
 
         <section className="max-w-2xl mx-auto p-6 bg-white/10 dark:bg-gray-900 text-center text-base mb-8 rounded-lg shadow-lg">
           <span className="font-semibold text-blue-700 dark:text-blue-400">Fixit</span> is a

@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { FaMap, FaChartBar, FaUsers, FaSun, FaMoon, FaUser, FaSignInAlt, FaSignOutAlt, FaLocationArrow, FaTools, FaSearch } from 'react-icons/fa';
+import { FaMap, FaChartBar, FaUsers, FaSun, FaMoon, FaUser, FaSignInAlt, FaSignOutAlt, FaLocationArrow, FaTools, FaSearch, FaQuestionCircle, FaStar } from 'react-icons/fa';
 
 function Navbar() {
   const [darkMode, setDarkMode] = useState(false);
@@ -76,7 +76,7 @@ function Navbar() {
       <div className="flex items-center space-x-3">
         <Link to="/" className="text-2xl font-extrabold tracking-tight drop-shadow flex items-center gap-2">
           <FaTools className="text-blue-500" />
-          <span>fixit</span>
+          <span>Fixit</span>
         </Link>
         <Link
           to="/"
@@ -92,19 +92,37 @@ function Navbar() {
         >
           <FaUsers /> <span className="hidden sm:inline">Gallery</span>
         </Link>
+        {currentUser && (
+          <>
+            <Link
+              to="/dashboard"
+              className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1"
+              title="Dashboard"
+            >
+              <FaChartBar /> <span className="hidden sm:inline">Dashboard</span>
+            </Link>
+            <Link
+              to="/team"
+              className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1"
+              title="Team"
+            >
+              <FaUsers /> <span className="hidden sm:inline">Team</span>
+            </Link>
+          </>
+        )}
         <Link
-          to="/dashboard"
+          to="/help"
           className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1"
-          title="Dashboard"
+          title="Help"
         >
-          <FaChartBar /> <span className="hidden sm:inline">Dashboard</span>
+          <FaQuestionCircle /> <span className="hidden sm:inline">Help</span>
         </Link>
         <Link
-          to="/team"
+          to="/leaderboard"
           className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1"
-          title="Team"
+          title="Leaderboard"
         >
-          <FaUsers /> <span className="hidden sm:inline">Team</span>
+          <FaStar /> <span className="hidden sm:inline">Leaderboard</span>
         </Link>
       </div>
       
@@ -114,7 +132,7 @@ function Navbar() {
             type="text"
             value={searchId}
             onChange={(e) => setSearchId(e.target.value)}
-            placeholder="search by id..."
+            placeholder="Search by ID..."
             className="bg-white/10 text-white border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-l-lg py-1 px-3 text-sm"
           />
           <button
@@ -129,7 +147,7 @@ function Navbar() {
           className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm transition flex items-center gap-1"
           title="Locate Me"
         >
-          <FaLocationArrow /> <span className="hidden sm:inline">locate</span>
+          <FaLocationArrow /> <span className="hidden sm:inline">Locate</span>
         </button>
         <button
           onClick={toggleDarkMode}

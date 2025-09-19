@@ -10,8 +10,11 @@ import Dashboard from "./pages/Dashboard";
 import Team from "./pages/Team";
 import NotFound from "./pages/NotFound";
 import Report from "./pages/Report";
-import Gallery from "./pages/Gallery"; // New Import
+import Gallery from "./pages/Gallery";
 import "./App.css";
+
+// Import Leaflet CSS here once for the entire app
+import "leaflet/dist/leaflet.css";
 
 function App() {
   return (
@@ -23,7 +26,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/report/:id" element={<Report />} />
-          <Route path="/gallery" element={<Gallery />} /> {/* New Route */}
+          <Route path="/gallery" element={<Gallery />} />
           <Route 
             path="/dashboard" 
             element={
