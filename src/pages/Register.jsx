@@ -1,14 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { FaGoogle } from 'react-icons/fa';
 
 function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, signInWithGoogle, currentUser } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/dashboard');
+    }
+  }, [currentUser, navigate]);
 
   const clearError = (field) => {
     if (errors[field]) {
@@ -16,12 +23,11 @@ function Register() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
 
-    // Client-side validation
     if (password.length < 6) {
       setErrors({ password: 'Password must be at least 6 characters long.' });
       setLoading(false);
@@ -30,10 +36,8 @@ function Register() {
 
     try {
       await register(email, password);
-      navigate('/dashboard');
     } catch (error) {
       setLoading(false);
-      // Handle specific Firebase auth errors
       if (error.code === 'auth/email-already-in-use') {
         setErrors({ email: 'This email address is already in use.' });
       } else if (error.code === 'auth/invalid-email') {
@@ -46,12 +50,21 @@ function Register() {
     }
   };
 
+  const handleGoogleRegister = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Google registration failed:', error);
+      setErrors({ general: 'Google registration failed. Please try again.' });
+    }
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen p-4 sm:p-6">
-      <div className="h-20"></div> {/* Navbar spacing */}
+      <div className="h-20"></div>
       <div className="bg-white/80 dark:bg-gray-900 p-8 sm:p-10 rounded-xl shadow-xl max-w-md w-full backdrop-blur-sm">
         <h2 className="text-2xl font-bold mb-8 text-center dark:text-white">
-          Join fixit today
+          Join Fixit today
         </h2>
         
         {errors.general && (
@@ -60,10 +73,10 @@ function Register() {
           </div>
         )}
         
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleRegister}>
           <div className="mb-5">
             <label htmlFor="registerEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Email address
+              Email Address
             </label>
             <input
               type="email"
@@ -111,6 +124,18 @@ function Register() {
             {loading ? 'Creating account...' : 'Register'}
           </button>
         </form>
+
+        <div className="my-6 flex items-center before:flex-1 before:border-t before:border-gray-300 before:mt-0.5 after:flex-1 after:border-t after:border-gray-300 after:mt-0.5 dark:before:border-gray-700 dark:after:border-gray-700">
+          <p className="text-center font-semibold mx-4 mb-0 dark:text-gray-300">Or</p>
+        </div>
+
+        <button
+          onClick={handleGoogleRegister}
+          className="w-full flex items-center justify-center gap-3 px-4 py-2 bg-white text-black rounded border border-gray-300 hover:bg-gray-100 transition"
+        >
+          <FaGoogle />
+          Sign up with Google
+        </button>
         
         <p className="text-center text-sm mt-6 text-gray-400">
           Already have an account?{' '}

@@ -471,22 +471,45 @@ function Home() {
 
       <main className="container mx-auto px-4">
         <div className="flex justify-between items-center mt-6 mb-2">
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
-            >
-              <SiGoogledocs/> Report Issue
-            </button>
-            {currentUser && (
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition"
-              >
-                🔧 Moderation
-              </button>
-            )}
-          </div>
+      <div className="flex space-x-2">
+  <button
+    onClick={() => setShowForm(true)}
+    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
+  >
+    <SiGoogledocs /> Report Issue
+  </button>
+
+  <button
+    onClick={() => {
+      if (!navigator.geolocation) return alert('Geolocation not supported');
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const { latitude, longitude } = pos.coords;
+        map.setView([latitude, longitude], 16);
+
+        if (userLocationMarker) map.removeLayer(userLocationMarker);
+
+        const marker = L.marker([latitude, longitude])
+          .addTo(map)
+          .bindPopup('You are here')
+          .openPopup();
+        setUserLocationMarker(marker);
+      });
+    }}
+    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition flex items-center gap-1"
+  >
+    📍 Locate Me
+  </button>
+
+  {currentUser && (
+    <button
+      onClick={() => navigate('/dashboard')}
+      className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition"
+    >
+      🔧 Moderation
+    </button>
+  )}
+</div>
+
 
           <select
             value={selectedType}

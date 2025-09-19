@@ -105,25 +105,26 @@ function Dashboard() {
     return () => unsubscribe();
   }, []);
 
-  const filteredIssues = issues.filter(issue => {
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch =
-      issue.id.toLowerCase().includes(searchLower) ||
-      issue.type.toLowerCase().includes(searchLower) ||
-      issue.desc.toLowerCase().includes(searchLower) ||
-      (issue.lat?.toFixed(5) + ', ' + issue.lng?.toFixed(5)).includes(searchLower) ||
-      (issue.lat?.toFixed(4) + ', ' + issue.lng?.toFixed(4)).includes(searchLower) ||
-      (issue.lat?.toFixed(3) + ', ' + issue.lng?.toFixed(3)).includes(searchLower);
+ const filteredIssues = issues.filter(issue => {
+  const searchLower = searchQuery.toLowerCase();
+  const matchesSearch =
+    issue.id.toLowerCase().includes(searchLower) ||
+    issue.type.toLowerCase().includes(searchLower) ||
+    issue.desc.toLowerCase().includes(searchLower) ||
+    (issue.department?.toLowerCase() || '').includes(searchLower) ||
+    (issue.lat?.toFixed(5) + ', ' + issue.lng?.toFixed(5)).includes(searchLower) ||
+    (issue.lat?.toFixed(4) + ', ' + issue.lng?.toFixed(4)).includes(searchLower) ||
+    (issue.lat?.toFixed(3) + ', ' + issue.lng?.toFixed(3)).includes(searchLower);
 
-    return (
-      (selectedStatus === 'All' || issue.status === selectedStatus) &&
-      (selectedCategory === 'All' || issue.type === selectedCategory) &&
-      (selectedSeverity === 'All' || issue.severity === selectedSeverity) &&
-      (selectedDepartment === 'All' || issue.department === selectedDepartment) &&
+  return (
+    (selectedStatus === 'All' || issue.status === selectedStatus.toLowerCase()) &&
+    (selectedCategory === 'All' || issue.type === selectedCategory) &&
+    (selectedSeverity === 'All' || issue.severity === selectedSeverity) &&
+    (selectedDepartment === 'All' || issue.department === selectedDepartment) &&
+    matchesSearch
+  );
+});
 
-      matchesSearch
-    );
-  });
   
   const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -530,33 +531,37 @@ function Dashboard() {
               )}
             </div>
             {/* Action buttons inside the modal */}
-            <div className="flex flex-col sm:flex-row gap-2 mt-4">
-              <button
-                  onClick={() => handleStatusChange(selectedIssue.id, 'In-Progress')}
-                  className={`flex-1 px-4 py-2 text-white rounded transition text-xs flex items-center justify-center gap-1 ${
-                    selectedIssue.status === 'in-progress' ? 'bg-yellow-800 border border-yellow-500' : 'bg-yellow-600 hover:bg-yellow-700'
-                  }`}
-              >
-                  <FaSpinner />
-                  <span>In-Progress</span>
-              </button>
-              <button
-                  onClick={() => handleStatusChange(selectedIssue.id, 'Resolved')}
-                  className={`flex-1 px-4 py-2 text-white rounded transition text-xs flex items-center justify-center gap-1 ${
-                    selectedIssue.status === 'resolved' ? 'bg-green-800 border border-green-500' : 'bg-green-600 hover:bg-green-700'
-                  }`}
-              >
-                  <FaCheckCircle />
-                  <span>Resolved</span>
-              </button>
-              <button
-                  onClick={() => handleDelete(selectedIssue.id)}
-                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition text-xs flex items-center justify-center gap-1"
-              >
-                  <FaTrashAlt />
-                  <span>Remove</span>
-              </button>
-            </div>
+           <div className="mb-2 text-xs text-gray-500 dark:text-gray-400 text-center">
+  Click a button to update the status of this report
+</div>
+<div className="flex flex-col sm:flex-row gap-2 mt-4">
+  <button
+    onClick={() => handleStatusChange(selectedIssue.id, 'In-Progress')}
+    className={`flex-1 px-4 py-2 text-white rounded transition text-xs flex items-center justify-center gap-1 ${
+      selectedIssue.status === 'in-progress' ? 'bg-yellow-800 border border-yellow-500' : 'bg-yellow-600 hover:bg-yellow-700'
+    }`}
+  >
+    <FaSpinner />
+    <span>In-Progress</span>
+  </button>
+  <button
+    onClick={() => handleStatusChange(selectedIssue.id, 'Resolved')}
+    className={`flex-1 px-4 py-2 text-white rounded transition text-xs flex items-center justify-center gap-1 ${
+      selectedIssue.status === 'resolved' ? 'bg-green-800 border border-green-500' : 'bg-green-600 hover:bg-green-700'
+    }`}
+  >
+    <FaCheckCircle />
+    <span>Resolved</span>
+  </button>
+  <button
+    onClick={() => handleDelete(selectedIssue.id)}
+    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition text-xs flex items-center justify-center gap-1"
+  >
+    <FaTrashAlt />
+    <span>Remove</span>
+  </button>
+</div>
+
           </div>
         </div>
       )}

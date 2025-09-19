@@ -232,3 +232,46 @@ body.bg-gradient-to-br {
 .medium-severity { background-color: #FFC107; }
 .high-severity { background-color: #FF9800; }
 .critical-severity { background-color: #F44336; }
+/* NAVBAR FIX */
+
+/* remove Tailwind @apply (won’t work in plain CSS) */
+.nav-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #fff;
+  text-decoration: none;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+  background-color: #1d4ed8; /* blue-700 */
+}
+
+/* buttons like locate, login, logout */
+.action-btn {
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.25rem;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #fff;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.action-btn.bg-blue-600 { background-color: #2563eb; } /* blue-600 */
+.action-btn.bg-blue-600:hover { background-color: #1d4ed8; } /* blue-700 */
+
+.action-btn.bg-gray-700 { background-color: #374151; }
+.action-btn.bg-gray-700:hover { background-color: #4b5563; }
+
+.action-btn.bg-red-600 { background-color: #dc2626; }
+.action-btn.bg-red-600:hover { background-color: #b91c1c; }
+
+.action-btn.bg-green-600 { background-color: #16a34a; }
+.action-btn.bg-green-600:hover { background-color: #15803d; }

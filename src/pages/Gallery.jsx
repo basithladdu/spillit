@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../utils/firebase';
+import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 
 function Gallery() {
   const [issues, setIssues] = useState([]);
@@ -30,7 +31,25 @@ function Gallery() {
     return () => unsubscribe();
   }, []);
 
-  // Filter issues based on all selected filters
+  const capitalizeFirstLetter = (string) => {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
+  const getStatusDisplay = (status) => {
+    if (!status) return 'N/A';
+    return status.split('-').map(capitalizeFirstLetter).join('-');
+  };
+
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'new': return 'bg-blue-600';
+      case 'in-progress': return 'bg-yellow-600';
+      case 'resolved': return 'bg-green-600';
+      default: return 'bg-gray-600';
+    }
+  };
+
   const filteredAndSortedIssues = issues.filter(issue => {
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch =
@@ -54,24 +73,13 @@ function Gallery() {
     return 0;
   });
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredAndSortedIssues.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentIssues = filteredAndSortedIssues.slice(startIndex, endIndex);
+  const currentIssues = filteredAndSortedIssues.slice(startIndex, startIndex + itemsPerPage);
 
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) {
       setCurrentPage(page);
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'new': return 'bg-blue-600';
-      case 'in-progress': return 'bg-yellow-600';
-      case 'resolved': return 'bg-green-600';
-      default: return 'bg-gray-600';
     }
   };
 
@@ -85,7 +93,7 @@ function Gallery() {
 
   return (
     <div className="bg-black text-white min-h-screen">
-      <div className="h-20"></div> {/* Navbar spacing */}
+      <div className="h-20"></div>
 
       <main className="container mx-auto p-4 max-w-7xl">
         <h1 className="text-3xl font-bold text-center mt-8 mb-4">
@@ -116,8 +124,7 @@ function Gallery() {
         </div>
 
         {/* Filter and Sort Bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-          {/* Search Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-end mb-6 gap-4">
           <div className="flex-1">
             <label htmlFor="search-input" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Search</label>
             <input
@@ -129,7 +136,7 @@ function Gallery() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm bg-white/80 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap items-end justify-center space-x-2">
             <div className="flex flex-col">
               <label htmlFor="status-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
               <select
@@ -140,7 +147,7 @@ function Gallery() {
               >
                 <option value="All">All</option>
                 <option value="new">Reported</option>
-                <option value="in-progress">In Progress</option>
+                <option value="in-progress">In-Progress</option>
                 <option value="resolved">Resolved</option>
               </select>
             </div>
@@ -202,7 +209,7 @@ function Gallery() {
               <div key={issue.id} className="bg-white/10 backdrop-blur-sm p-6 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-1">
                 <div className="flex items-center mb-4">
                   <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full text-white ${getStatusColor(issue.status)}`}>
-                    {issue.status}
+                    {getStatusDisplay(issue.status)}
                   </span>
                   <span className="text-sm text-gray-400 ml-auto">
                     {issue.ts ? new Date(issue.ts.toDate()).toLocaleDateString() : 'Unknown date'}
@@ -216,7 +223,7 @@ function Gallery() {
                 )}
                 <div className="mt-4 flex justify-between items-center">
                   <div className="flex items-center space-x-2 text-gray-400">
-                    <span>0 upvotes</span> {/* Placeholder */}
+                    <span>0 upvotes</span>
                   </div>
                   <Link 
                     to={`/report/${issue.id}`}
@@ -238,7 +245,7 @@ function Gallery() {
               disabled={currentPage === 1}
               className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg disabled:opacity-50"
             >
-              Previous
+              <FaArrowLeft />
             </button>
             {Array.from({ length: totalPages }, (_, i) => (
               <button
@@ -254,7 +261,7 @@ function Gallery() {
               disabled={currentPage === totalPages}
               className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg disabled:opacity-50"
             >
-              Next
+              <FaArrowRight />
             </button>
           </div>
         )}

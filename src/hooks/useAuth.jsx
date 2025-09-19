@@ -3,7 +3,9 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 import { auth } from '../utils/firebase';
 
@@ -21,14 +23,20 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Register user
+  // Register user with email/password
   function register(email, password) {
     return createUserWithEmailAndPassword(auth, email, password);
   }
 
-  // Login user
+  // Login user with email/password
   function login(email, password) {
     return signInWithEmailAndPassword(auth, email, password);
+  }
+
+  // Login with Google
+  function signInWithGoogle() {
+    const provider = new GoogleAuthProvider();
+    return signInWithPopup(auth, provider);
   }
 
   // Logout user
@@ -49,7 +57,8 @@ export function AuthProvider({ children }) {
     currentUser,
     register,
     login,
-    logout
+    logout,
+    signInWithGoogle
   };
 
   return (

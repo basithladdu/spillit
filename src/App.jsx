@@ -11,9 +11,10 @@ import Team from "./pages/Team";
 import NotFound from "./pages/NotFound";
 import Report from "./pages/Report";
 import Gallery from "./pages/Gallery";
-import "./App.css";
+import Help from "./pages/Help";
+import Leaderboard from "./pages/Leaderboard";
 
-// Import Leaflet CSS here once for the entire app
+import "./App.css";
 import "leaflet/dist/leaflet.css";
 
 function App() {
@@ -27,6 +28,13 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/report/:id" element={<Report />} />
           <Route path="/gallery" element={<Gallery />} />
+          <Route path="/help" element={<Help />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+
+          {/* Team is now public */}
+          <Route path="/team" element={<Team />} />
+
+          {/* Dashboard remains protected */}
           <Route 
             path="/dashboard" 
             element={
@@ -35,14 +43,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="/team" 
-            element={
-              <ProtectedRoute>
-                <Team />
-              </ProtectedRoute>
-            } 
-          />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
