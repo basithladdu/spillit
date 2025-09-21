@@ -47,12 +47,14 @@ function Navbar() {
         <Link to="/leaderboard" className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1" title="Leaderboard">
           <FaStar /> <span className="hidden sm:inline">Leaderboard</span>
         </Link>
-        
+          <Link to="/SIH2025" className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1" title="SIH2025">
+            <FaChartBar /> <span className="hidden sm:inline">SIH2025</span>
+          </Link>
         {currentUser && (
           <Link to="/dashboard" className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1" title="Dashboard">
             <FaChartBar /> <span className="hidden sm:inline">Dashboard</span>
           </Link>
-          
+        
         )}
       </div>
 

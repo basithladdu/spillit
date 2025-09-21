@@ -13,6 +13,7 @@ import Report from "./pages/Report";
 import Gallery from "./pages/Gallery";
 import Help from "./pages/Help";
 import Leaderboard from "./pages/Leaderboard";
+import SIH2025 from "./pages/SIH2025";
 
 import "./App.css";
 import "leaflet/dist/leaflet.css";
@@ -33,6 +34,7 @@ function App() {
 
           {/* Team is now public */}
           <Route path="/team" element={<Team />} />
+          <Route path="/SIH2025" element={<SIH2025 />} />
 
           {/* Dashboard remains protected */}
           <Route 

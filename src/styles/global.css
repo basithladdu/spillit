@@ -275,3 +275,11 @@ body.bg-gradient-to-br {
 
 .action-btn.bg-green-600 { background-color: #16a34a; }
 .action-btn.bg-green-600:hover { background-color: #15803d; }
+.leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  border: none !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+}

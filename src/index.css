@@ -1,1 +1,18 @@
 @import "tailwindcss";
+/* Fix for Leaflet popup styling conflicts */
+.leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  border: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+}
+
+.leaflet-popup-tip {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
