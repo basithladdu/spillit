@@ -14,7 +14,7 @@ function Footer() {
         </a>
         <span className="text-gray-300 dark:text-gray-600">|</span>
         <a 
-          href="https://twitter.com/fixitapp" 
+          href="https://twitter.com/letsfixindia" 
           target="_blank" 
           rel="noopener noreferrer" 
           className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"

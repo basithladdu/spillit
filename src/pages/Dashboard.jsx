@@ -11,7 +11,7 @@ function Dashboard() {
     byCategory: {},
     bySeverity: {},
     byStatus: {},
-    byDepartment: {}, // New stat for department
+    byDepartment: {},
     lastReportTime: null
   });
   const [selectedStatus, setSelectedStatus] = useState('All');
@@ -25,6 +25,16 @@ function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const navigate = useNavigate();
+
+  // New color map for statuses
+  const statusColors = {
+    'new': 'text-red-600',
+    'in-progress': 'text-yellow-600',
+    'resolved': 'text-green-600'
+  };
+
+  // List of Indian civic departments for the dropdown
+  const departmentOptions = ['Public Works Department (PWD)', 'Solid Waste Management Department', 'Water Utilities Department', 'Electric Division', 'Public Nuisance Dept.'];
 
   const showToast = (message, type = 'info') => {
     console.log(`${type.toUpperCase()}: ${message}`);
@@ -47,7 +57,7 @@ function Dashboard() {
     try {
       await updateDoc(doc(db, 'issues', id), { status: newStatus.toLowerCase() });
       showToast(`Issue status updated to ${newStatus}!`, 'success');
-      setIssues(prevIssues => prevIssues.map(issue => 
+      setIssues(prevIssues => prevIssues.map(issue =>
         issue.id === id ? { ...issue, status: newStatus.toLowerCase() } : issue
       ));
     } catch (error) {
@@ -76,7 +86,7 @@ function Dashboard() {
       const categorycounts = {};
       const severityCounts = {};
       const statusCounts = {};
-      const departmentCounts = {}; // New stat count for departments
+      const departmentCounts = {};
       let lastTimestamp = null;
 
       snapshot.forEach((doc) => {
@@ -85,7 +95,7 @@ function Dashboard() {
         categorycounts[data.type] = (categorycounts[data.type] || 0) + 1;
         severityCounts[data.severity] = (severityCounts[data.severity] || 0) + 1;
         statusCounts[data.status] = (statusCounts[data.status] || 0) + 1;
-        departmentCounts[data.department] = (departmentCounts[data.department] || 0) + 1; // Count by department
+        departmentCounts[data.department] = (departmentCounts[data.department] || 0) + 1;
         if (data.ts && (!lastTimestamp || data.ts.toDate() > lastTimestamp)) {
           lastTimestamp = data.ts.toDate();
         }
@@ -105,27 +115,26 @@ function Dashboard() {
     return () => unsubscribe();
   }, []);
 
- const filteredIssues = issues.filter(issue => {
-  const searchLower = searchQuery.toLowerCase();
-  const matchesSearch =
-    issue.id.toLowerCase().includes(searchLower) ||
-    issue.type.toLowerCase().includes(searchLower) ||
-    issue.desc.toLowerCase().includes(searchLower) ||
-    (issue.department?.toLowerCase() || '').includes(searchLower) ||
-    (issue.lat?.toFixed(5) + ', ' + issue.lng?.toFixed(5)).includes(searchLower) ||
-    (issue.lat?.toFixed(4) + ', ' + issue.lng?.toFixed(4)).includes(searchLower) ||
-    (issue.lat?.toFixed(3) + ', ' + issue.lng?.toFixed(3)).includes(searchLower);
+  const filteredIssues = issues.filter(issue => {
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch =
+      issue.id.toLowerCase().includes(searchLower) ||
+      issue.type.toLowerCase().includes(searchLower) ||
+      issue.desc.toLowerCase().includes(searchLower) ||
+      (issue.department?.toLowerCase() || '').includes(searchLower) ||
+      (issue.lat?.toFixed(5) + ', ' + issue.lng?.toFixed(5)).includes(searchLower) ||
+      (issue.lat?.toFixed(4) + ', ' + issue.lng?.toFixed(4)).includes(searchLower) ||
+      (issue.lat?.toFixed(3) + ', ' + issue.lng?.toFixed(3)).includes(searchLower);
 
-  return (
-    (selectedStatus === 'All' || issue.status === selectedStatus.toLowerCase()) &&
-    (selectedCategory === 'All' || issue.type === selectedCategory) &&
-    (selectedSeverity === 'All' || issue.severity === selectedSeverity) &&
-    (selectedDepartment === 'All' || issue.department === selectedDepartment) &&
-    matchesSearch
-  );
-});
+    return (
+      (selectedStatus === 'All' || issue.status === selectedStatus.toLowerCase()) &&
+      (selectedCategory === 'All' || issue.type === selectedCategory) &&
+      (selectedSeverity === 'All' || issue.severity === selectedSeverity) &&
+      (selectedDepartment === 'All' || issue.department === selectedDepartment) &&
+      matchesSearch
+    );
+  });
 
-  
   const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentIssues = filteredIssues.slice(startIndex, startIndex + itemsPerPage);
@@ -150,7 +159,7 @@ function Dashboard() {
     if (!status) return 'N/A';
     return status.split('-').map(capitalizeFirstLetter).join('-');
   };
-  
+
   const handleIssueClick = (issue) => {
     setSelectedIssue(issue);
     setShowDetails(true);
@@ -216,7 +225,7 @@ function Dashboard() {
             </p>
           </div>
         </div>
-        
+
         {/* Issues by Status */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
@@ -236,7 +245,8 @@ function Dashboard() {
                   <div className="text-lg font-bold text-gray-800 dark:text-white">
                     {getStatusDisplay(status)}
                   </div>
-                  <div className="text-3xl font-extrabold text-gray-800 dark:text-white">
+                  {/* Apply color coding here */}
+                  <div className={`text-3xl font-extrabold ${statusColors[status] || 'text-gray-800 dark:text-white'}`}>
                     {count}
                   </div>
                 </div>
@@ -244,7 +254,7 @@ function Dashboard() {
             )}
           </div>
         </div>
-        
+
         {/* Issues by Department */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
@@ -336,36 +346,35 @@ function Dashboard() {
               </select>
             </div>
             <div className="flex flex-col">
-  <label htmlFor="department-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-    Department
-  </label>
-  <select
-    id="department-filter"
-    value={selectedDepartment}
-    onChange={(e) => setSelectedDepartment(e.target.value)}
-    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm bg-white/80 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-  >
-    <option>All</option>
-    {Object.keys(stats.byDepartment).map((dep) => (
-      <option key={dep} value={dep}>{dep}</option>
-    ))}
-  </select>
-</div>
-
-          </div>
-          <div className="mb-4 flex items-center justify-between">
-              <label htmlFor="items-per-page" className="text-sm font-medium text-gray-700 dark:text-gray-300 mr-2">Items per page:</label>
+              <label htmlFor="department-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Department
+              </label>
               <select
-                id="items-per-page"
-                value={itemsPerPage}
-                onChange={handleItemsPerPageChange}
-                className="px-3 py-1 border border-gray-300 rounded-lg text-sm bg-white/80 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                id="department-filter"
+                value={selectedDepartment}
+                onChange={(e) => setSelectedDepartment(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm bg-white/80 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
-                <option value={10}>10</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
+                <option>All</option>
+                {Object.keys(stats.byDepartment).map((dep) => (
+                  <option key={dep} value={dep}>{dep}</option>
+                ))}
               </select>
             </div>
+          </div>
+          <div className="mb-4 flex items-center justify-between">
+            <label htmlFor="items-per-page" className="text-sm font-medium text-gray-700 dark:text-gray-300 mr-2">Items per page:</label>
+            <select
+              id="items-per-page"
+              value={itemsPerPage}
+              onChange={handleItemsPerPageChange}
+              className="px-3 py-1 border border-gray-300 rounded-lg text-sm bg-white/80 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            >
+              <option value={10}>10</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
           <div className="bg-white/10 rounded-lg shadow-lg overflow-hidden">
             {filteredIssues.length === 0 ? (
               <p className="text-center text-gray-500 dark:text-gray-400 p-8">
@@ -374,8 +383,8 @@ function Dashboard() {
             ) : (
               <div className="divide-y divide-gray-200 dark:divide-gray-700">
                 {currentIssues.map((issue) => (
-                  <div 
-                    key={issue.id} 
+                  <div
+                    key={issue.id}
                     className="p-6 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
                     onClick={() => handleIssueClick(issue)}
                   >
@@ -418,29 +427,29 @@ function Dashboard() {
                           </div>
                         )}
                         <div className="flex flex-col sm:flex-row gap-2">
-                            <button
-  onClick={(e) => {
-    e.stopPropagation();
-    const newStatus = issue.status === 'in-progress' ? 'resolved' : 'in-progress';
-    handleStatusChange(issue.id, newStatus);
-  }}
-  className={`px-4 py-2 rounded text-xs flex items-center gap-2 text-white ${
-    issue.status === 'resolved'
-      ? 'bg-green-600 hover:bg-green-700'
-      : 'bg-yellow-600 hover:bg-yellow-700'
-  }`}
->
-  {issue.status === 'resolved' ? <FaCheckCircle /> : <FaSpinner />}
-  <span>{issue.status === 'resolved' ? 'Resolved' : 'In-Progress'}</span>
-</button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const newStatus = issue.status === 'in-progress' ? 'resolved' : 'in-progress';
+                              handleStatusChange(issue.id, newStatus);
+                            }}
+                            className={`px-4 py-2 rounded text-xs flex items-center gap-2 text-white ${
+                              issue.status === 'resolved'
+                                ? 'bg-green-600 hover:bg-green-700'
+                                : 'bg-yellow-600 hover:bg-yellow-700'
+                            }`}
+                          >
+                            {issue.status === 'resolved' ? <FaCheckCircle /> : <FaSpinner />}
+                            <span>{issue.status === 'resolved' ? 'Resolved' : 'In-Progress'}</span>
+                          </button>
 
-                            <button
-                                onClick={(e) => { e.stopPropagation(); handleDelete(issue.id); }}
-                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition text-xs flex items-center gap-1"
-                            >
-                                <FaTrashAlt />
-                                <span>Remove</span>
-                            </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDelete(issue.id); }}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition text-xs flex items-center gap-1"
+                          >
+                            <FaTrashAlt />
+                            <span>Remove</span>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -451,8 +460,8 @@ function Dashboard() {
           </div>
           {totalPages > 1 && (
             <div className="mt-8 flex justify-center items-center space-x-2">
-              <button 
-                onClick={() => handlePageChange(currentPage - 1)} 
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
                 className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg disabled:opacity-50"
               >
@@ -478,7 +487,7 @@ function Dashboard() {
           )}
         </div>
       </main>
-      
+
       {showDetails && selectedIssue && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center">
           <div
@@ -512,9 +521,20 @@ function Dashboard() {
                 <span className="font-semibold w-24">Status:</span>
                 <span className="text-gray-700 dark:text-gray-300">{getStatusDisplay(selectedIssue.status)}</span>
               </div>
-              <div className="flex items-center">
-                <span className="font-semibold w-24">Assigned to:</span>
-                <span className="text-gray-700 dark:text-gray-300">{selectedIssue.department || 'N/A'}</span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center">
+                <span className="font-semibold w-24">Assign to:</span>
+                <div className="flex-1 mt-1 sm:mt-0">
+                  <select
+                    value={selectedIssue.department || ''}
+                    onChange={(e) => handleDepartmentChange(selectedIssue.id, e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm bg-white/80 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  >
+                    <option value="">Unassigned</option>
+                    {departmentOptions.map((dep) => (
+                      <option key={dep} value={dep}>{dep}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="flex items-center">
                 <span className="font-semibold w-24">Coordinates:</span>
@@ -531,37 +551,36 @@ function Dashboard() {
               )}
             </div>
             {/* Action buttons inside the modal */}
-           <div className="mb-2 text-xs text-gray-500 dark:text-gray-400 text-center">
-  Click a button to update the status of this report
-</div>
-<div className="flex flex-col sm:flex-row gap-2 mt-4">
-  <button
-    onClick={() => handleStatusChange(selectedIssue.id, 'In-Progress')}
-    className={`flex-1 px-4 py-2 text-white rounded transition text-xs flex items-center justify-center gap-1 ${
-      selectedIssue.status === 'in-progress' ? 'bg-yellow-800 border border-yellow-500' : 'bg-yellow-600 hover:bg-yellow-700'
-    }`}
-  >
-    <FaSpinner />
-    <span>In-Progress</span>
-  </button>
-  <button
-    onClick={() => handleStatusChange(selectedIssue.id, 'Resolved')}
-    className={`flex-1 px-4 py-2 text-white rounded transition text-xs flex items-center justify-center gap-1 ${
-      selectedIssue.status === 'resolved' ? 'bg-green-800 border border-green-500' : 'bg-green-600 hover:bg-green-700'
-    }`}
-  >
-    <FaCheckCircle />
-    <span>Resolved</span>
-  </button>
-  <button
-    onClick={() => handleDelete(selectedIssue.id)}
-    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition text-xs flex items-center justify-center gap-1"
-  >
-    <FaTrashAlt />
-    <span>Remove</span>
-  </button>
-</div>
-
+            <div className="mb-2 text-xs text-gray-500 dark:text-gray-400 text-center">
+              Click a button to update the status of this report
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 mt-4">
+              <button
+                onClick={() => handleStatusChange(selectedIssue.id, 'In-Progress')}
+                className={`flex-1 px-4 py-2 text-white rounded transition text-xs flex items-center justify-center gap-1 ${
+                  selectedIssue.status === 'in-progress' ? 'bg-yellow-800 border border-yellow-500' : 'bg-yellow-600 hover:bg-yellow-700'
+                }`}
+              >
+                <FaSpinner />
+                <span>In-Progress</span>
+              </button>
+              <button
+                onClick={() => handleStatusChange(selectedIssue.id, 'Resolved')}
+                className={`flex-1 px-4 py-2 text-white rounded transition text-xs flex items-center justify-center gap-1 ${
+                  selectedIssue.status === 'resolved' ? 'bg-green-800 border border-green-500' : 'bg-green-600 hover:bg-green-700'
+                }`}
+              >
+                <FaCheckCircle />
+                <span>Resolved</span>
+              </button>
+              <button
+                onClick={() => handleDelete(selectedIssue.id)}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition text-xs flex items-center justify-center gap-1"
+              >
+                <FaTrashAlt />
+                <span>Remove</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

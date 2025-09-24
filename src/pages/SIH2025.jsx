@@ -9,12 +9,12 @@ function SIH2025() {
     { name: 'Awaiz', role: 'Founding Engineer' },
     { name: 'Kabeer', role: 'Founding Engineer' },
     { name: 'Musa', role: 'Founding Engineer' },
-    { name: 'Mubeen Taj', role: 'Founding Engineer' },
-    { name: 'Muqeeth', role: 'Marketing & PR' },
+    { name: 'Dakshayini', role: 'Founding Engineer' },
+    { name: 'Muqeeth', role: 'Founding Engineer' },
   ];
 
-  const videoUrl = "https://www.youtube.com/embed/dQw4w9WgXcQ?si=RjE1s_u6sQ4eX1_t"; // Replace this with your video URL
-
+  const videoUrl = ""; // Replace this with your video URL
+ 
   return (
     <div className="container mx-auto p-4 text-center">
       <div className="h-20"></div> {/* Navbar spacing */}
@@ -25,12 +25,14 @@ function SIH2025() {
       <p className="text-gray-600 dark:text-gray-400 mb-8">
         Fixit is a community-driven project built with a passion for improving local civic issues. Our dedicated team made this possible.
       </p>
-
+ 
       {/* Problem Statement Details */}
-     
-
+     <h1 className="text-4xl font-bold text-blue-600 dark:text-red-500 mt-8 mb-4">
+YOUTUBE VIDEO and MOBILE APP INCOMING      </h1>
+        <h2 className="text-2xl font-bold text-blue-600 dark:text-yellow-400 mb-4">
+WORK-IN-PROGRESS      </h2>
       {/* Video Iframe */}
-      <div className="w-full max-w-4xl mx-auto mb-12 rounded-lg overflow-hidden shadow-xl">
+      {/* <div className="w-full max-w-4xl mx-auto mb-12 rounded-lg overflow-hidden shadow-xl">
         <iframe
           className="w-full aspect-video"
           src={videoUrl}
@@ -39,7 +41,7 @@ function SIH2025() {
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
         ></iframe>
-      </div>
+      </div> */}
    <h2 className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-4">
 TEAM - Fixit        </h2>
       {/* Team Details */}

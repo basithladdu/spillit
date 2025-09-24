@@ -13,7 +13,12 @@ function Login() {
 
   useEffect(() => {
     if (currentUser) {
-      navigate('/dashboard');
+      if (currentUser.role === 'admin') {
+        navigate('/dashboard');
+      } else {
+        // Redirect non-admin users to the home page or gallery
+        navigate('/');
+      }
     }
   }, [currentUser, navigate]);
 
