@@ -1,74 +1,67 @@
-/* Base styles for the minimalist theme */
+/* Base styles */
 * {
     font-family: 'JetBrains Mono', monospace;
-    text-transform: lowercase; /* enforce lowercase everywhere */
+    text-transform: lowercase;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Base body styles - designed for a dark theme from the start */
 body {
-    background-color: #000; /* Pure black background by default */
-    color: #fff; /* Pure white text by default for general content */
+    background-color: #000;
+    color: #fff;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    /* Smooth transition for background/color when dark mode toggles (if you had a light mode alternative) */
     transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
 }
 
-/* The 'dark' class on body is now redundant if body is always dark,
-   but keep it if you plan to implement a light mode toggle later.
-   For now, it just re-confirms the dark styles. */
 body.dark {
     background-color: #000 !important;
     color: #fff !important;
 }
 
-/* Glassy overlay effect for cards/sections */
-/* Renamed to 'glass' to match your HTML class name */
+/* Glass effect */
 .glass {
-    background-color: rgba(255, 255, 255, 0.05); /* very subtle white tint for glass */
-    backdrop-filter: blur(5px); /* light blur */
-    border: 1px solid rgba(255, 255, 255, 0.1); /* thin white border */
-    border-radius: 0.25rem; /* slight rounding */
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* subtle shadow for depth */
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.375rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    color: #fff;
     transition: all 0.2s ease-in-out;
-    /* Ensure text within glass elements is readable on this transparent dark background */
-    color: #fff; /* Explicitly set text to white for content inside .glass */
 }
 
-/* General button styling */
+/* Buttons */
 .btn {
     background-color: transparent;
     border: 1px solid #fff;
-    color: #fff; /* White text for default buttons */
+    color: #fff;
     padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
+    border-radius: 0.375rem;
     cursor: pointer;
     transition: all 0.1s ease-in-out;
     font-size: 0.9rem;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    text-decoration: none; /* ensure no underline on buttons */
-    white-space: nowrap; /* Prevent text wrapping */
+    text-decoration: none;
+    white-space: nowrap;
 }
 .btn:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }
 .btn-primary {
-    background-color: #fff; /* White background for primary button */
-    color: #000; /* Black text for primary button to contrast with white background */
+    background-color: #fff;
+    color: #000;
 }
 .btn-primary:hover {
     background-color: #eee;
 }
 
-/* Link styling */
+/* Links */
 .link {
-    color: #fff; /* White links for the dark theme */
+    color: #fff;
     text-decoration: underline;
     transition: color 0.1s ease-in-out;
 }
@@ -76,9 +69,10 @@ body.dark {
     color: #ccc;
 }
 
-/* Toast notifications */
+/* Toasts */
 #toast-container {
-    pointer-events: none; /* Allows clicks to pass through */
+    pointer-events: none;
+    z-index: 9999;
 }
 .toast {
     background-color: #333;
@@ -92,142 +86,136 @@ body.dark {
     display: flex;
     align-items: center;
     gap: 8px;
-    pointer-events: auto; /* Re-enable pointer events for the toast itself */
+    pointer-events: auto;
     min-width: 200px;
 }
 .toast.show {
     opacity: 1;
     transform: translateY(0);
 }
-.toast-info {
-    background-color: #2196F3;
-}
-.toast-success {
-    background-color: #4CAF50;
-}
-.toast-error {
-    background-color: #F44336;
-}
+.toast-info { background-color: #2196F3; }
+.toast-success { background-color: #4CAF50; }
+.toast-error { background-color: #F44336; }
 
-/* General form element styling */
+/* Forms */
 .form-label {
-    color: #fff; /* White labels for the dark theme */
+    color: #fff;
     display: block;
-    font-size: 0.875rem; /* sm:text-sm */
-    font-weight: 500; /* medium */
+    font-size: 0.875rem;
+    font-weight: 500;
     margin-bottom: 0.25rem;
 }
-
 .form-input, .form-select, .form-textarea {
     display: block;
     width: 100%;
-    padding: 0.5rem 0.75rem; /* px-3 py-2 */
-    border: 1px solid rgba(255, 255, 255, 0.3); /* Lighter border for inputs */
-    border-radius: 0.375rem; /* rounded-md */
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
-    outline: none;
-    background-color: rgba(0, 0, 0, 0.6); /* Darker background for inputs */
-    color: #fff; /* White text inside inputs */
-    font-size: 0.875rem; /* sm:text-sm */
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 0.375rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 0.875rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
 }
 .form-input:focus, .form-select:focus, .form-textarea:focus {
-    border-color: #007bff; /* Focus ring color */
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25); /* Focus ring */
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
-
 .form-textarea {
     resize: vertical;
-    min-height: 80px; /* Example min height */
+    min-height: 80px;
 }
 
-/* File drop zone specific styles */
+/* File drop zone */
 .file-drop-zone {
-    min-height: 100px; /* Adjust as needed */
+    min-height: 100px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    /* Specific styles for the dropzone's dark theme appearance */
-    border: 2px dashed rgba(255, 255, 255, 0.4); /* White dashed border */
-    background-color: rgba(0, 0, 0, 0.4); /* Dark background */
-    color: #fff; /* White text for dropzone */
+    border: 2px dashed rgba(255, 255, 255, 0.4);
+    background-color: rgba(0, 0, 0, 0.4);
+    color: #fff;
+    transition: background-color 0.2s, border-color 0.2s;
 }
 .file-drop-zone:hover {
     background-color: rgba(0, 0, 0, 0.6);
     border-color: rgba(255, 255, 255, 0.6);
 }
 
-/* Specific styling for member-card (for team.html) */
+/* Member card */
 .member-card {
-  color: #fff;
-  /* Apply the glass effect */
-  @apply glass p-4 rounded-sm text-center;
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.375rem;
+    padding: 1rem;
+    text-align: center;
 }
 
-/* Map specific adjustments */
+/* Map */
 #map {
-  height: calc(100vh - 64px - 4rem);
-  width: 100%;
+    height: calc(100vh - 64px - 4rem);
+    width: 100%;
 }
-@apply glass;
 
-/* Adjustments for text within the navbar for contrast */
+/* Navbar */
 nav .link {
-  color: #fff;
+    color: #fff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
 }
 nav .link:hover {
-  background-color: #333;
-  color: #fff;
+    background-color: #333;
 }
 
-/* Adjustments for the filter dropdown */
+/* Filter dropdown */
 #issueFilter {
-  background-color: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.3);
 }
 #issueFilter option {
-  background-color: #333;
-  color: #fff;
-}
-@apply glass;
-
-/* Adjust the main descriptive section at the bottom */
-body section.max-w-2xl.mx-auto.p-6.glass.text-center.text-base.mb-8 {
-    color: #fff; /* Ensure text is white within this glass section */
-}
-body section.max-w-2xl.mx-auto.p-6.glass.text-center.text-base.mb-8 .font-semibold.text-blue-700 {
-    color: #8be9fd; /* A light blue for emphasis in dark theme */
+    background-color: #333;
+    color: #fff;
 }
 
-/* Moderator Panel Adjustments */
-#modSection h2 {
-    color: #fff; /* Ensure heading is white */
+/* Descriptive section */
+.about-section {
+    color: #fff;
 }
+.about-section .highlight {
+    color: #8be9fd;
+}
+
+/* Moderator Panel */
+#modSection h2 { color: #fff; }
 #modList {
-    color: #fff; /* Ensure content in mod list is white */
-    /* Adjust divider color if needed for dark theme */
+    color: #fff;
     border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* For popup content on map markers (Leaflet popups) */
+/* Leaflet popups */
 .leaflet-popup-content-wrapper {
-    background-color: rgba(0, 0, 0, 0.8) !important; /* Dark background for popups */
-    color: #fff !important; /* White text for popups */
-    border-radius: 0.25rem !important;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    color: #fff !important;
+    border-radius: 0.375rem !important;
 }
 .leaflet-popup-tip {
-    background-color: rgba(0, 0, 0, 0.8) !important; /* Dark tip for popups */
+    background-color: rgba(0, 0, 0, 0.8) !important;
+}
+.leaflet-popup-content a {
+    color: #8be9fd;
+    text-decoration: underline;
 }
 
-/* Hide the body gradient background since we want pure black */
+/* Remove gradient backgrounds */
 body.bg-gradient-to-br {
     background-image: none !important;
 }
 
-/* Custom icon for map markers */
+/* Map markers */
 .custom-div-icon {
     background-color: white;
     width: 24px;
@@ -239,18 +227,51 @@ body.bg-gradient-to-br {
     box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.5);
 }
 
-.low-severity {
-    background-color: #4CAF50; /* Green */
+/* Severity colors */
+.low-severity { background-color: #4CAF50; }
+.medium-severity { background-color: #FFC107; }
+.high-severity { background-color: #FF9800; }
+.critical-severity { background-color: #F44336; }
+/* NAVBAR FIX */
+
+/* remove Tailwind @apply (won’t work in plain CSS) */
+.nav-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #fff;
+  text-decoration: none;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
-.medium-severity {
-    background-color: #FFC107; /* Yellow */
+.nav-link:hover {
+  background-color: #1d4ed8; /* blue-700 */
 }
 
-.high-severity {
-    background-color: #FF9800; /* Orange */
+/* buttons like locate, login, logout */
+.action-btn {
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.25rem;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #fff;
+  transition: background-color 0.2s ease-in-out;
 }
 
-.critical-severity {
-    background-color: #F44336; /* Red */
-}
+.action-btn.bg-blue-600 { background-color: #2563eb; } /* blue-600 */
+.action-btn.bg-blue-600:hover { background-color: #1d4ed8; } /* blue-700 */
+
+.action-btn.bg-gray-700 { background-color: #374151; }
+.action-btn.bg-gray-700:hover { background-color: #4b5563; }
+
+.action-btn.bg-red-600 { background-color: #dc2626; }
+.action-btn.bg-red-600:hover { background-color: #b91c1c; }
+
+.action-btn.bg-green-600 { background-color: #16a34a; }
+.action-btn.bg-green-600:hover { background-color: #15803d; }

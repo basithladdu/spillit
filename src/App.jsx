@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -10,20 +10,32 @@ import Dashboard from "./pages/Dashboard";
 import Team from "./pages/Team";
 import NotFound from "./pages/NotFound";
 import Report from "./pages/Report";
-import Gallery from "./pages/Gallery"; // New Import
+import Gallery from "./pages/Gallery";
+import Help from "./pages/Help";
+import Leaderboard from "./pages/Leaderboard";
+
 import "./App.css";
+import "leaflet/dist/leaflet.css";
 
 function App() {
+  const location = useLocation();
+
   return (
     <AuthProvider>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-950 dark:via-black dark:to-gray-800 text-black dark:text-white transition-colors duration-300">
-        <Navbar />
+        {/* Conditionally render the Navbar */}
+        {location.pathname !== '/' && <Navbar />}
+
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/report/:id" element={<Report />} />
-          <Route path="/gallery" element={<Gallery />} /> {/* New Route */}
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/help" element={<Help />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/team" element={<Team />} />
+
           <Route 
             path="/dashboard" 
             element={
@@ -32,17 +44,8 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="/team" 
-            element={
-              <ProtectedRoute>
-                <Team />
-              </ProtectedRoute>
-            } 
-          />
           <Route path="*" element={<NotFound />} />
         </Routes>
-        <Footer />
       </div>
     </AuthProvider>
   );

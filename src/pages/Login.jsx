@@ -1,14 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { FaGoogle } from 'react-icons/fa';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, signInWithGoogle, currentUser } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/dashboard');
+    }
+  }, [currentUser, navigate]);
 
   const clearError = (field) => {
     if (errors[field]) {
@@ -16,17 +23,15 @@ function Login() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
 
     try {
       await login(email, password);
-      navigate('/dashboard');
     } catch (error) {
       setLoading(false);
-      // Handle specific Firebase auth errors
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         setErrors({ email: 'Invalid email or password.', password: 'Invalid email or password.' });
       } else if (error.code === 'auth/invalid-email') {
@@ -39,12 +44,21 @@ function Login() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Google login failed:', error);
+      setErrors({ general: 'Google login failed. Please try again.' });
+    }
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen p-4 sm:p-6">
-      <div className="h-20"></div> {/* Navbar spacing */}
-      <div className="bg-white/80 dark:bg-gray-900 p-8 sm:p-10 rounded-lg shadow-xl max-w-md w-full backdrop-blur-sm">
+      <div className="h-20"></div>
+      <div className="bg-white/80 dark:bg-gray-900 p-8 sm:p-10 rounded-xl shadow-xl max-w-md w-full backdrop-blur-sm">
         <h2 className="text-2xl font-bold mb-8 text-center dark:text-white">
-          Welcome back to fixit
+          Welcome back to Fixit
         </h2>
         
         {errors.general && (
@@ -53,10 +67,10 @@ function Login() {
           </div>
         )}
         
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleLogin}>
           <div className="mb-5">
             <label htmlFor="loginEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Email address
+              Email Address
             </label>
             <input
               type="email"
@@ -105,6 +119,18 @@ function Login() {
           </button>
         </form>
         
+        <div className="my-6 flex items-center before:flex-1 before:border-t before:border-gray-300 before:mt-0.5 after:flex-1 after:border-t after:border-gray-300 after:mt-0.5 dark:before:border-gray-700 dark:after:border-gray-700">
+          <p className="text-center font-semibold mx-4 mb-0 dark:text-gray-300">Or</p>
+        </div>
+
+        <button
+          onClick={handleGoogleLogin}
+          className="w-full flex items-center justify-center gap-3 px-4 py-2 bg-white text-black rounded border border-gray-300 hover:bg-gray-100 transition"
+        >
+          <FaGoogle />
+          Sign in with Google
+        </button>
+
         <p className="text-center text-sm mt-6 text-gray-400">
           Don't have an account?{' '}
           <Link to="/register" className="text-blue-600 hover:text-blue-800 font-semibold">
