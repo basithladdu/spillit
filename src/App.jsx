@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -19,10 +19,14 @@ import "./App.css";
 import "leaflet/dist/leaflet.css";
 
 function App() {
+  const location = useLocation();
+
   return (
     <AuthProvider>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-950 dark:via-black dark:to-gray-800 text-black dark:text-white transition-colors duration-300">
-        <Navbar />
+        {/* Conditionally render the Navbar */}
+        {location.pathname !== '/' && <Navbar />}
+
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -31,12 +35,9 @@ function App() {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/help" element={<Help />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
-
-          {/* Team is now public */}
           <Route path="/team" element={<Team />} />
           <Route path="/SIH2025" element={<SIH2025 />} />
 
-          {/* Dashboard remains protected */}
           <Route 
             path="/dashboard" 
             element={
@@ -45,10 +46,8 @@ function App() {
               </ProtectedRoute>
             } 
           />
-
           <Route path="*" element={<NotFound />} />
         </Routes>
-        <Footer />
       </div>
     </AuthProvider>
   );

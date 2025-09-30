@@ -22,6 +22,7 @@ function Footer() {
           follow us on twitter
         </a>
       </div>
+     
     </footer>
   );
 }
