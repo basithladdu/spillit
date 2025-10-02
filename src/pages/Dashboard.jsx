@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, orderBy, query, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../utils/firebase';
-import { FaTrashAlt, FaCheckCircle, FaSpinner, FaArrowLeft, FaArrowRight, FaSearch, FaFilter, FaChartBar, FaEye, FaEyeSlash, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
+import { FaTrashAlt, FaSpinner, FaArrowLeft, FaArrowRight, FaSearch, FaFilter, FaChartBar, FaEye, FaEyeSlash, FaSort, FaSortUp, FaSortDown, FaArrowAltCircleUp } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 // Bubble animation component
@@ -110,6 +110,35 @@ const StatsCard = ({ title, value, color, icon, onClick }) => (
   </BubbleAnimation>
 );
 
+// Delete Confirmation Dialog Component
+const DeleteConfirmDialog = ({ onConfirm, onCancel, issueId }) => (
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={onCancel}></div>
+    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-sm w-full relative z-10 animate-scaleIn text-center">
+      <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-4">
+        Are you sure?
+      </h3>
+      <p className="text-gray-700 dark:text-gray-300 mb-6">
+        This action cannot be undone. You are about to delete issue <span className="font-mono">{issueId.slice(-8)}</span>.
+      </p>
+      <div className="flex justify-center gap-4">
+        <BubbleAnimation
+          onClick={onCancel}
+          className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white rounded-lg transition font-semibold"
+        >
+          Cancel
+        </BubbleAnimation>
+        <BubbleAnimation
+          onClick={onConfirm}
+          className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-semibold"
+        >
+          Delete
+        </BubbleAnimation>
+      </div>
+    </div>
+  </div>
+);
+
 function Dashboard() {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -135,26 +164,23 @@ function Dashboard() {
   const [expandedFilters, setExpandedFilters] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const navigate = useNavigate();
-
-  // New color map for statuses
-  const statusColors = {
-    'new': 'text-red-600',
-    'in-progress': 'text-yellow-600',
-    'resolved': 'text-green-600'
-  };
-
-  // List of Indian civic departments for the dropdown
-  const departmentOptions = ['Public Works Department (PWD)', 'Solid Waste Management Department', 'Water Utilities Department', 'Electric Division', 'Public Nuisance Dept.'];
+  const [issueToDelete, setIssueToDelete] = useState(null);
 
   const showToast = (message, type = 'info') => {
     // You can replace this with a proper toast notification library
     console.log(`${type.toUpperCase()}: ${message}`);
   };
 
-  const handleDelete = async (id) => {
+  const confirmDelete = (id) => {
+    setIssueToDelete(id);
+  };
+
+  const handleDelete = async () => {
+    if (!issueToDelete) return;
     try {
-      await deleteDoc(doc(db, 'issues', id));
+      await deleteDoc(doc(db, 'issues', issueToDelete));
       showToast('Issue deleted successfully!', 'success');
+      setIssueToDelete(null);
       setSelectedIssue(null);
       setShowDetails(false);
     } catch (error) {
@@ -195,7 +221,9 @@ function Dashboard() {
         categoryCounts[data.type] = (categoryCounts[data.type] || 0) + 1;
         severityCounts[data.severity] = (severityCounts[data.severity] || 0) + 1;
         statusCounts[data.status] = (statusCounts[data.status] || 0) + 1;
-        departmentCounts[data.department] = (departmentCounts[data.department] || 0) + 1; // Count by department
+        if (data.department) {
+          departmentCounts[data.department] = (departmentCounts[data.department] || 0) + 1;
+        }
         if (data.ts && (!lastTimestamp || data.ts.toDate() > lastTimestamp)) {
           lastTimestamp = data.ts.toDate();
         }
@@ -216,35 +244,58 @@ function Dashboard() {
     return () => unsubscribe();
   }, []);
 
- const filteredIssues = issues.filter(issue => {
-  const searchLower = searchQuery.toLowerCase();
-  const matchesSearch =
-    issue.id.toLowerCase().includes(searchLower) ||
-    issue.type.toLowerCase().includes(searchLower) ||
-    issue.desc.toLowerCase().includes(searchLower) ||
-    (issue.department?.toLowerCase() || '').includes(searchLower) ||
-    (issue.lat?.toFixed(5) + ', ' + issue.lng?.toFixed(5)).includes(searchLower) ||
-    (issue.lat?.toFixed(4) + ', ' + issue.lng?.toFixed(4)).includes(searchLower) ||
-    (issue.lat?.toFixed(3) + ', ' + issue.lng?.toFixed(3)).includes(searchLower);
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
 
-  return (
-    (selectedStatus === 'All' || issue.status === selectedStatus.toLowerCase()) &&
-    (selectedCategory === 'All' || issue.type === selectedCategory) &&
-    (selectedSeverity === 'All' || issue.severity === selectedSeverity) &&
-    (selectedDepartment === 'All' || issue.department === selectedDepartment) &&
-    matchesSearch
-  );
-});
+  const sortedAndFilteredIssues = issues
+    .filter(issue => {
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch =
+        issue.id.toLowerCase().includes(searchLower) ||
+        issue.type.toLowerCase().includes(searchLower) ||
+        issue.desc.toLowerCase().includes(searchLower) ||
+        (issue.department?.toLowerCase() || '').includes(searchLower) ||
+        (issue.lat?.toFixed(5) + ', ' + issue.lng?.toFixed(5)).includes(searchLower);
 
-  
-  const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
+      const statusMatch = selectedStatus === 'All' || issue.status === selectedStatus.toLowerCase();
+      const categoryMatch = selectedCategory === 'All' || issue.type === selectedCategory;
+      const severityMatch = selectedSeverity === 'All' || issue.severity === selectedSeverity;
+      const departmentMatch = selectedDepartment === 'All' || (issue.department && issue.department === selectedDepartment);
+      
+      const tabMatch = activeTab === 'all' || 
+        (activeTab === 'new' && issue.status === 'new') ||
+        (activeTab === 'in-progress' && issue.status === 'in-progress') ||
+        (activeTab === 'resolved' && issue.status === 'resolved');
+
+      return matchesSearch && statusMatch && categoryMatch && severityMatch && departmentMatch && tabMatch;
+    })
+    .sort((a, b) => {
+      let aValue = a[sortField];
+      let bValue = b[sortField];
+      
+      if (sortField === 'ts') {
+        aValue = aValue?.toDate?.() || new Date(0);
+        bValue = bValue?.toDate?.() || new Date(0);
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+  const totalPages = Math.ceil(sortedAndFilteredIssues.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentIssues = sortedAndFilteredIssues.slice(startIndex, startIndex + itemsPerPage);
 
   const handlePageChange = (page) => {
     if (page > 0 && page <= totalPages) {
       setCurrentPage(page);
-      // Scroll to top of the list
       window.scrollTo({ top: 600, behavior: 'smooth' });
     }
   };
@@ -254,16 +305,6 @@ function Dashboard() {
     setCurrentPage(1);
   };
 
-  const capitalizeFirstLetter = (string) => {
-    if (!string) return '';
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  };
-
-  const getStatusDisplay = (status) => {
-    if (!status) return 'N/A';
-    return status.split('-').map(capitalizeFirstLetter).join('-');
-  };
-  
   const handleIssueClick = (issue) => {
     setSelectedIssue(issue);
     setShowDetails(true);
@@ -319,269 +360,307 @@ function Dashboard() {
             </BubbleAnimation>
           ))}
         </div>
-        
-        {/* Issues by Status */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-            Issues by Status
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.keys(stats.byStatus).length === 0 ? (
-              <p className="text-center text-gray-500 dark:text-gray-400 col-span-full">
-                No issues reported yet.
-              </p>
-            ) : (
-              Object.entries(stats.byStatus).map(([status, count]) => (
-                <div
-                  key={status}
-                  className="bg-white/10 p-6 rounded-lg shadow-lg text-center hover:shadow-xl transition-shadow"
-                >
-                  <div className="text-lg font-bold text-gray-800 dark:text-white">
-                    {getStatusDisplay(status)}
-                  </div>
-                  <div className="text-3xl font-extrabold text-gray-800 dark:text-white">
-                    {count}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-        
-        {/* Issues by Department */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-            Issues by Department
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Object.keys(stats.byDepartment).length === 0 ? (
-              <p className="text-center text-gray-500 dark:text-gray-400 col-span-full">
-                No issues assigned yet.
-              </p>
-            ) : (
-              Object.entries(stats.byDepartment).map(([department, count]) => (
-                <div
-                  key={department}
-                  className="bg-white/10 p-6 rounded-lg shadow-lg text-center hover:shadow-xl transition-shadow"
-                >
-                  <div className="text-lg font-bold text-gray-800 dark:text-white">
-                    {department}
-                  </div>
-                  <div className="text-3xl font-extrabold text-gray-800 dark:text-white">
-                    {count}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+
+        {/* Stats Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <StatsCard
+            title="Total Reports"
+            value={stats.total}
+            color="text-blue-600 dark:text-blue-400"
+            icon="📊"
+            onClick={() => setActiveTab('all')}
+          />
+          <StatsCard
+            title="Categories"
+            value={Object.keys(stats.byCategory).length}
+            color="text-green-600 dark:text-green-400"
+            icon="📁"
+          />
+          <StatsCard
+            title="Active Issues"
+            value={issues.filter(issue => issue.status !== 'resolved').length}
+            color="text-orange-600 dark:text-orange-400"
+            icon="🚧"
+            onClick={() => setActiveTab('in-progress')}
+          />
+          <StatsCard
+            title="Resolved"
+            value={issues.filter(issue => issue.status === 'resolved').length}
+            color="text-purple-600 dark:text-purple-400"
+            icon="✅"
+            onClick={() => setActiveTab('resolved')}
+          />
         </div>
 
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-            Recent Issues
-          </h2>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4 mb-4">
-            <div className="flex-1">
-              <label htmlFor="search-input" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Search</label>
-              <input
-                id="search-input"
-                type="text"
-                placeholder="Search by ID, type, description, or coordinates..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm bg-white/80 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
-            </div>
-            <div className="flex flex-col">
-              <label htmlFor="status-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-              <select
-                id="status-filter"
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm bg-white/80 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              >
-                <option>All</option>
-                <option value="new">New</option>
-                <option value="in-progress">In-Progress</option>
-                <option value="resolved">Resolved</option>
-              </select>
-            </div>
-            <div className="flex flex-col">
-              <label htmlFor="category-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-              <select
-                id="category-filter"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm bg-white/80 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              >
-                <option>All</option>
-                <option>Pothole</option>
-                <option>Garbage</option>
-                <option>Water Leak</option>
-                <option>Streetlight Outage</option>
-                <option>Public Nuisance</option>
-                <option>Other</option>
-              </select>
-            </div>
-            <div className="flex flex-col">
-              <label htmlFor="severity-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Severity</label>
-              <select
-                id="severity-filter"
-                value={selectedSeverity}
-                onChange={(e) => setSelectedSeverity(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm bg-white/80 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              >
-                <option>All</option>
-                <option>Low</option>
-                <option>Medium</option>
-                <option>High</option>
-                <option>Critical</option>
-              </select>
-            </div>
-            <div className="flex flex-col">
-  <label htmlFor="department-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-    Department
-  </label>
-  <select
-    id="department-filter"
-    value={selectedDepartment}
-    onChange={(e) => setSelectedDepartment(e.target.value)}
-    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm bg-white/80 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-  >
-    <option>All</option>
-    {Object.keys(stats.byDepartment).map((dep) => (
-      <option key={dep} value={dep}>{dep}</option>
-    ))}
-  </select>
-</div>
-
+        {/* Interactive Filters Section */}
+        <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl shadow-lg p-6 mb-8 backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <FaFilter className="text-blue-600" />
+              Filters & Search
+            </h2>
+            <BubbleAnimation
+              onClick={() => setExpandedFilters(!expandedFilters)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-2"
+            >
+              {expandedFilters ? <FaEyeSlash /> : <FaEye />}
+              {expandedFilters ? 'Hide Filters' : 'Show Filters'}
+            </BubbleAnimation>
           </div>
-          <div className="mb-4 flex items-center justify-between">
-              <label htmlFor="items-per-page" className="text-sm font-medium text-gray-700 dark:text-gray-300 mr-2">Items per page:</label>
-              <select
-                id="items-per-page"
-                value={itemsPerPage}
-                onChange={handleItemsPerPageChange}
-                className="px-3 py-1 border border-gray-300 rounded-lg text-sm bg-white/80 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              >
-                <option value={10}>10</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
+
+          {/* Search Bar */}
+          <div className="relative mb-4">
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by ID, type, description, or coordinates..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-300"
+            />
+          </div>
+
+          {/* Expandable Filters */}
+          {expandedFilters && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-fadeIn">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white/50 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-300"
+                >
+                  <option>All</option>
+                  <option value="new">New</option>
+                  <option value="in-progress">In-Progress</option>
+                  <option value="resolved">Resolved</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white/50 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-300"
+                >
+                  <option>All</option>
+                  <option>Pothole</option>
+                  <option>Garbage</option>
+                  <option>Water Leak</option>
+                  <option>Streetlight Outage</option>
+                  <option>Public Nuisance</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Severity</label>
+                <select
+                  value={selectedSeverity}
+                  onChange={(e) => setSelectedSeverity(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white/50 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-300"
+                >
+                  <option>All</option>
+                  <option>Low</option>
+                  <option>Medium</option>
+                  <option>High</option>
+                  <option>Critical</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Department</label>
+                <select
+                  value={selectedDepartment}
+                  onChange={(e) => setSelectedDepartment(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white/50 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-300"
+                >
+                  <option>All</option>
+                  {Object.keys(stats.byDepartment).map((dep) => (
+                    <option key={dep} value={dep}>{dep}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-          <div className="bg-white/10 rounded-lg shadow-lg overflow-hidden">
-            {filteredIssues.length === 0 ? (
-              <p className="text-center text-gray-500 dark:text-gray-400 p-8">
-                No issues with this status found.
-              </p>
-            ) : (
-              <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                {currentIssues.map((issue) => (
-                  <div 
-                    key={issue.id} 
-                    className="p-6 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                    onClick={() => handleIssueClick(issue)}
+          )}
+        </div>
+
+        {/* Issues List */}
+        <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl shadow-lg overflow-hidden backdrop-blur-sm">
+          {/* Table Header */}
+          <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                <FaChartBar className="text-green-600" />
+                Issues ({sortedAndFilteredIssues.length})
+              </h2>
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Show:
+                  <select
+                    value={itemsPerPage}
+                    onChange={handleItemsPerPageChange}
+                    className="ml-2 px-3 py-1 border border-gray-300 rounded-lg text-sm bg-white dark:bg-gray-600 dark:border-gray-500 dark:text-white"
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center mb-2">
-                          <span className="inline-block px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100 rounded-full mr-3">
-                            {issue.type}
-                          </span>
-                          <span className="inline-block px-3 py-1 text-xs font-semibold bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100 rounded-full mr-3">
-                            {issue.severity}
-                          </span>
-                          <span className="inline-block px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 rounded-full">
-                            {getStatusDisplay(issue.status)}
-                          </span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400 ml-auto">
-                            {issue.ts ? new Date(issue.ts.toDate()).toLocaleDateString() : 'Unknown date'}
-                          </span>
-                        </div>
-                        <p className="text-gray-800 dark:text-white mb-2">
-                          {issue.desc}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Coordinates: {issue.lat?.toFixed(4)}, {issue.lng?.toFixed(4)}
-                        </p>
-                        {issue.department && (
-                          <p className="text-xs text-gray-400 dark:text-gray-500">
-                            Assigned to: {issue.department}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center mt-4 sm:mt-0">
-                        {issue.imageUrl && (
-                          <div className="sm:ml-4 flex-shrink-0 mr-4">
-                            <img
-                              src={issue.imageUrl}
-                              alt="Issue photo"
-                              className="w-20 h-20 rounded-lg object-cover"
-                            />
-                          </div>
-                        )}
-                        <div className="flex flex-col sm:flex-row gap-2">
-                            <button
-  onClick={(e) => {
-    e.stopPropagation();
-    const newStatus = issue.status === 'in-progress' ? 'resolved' : 'in-progress';
-    handleStatusChange(issue.id, newStatus);
-  }}
-  className={`px-4 py-2 rounded text-xs flex items-center gap-2 text-white ${
-    issue.status === 'resolved'
-      ? 'bg-green-600 hover:bg-green-700'
-      : 'bg-yellow-600 hover:bg-yellow-700'
-  }`}
->
-  {issue.status === 'resolved' ? <FaCheckCircle /> : <FaSpinner />}
-  <span>{issue.status === 'resolved' ? 'Resolved' : 'In-Progress'}</span>
-</button>
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+          </div>
 
-                            <button
-                                onClick={(e) => { e.stopPropagation(); handleDelete(issue.id); }}
-                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition text-xs flex items-center gap-1"
-                            >
-                                <FaTrashAlt />
-                                <span>Remove</span>
-                            </button>
-                        </div>
-                      </div>
+          {/* Issues List */}
+        {sortedAndFilteredIssues.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🔍</div>
+            <p className="text-gray-500 dark:text-gray-400 text-lg">
+              No issues found with the current filters.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            {currentIssues.map((issue, index) => (
+              <div
+                key={issue.id}
+                className="p-6 hover:bg-blue-50 dark:hover:bg-gray-700 transition-all duration-300 cursor-pointer group animate-fadeIn"
+                style={{ animationDelay: `${index * 0.1}s` }}
+                onClick={() => handleIssueClick(issue)}
+              >
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100 rounded-full transition-all duration-300 hover:scale-105">
+                        📝 {issue.type}
+                      </span>
+                      <SeverityBadge severity={issue.severity} />
+                      <StatusBadge status={issue.status} />
+                      <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 rounded-full transition-all duration-300 hover:scale-105">
+                        <FaArrowAltCircleUp className="text-blue-500" /> {issue.upvotes || 0}
+                      </span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400 ml-auto">
+                        {issue.ts ? new Date(issue.ts.toDate()).toLocaleDateString() : 'Unknown date'}
+                      </span>
+                    </div>
+                    
+                    <p className="text-gray-800 dark:text-white mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {issue.desc}
+                    </p>
+                    
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                      <span>📍 {issue.lat?.toFixed(4)}, {issue.lng?.toFixed(4)}</span>
+                      {issue.department && (
+                        <span className="inline-flex items-center gap-1">
+                          🏢 {issue.department}
+                        </span>
+                      )}
+                      <span className="font-mono">ID: {issue.id.slice(-8)}</span>
                     </div>
                   </div>
-                ))}
+
+                  <div className="flex items-center gap-4">
+                    {issue.imageUrl && (
+                      <div className="relative group/image">
+                        <img
+                          src={issue.imageUrl}
+                          alt="Issue"
+                          className="w-16 h-16 rounded-lg object-cover shadow-md transition-all duration-300 group-hover/image:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-opacity-0 group-hover/image:bg-opacity-20 rounded-lg transition-all duration-300 flex items-center justify-center">
+                          <span className="text-white opacity-0 group-hover/image:opacity-100 transition-opacity duration-300">👁️</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Fixed alignment */}
+                    <div className="flex flex-col gap-2 items-end">
+                      {/* Toggle with labels */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {issue.status === 'resolved' ? 'Resolved' : 'In Progress'}
+                        </span>
+                        <label className="relative inline-flex items-center cursor-pointer" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={issue.status === 'resolved'}
+                            onChange={(e) => {
+                              const newStatus = e.target.checked ? 'resolved' : 'in-progress';
+                              handleStatusChange(issue.id, newStatus);
+                            }}
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                        </label>
+                      </div>
+                      
+                      <BubbleAnimation
+                        onClick={(e) => { e.stopPropagation(); confirmDelete(issue.id); }}
+                        className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition flex items-center gap-2 text-sm"
+                      >
+                        <FaTrashAlt />
+                        Remove
+                      </BubbleAnimation>
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
+            ))}
           </div>
+        )}
+
+          {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-8 flex justify-center items-center space-x-2">
-              <button 
-                onClick={() => handlePageChange(currentPage - 1)} 
-                disabled={currentPage === 1}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg disabled:opacity-50"
-              >
-                <FaArrowLeft />
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => handlePageChange(i + 1)}
-                  className={`px-4 py-2 rounded-lg text-sm ${currentPage === i + 1 ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg disabled:opacity-50"
-              >
-                <FaArrowRight />
-              </button>
+            <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, sortedAndFilteredIssues.length)} of {sortedAndFilteredIssues.length} issues
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <BubbleAnimation
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg disabled:opacity-50 transition flex items-center gap-2"
+                  >
+                    <FaArrowLeft />
+                    Previous
+                  </BubbleAnimation>
+                  
+                  <div className="flex space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const pageNum = i + 1;
+                      return (
+                        <BubbleAnimation
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`px-4 py-2 rounded-lg text-sm transition ${
+                            currentPage === pageNum 
+                              ? 'bg-blue-600 text-white' 
+                              : 'bg-gray-600 hover:bg-gray-700 text-white'
+                          }`}
+                        >
+                          {pageNum}
+                        </BubbleAnimation>
+                      );
+                    })}
+                  </div>
+                  
+                  <BubbleAnimation
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg disabled:opacity-50 transition flex items-center gap-2"
+                  >
+                    Next
+                    <FaArrowRight />
+                  </BubbleAnimation>
+                </div>
+              </div>
             </div>
           )}
         </div>
       </main>
-      
+
+      {/* Issue Details Modal */}
       {showDetails && selectedIssue && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <div
@@ -597,33 +676,52 @@ function Dashboard() {
             >
               ×
             </button>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 text-center">
-              Issue Details
-            </h2>
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <span className="font-semibold w-24">ID:</span>
-                <span className="text-gray-700 dark:text-gray-300 font-mono text-sm break-all">{selectedIssue.id}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="font-semibold w-24">Type:</span>
-                <span className="text-gray-700 dark:text-gray-300">{selectedIssue.type}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="font-semibold w-24">Severity:</span>
-                <span className="text-gray-700 dark:text-gray-300">{selectedIssue.severity}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="font-semibold w-24">Status:</span>
-                <span className="text-gray-700 dark:text-gray-300">{getStatusDisplay(selectedIssue.status)}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="font-semibold w-24">Assigned to:</span>
-                <span className="text-gray-700 dark:text-gray-300">{selectedIssue.department || 'N/A'}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="font-semibold w-24">Coordinates:</span>
-                <span className="text-gray-700 dark:text-gray-300">{selectedIssue.lat?.toFixed(5)}, {selectedIssue.lng?.toFixed(5)}</span>
+
+            <div className="p-8 max-h-[80vh] overflow-y-auto">
+              <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-6 text-center">
+                Issue Details
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="font-semibold text-gray-600 dark:text-gray-400">ID</label>
+                    <p className="text-gray-800 dark:text-gray-200 font-mono text-sm break-all mt-1">
+                      {selectedIssue.id}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="font-semibold text-gray-600 dark:text-gray-400">Type</label>
+                    <p className="text-gray-800 dark:text-gray-200 mt-1">{selectedIssue.type}</p>
+                  </div>
+                  <div>
+                    <label className="font-semibold text-gray-600 dark:text-gray-400">Severity</label>
+                    <div className="mt-1">
+                      <SeverityBadge severity={selectedIssue.severity} />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="font-semibold text-gray-600 dark:text-gray-400">Status</label>
+                    <div className="mt-1">
+                      <StatusBadge status={selectedIssue.status} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="font-semibold text-gray-600 dark:text-gray-400">Department</label>
+                    <p className="text-gray-800 dark:text-gray-200 mt-1">
+                      {selectedIssue.department || 'Not assigned'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="font-semibold text-gray-600 dark:text-gray-400">Coordinates</label>
+                    <p className="text-gray-800 dark:text-gray-200 mt-1">
+                      {selectedIssue.lat?.toFixed(5)}, {selectedIssue.lng?.toFixed(5)}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="mb-6">
@@ -643,41 +741,62 @@ function Dashboard() {
                   />
                 </div>
               )}
-            </div>
-            {/* Action buttons inside the modal */}
-           <div className="mb-2 text-xs text-gray-500 dark:text-gray-400 text-center">
-  Click a button to update the status of this report
-</div>
-<div className="flex flex-col sm:flex-row gap-2 mt-4">
-  <button
-    onClick={() => handleStatusChange(selectedIssue.id, 'In-Progress')}
-    className={`flex-1 px-4 py-2 text-white rounded transition text-xs flex items-center justify-center gap-1 ${
-      selectedIssue.status === 'in-progress' ? 'bg-yellow-800 border border-yellow-500' : 'bg-yellow-600 hover:bg-yellow-700'
-    }`}
-  >
-    <FaSpinner />
-    <span>In-Progress</span>
-  </button>
-  <button
-    onClick={() => handleStatusChange(selectedIssue.id, 'Resolved')}
-    className={`flex-1 px-4 py-2 text-white rounded transition text-xs flex items-center justify-center gap-1 ${
-      selectedIssue.status === 'resolved' ? 'bg-green-800 border border-green-500' : 'bg-green-600 hover:bg-green-700'
-    }`}
-  >
-    <FaCheckCircle />
-    <span>Resolved</span>
-  </button>
-  <button
-    onClick={() => handleDelete(selectedIssue.id)}
-    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition text-xs flex items-center justify-center gap-1"
-  >
-    <FaTrashAlt />
-    <span>Remove</span>
-  </button>
-</div>
+              
+              <div className="mb-6">
+                <label className="font-semibold text-gray-600 dark:text-gray-400 mb-2 block">Upvotes</label>
+                <div className="flex items-center justify-center gap-2">
+                  <FaArrowAltCircleUp className="text-blue-500 text-3xl" />
+                  <p className="text-4xl font-bold text-gray-800 dark:text-white">{selectedIssue.upvotes || 0}</p>
+                </div>
+              </div>
 
+              {/* Action Buttons */}
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                <div className="text-center mb-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Update issue status
+                  </p>
+                </div>
+                
+                <div className="flex items-center justify-center gap-6 mb-6">
+                  <span className="text-gray-700 dark:text-gray-300 font-semibold">In Progress</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={selectedIssue.status === 'resolved'}
+                      onChange={(e) => {
+                        const newStatus = e.target.checked ? 'resolved' : 'in-progress';
+                        handleStatusChange(selectedIssue.id, newStatus);
+                      }}
+                    />
+                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                  </label>
+                  <span className="text-gray-700 dark:text-gray-300 font-semibold">Resolved</span>
+                </div>
+
+                <div className="flex gap-4">
+                  <BubbleAnimation
+                    onClick={() => confirmDelete(selectedIssue.id)}
+                    className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition flex items-center justify-center gap-2 font-semibold"
+                  >
+                    <FaTrashAlt />
+                    Delete Issue
+                  </BubbleAnimation>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      )}
+
+      {/* Render the delete confirmation dialog */}
+      {issueToDelete && (
+        <DeleteConfirmDialog
+          onConfirm={handleDelete}
+          onCancel={() => setIssueToDelete(null)}
+          issueId={issueToDelete}
+        />
       )}
 
       {/* Add CSS animations */}

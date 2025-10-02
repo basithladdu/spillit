@@ -1,16 +1,112 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { collection, onSnapshot, orderBy, query, doc, updateDoc, increment, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { Link } from 'react-router-dom';
+import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../utils/firebase';
-import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+import { FaArrowLeft, FaArrowRight, FaSearch, FaFilter, FaShare, FaArrowAltCircleUp } from 'react-icons/fa';
+
+// Bubble animation component
+const BubbleAnimation = ({ children, onClick, className = "" }) => {
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleClick = (e) => {
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 600);
+    if (onClick) onClick(e);
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      className={`relative overflow-hidden ${className}`}
+    >
+      {children}
+      {isAnimating && (
+        <span className="absolute inset-0 flex items-center justify-center">
+          <span className="animate-bubble absolute w-4 h-4 bg-white/30 rounded-full scale-0 opacity-70"></span>
+        </span>
+      )}
+    </button>
+  );
+};
+
+// Interactive Stats Card - Sized Down
+const StatsCard = ({ title, value, color, icon, onClick }) => (
+  <BubbleAnimation
+    onClick={onClick}
+    className={`bg-white/10 p-3 rounded-xl shadow-lg text-center hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer backdrop-blur-sm ${color}`}
+  >
+    <div className="text-xl mb-1">{icon}</div>
+    <h3 className="text-sm font-semibold mb-1">{title}</h3>
+    <p className="text-xl font-bold">{value}</p>
+  </BubbleAnimation>
+);
+
+// Status Badge with animations
+const StatusBadge = ({ status }) => {
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'new': return 'bg-blue-600 text-white';
+      case 'in-progress': return 'bg-yellow-600 text-white';
+      case 'resolved': return 'bg-green-600 text-white';
+      default: return 'bg-gray-600 text-white';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch(status) {
+      case 'new': return '🆕';
+      case 'in-progress': return '🔄';
+      case 'resolved': return '✅';
+      default: return '📋';
+    }
+  };
+
+  return (
+    <span className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full transition-all duration-300 hover:scale-110 ${getStatusColor(status)}`}>
+      {getStatusIcon(status)}
+      {status.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('-')}
+    </span>
+  );
+};
+
+// Severity Badge
+const SeverityBadge = ({ severity }) => {
+  const getSeverityColor = (severity) => {
+    switch(severity) {
+      case 'Critical': return 'bg-red-600 text-white';
+      case 'High': return 'bg-orange-600 text-white';
+      case 'Medium': return 'bg-yellow-600 text-white';
+      case 'Low': return 'bg-green-600 text-white';
+      default: return 'bg-gray-600 text-white';
+    }
+  };
+
+  const getSeverityIcon = (severity) => {
+    switch(severity) {
+      case 'Critical': return '🔥';
+      case 'High': return '⚠️';
+      case 'Medium': return '📢';
+      case 'Low': return '💚';
+      default: return '📋';
+    }
+  };
+
+  return (
+    <span className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full transition-all duration-300 hover:scale-110 ${getSeverityColor(severity)}`}>
+      {getSeverityIcon(severity)}
+      {severity}
+    </span>
+  );
+};
 
 function Gallery() {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [filters, setFilters] = useState({
-    status: 'All', category: 'All', severity: 'All', department: 'All', sortBy: 'Newest First'
+    status: 'All',
+    category: 'All',
+    severity: 'All',
+    sortBy: 'Newest First'
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -18,49 +114,6 @@ function Gallery() {
   const [likedIssues, setLikedIssues] = useState(new Set());
   const [viewCounts, setViewCounts] = useState({});
   const itemsPerPage = 9;
-  const navigate = useNavigate();
-
-  const departmentOptions = ['Public Works Department (PWD)', 'Solid Waste Management Department', 'Water Utilities Department', 'Electric Division', 'Public Nuisance Dept.'];
-
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribeAuth();
-  }, []);
-
-  const handleUpvote = async (issueId) => {
-    if (!user) {
-      setShowLoginModal(true);
-      return;
-    }
-    const issueRef = doc(db, 'issues', issueId);
-    try {
-      const issue = issues.find(i => i.id === issueId);
-      if (!issue) return;
-
-      const userHasVoted = issue.upvoters?.includes(user.uid);
-
-      if (userHasVoted) {
-        // Remove upvote
-        await updateDoc(issueRef, {
-          upvotes: increment(-1),
-          upvoters: arrayRemove(user.uid)
-        });
-      } else {
-        // Add upvote
-        await updateDoc(issueRef, {
-          upvotes: increment(1),
-          upvoters: arrayUnion(user.uid)
-        });
-      }
-      
-    } catch (error) {
-      console.error("Error upvoting issue:", error);
-    }
-  };
 
   useEffect(() => {
     const q = query(collection(db, 'issues'), orderBy('ts', 'desc'));
@@ -70,12 +123,22 @@ function Gallery() {
         issuesData.push({ id: doc.id, ...doc.data() });
       });
       setIssues(issuesData);
+      setLoading(false);
     });
 
-    return () => unsubscribe();
+    const savedLikes = localStorage.getItem('galleryLikes');
+    if (savedLikes) {
+      setLikedIssues(new Set(JSON.parse(savedLikes)));
+    }
+
+    const savedViews = localStorage.getItem('galleryViews');
+    if (savedViews) {
+      setViewCounts(JSON.parse(savedViews));
+    }
   }, []);
 
-  const handleLike = (issueId) => {
+  // Updated upvote logic
+  const handleUpvote = (issueId) => {
     const newLikedIssues = new Set(likedIssues);
     if (newLikedIssues.has(issueId)) {
       newLikedIssues.delete(issueId);
@@ -93,7 +156,9 @@ function Gallery() {
     localStorage.setItem('galleryViews', JSON.stringify(newViewCounts));
   };
 
-  const handleShare = async (issue) => {
+  const handleShare = async (e, issue) => {
+    e.preventDefault();
+    e.stopPropagation();
     const shareUrl = `${window.location.origin}/report/${issue.id}`;
     const shareText = `Check out this community issue: ${issue.desc}`;
     
@@ -108,7 +173,6 @@ function Gallery() {
         console.log('Error sharing:', error);
       }
     } else {
-      // Fallback: copy to clipboard
       navigator.clipboard.writeText(shareUrl);
       alert('Link copied to clipboard!');
     }
@@ -119,14 +183,12 @@ function Gallery() {
     const matchesSearch =
       issue.desc.toLowerCase().includes(searchLower) ||
       issue.type.toLowerCase().includes(searchLower) ||
-      (issue.department?.toLowerCase() || '').includes(searchLower) ||
       (issue.lat?.toFixed(5) + ', ' + issue.lng?.toFixed(5)).includes(searchLower);
 
     return (
       (filters.status === 'All' || issue.status === filters.status) &&
       (filters.category === 'All' || issue.type === filters.category) &&
       (filters.severity === 'All' || issue.severity === filters.severity) &&
-      (filters.department === 'All' || issue.department === filters.department) &&
       matchesSearch
     );
   }).sort((a, b) => {
@@ -137,7 +199,9 @@ function Gallery() {
       return a.ts?.toDate() - b.ts?.toDate();
     }
     if (filters.sortBy === 'Most Liked') {
-      return (likedIssues.has(b.id) ? 1 : 0) - (likedIssues.has(a.id) ? 1 : 0);
+      const aLiked = likedIssues.has(a.id) ? 1 : 0;
+      const bLiked = likedIssues.has(b.id) ? 1 : 0;
+      return bLiked - aLiked;
     }
     if (filters.sortBy === 'Most Viewed') {
       return (viewCounts[b.id] || 0) - (viewCounts[a.id] || 0);
@@ -183,104 +247,144 @@ function Gallery() {
       <div className="h-20"></div>
 
       <main className="container mx-auto p-4 max-w-7xl">
-        <h1 className="text-3xl font-bold text-center mt-8 mb-4">
-          Community Reports Gallery
-        </h1>
-        <p className="text-center text-gray-400 mb-8">
-          Explore all public reports and see the progress being made.
-        </p>
-
-        {/* Stats Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/10 p-6 rounded-lg shadow-lg text-center">
-            <h3 className="text-lg font-semibold mb-2">Total Reports</h3>
-            <p className="text-3xl font-bold text-blue-400">{issues.length}</p>
-          </div>
-          <div className="bg-white/10 p-6 rounded-lg shadow-lg text-center">
-            <h3 className="text-lg font-semibold mb-2">In Progress</h3>
-            <p className="text-3xl font-bold text-yellow-400">{issues.filter(i => i.status === 'in-progress').length}</p>
-          </div>
-          <div className="bg-white/10 p-6 rounded-lg shadow-lg text-center">
-            <h3 className="text-lg font-semibold mb-2">Resolved Issues</h3>
-            <p className="text-3xl font-bold text-green-400">{issues.filter(i => i.status === 'resolved').length}</p>
-          </div>
-          <div className="bg-white/10 p-6 rounded-lg shadow-lg text-center">
-            <h3 className="text-lg font-semibold mb-2">Community Support</h3>
-            <p className="text-3xl font-bold text-purple-400">0</p>
-          </div>
+        {/* Header */}
+        <div className="text-center mb-8 animate-fadeIn">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-4">
+            Community Reports Gallery
+          </h1>
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+            Explore all public reports, support your community, and track progress in real-time
+          </p>
         </div>
 
-        {/* Filter and Sort Bar */}
-        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-end mb-6 gap-4">
-          <div className="flex-1">
-            <label htmlFor="search-input" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Search</label>
-            <input
-              id="search-input"
-              type="text"
-              placeholder="Search by description or type..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm bg-white/80 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            />
+        {/* Interactive Stats Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+          <StatsCard
+            title="Total Reports"
+            value={issues.length}
+            color="text-blue-400"
+            icon="📊"
+          />
+          <StatsCard
+            title="In Progress"
+            value={issues.filter(i => i.status === 'in-progress').length}
+            color="text-yellow-400"
+            icon="🚧"
+            onClick={() => setFilters({...filters, status: 'in-progress'})}
+          />
+          <StatsCard
+            title="Resolved"
+            value={issues.filter(i => i.status === 'resolved').length}
+            color="text-green-400"
+            icon="✅"
+            onClick={() => setFilters({...filters, status: 'resolved'})}
+          />
+          <StatsCard
+            title="Community Upvotes"
+            value={Array.from(likedIssues).length}
+            color="text-purple-400"
+            icon="👍"
+          />
+        </div>
+
+        {/* Enhanced Filter and Search Section */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-white/10">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+            {/* Search Bar */}
+            <div className="flex-1 w-full">
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search reports by description, type, or location..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                />
+              </div>
+            </div>
+
+            {/* Filter Toggle */}
+            <div className="flex items-center gap-4">
+              <BubbleAnimation
+                onClick={() => setExpandedFilters(!expandedFilters)}
+                className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center gap-2"
+              >
+                <FaFilter />
+                {expandedFilters ? 'Hide Filters' : 'Show Filters'}
+              </BubbleAnimation>
+
+              <BubbleAnimation
+                onClick={clearFilters}
+                className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition"
+              >
+                Clear All
+              </BubbleAnimation>
+            </div>
           </div>
-          <div className="flex flex-wrap items-end justify-center space-x-2">
-            <div className="flex flex-col">
-              <label htmlFor="status-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-              <select
-                id="status-filter"
-                value={filters.status}
-                onChange={(e) => setFilters({...filters, status: e.target.value})}
-                className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm"
-              >
-                <option value="All">All</option>
-                <option value="new">Reported</option>
-                <option value="in-progress">In-Progress</option>
-                <option value="resolved">Resolved</option>
-              </select>
-            </div>
-            <div className="flex flex-col">
-              <label htmlFor="category-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-              <select
-                id="category-filter"
-                value={filters.category}
-                onChange={(e) => setFilters({...filters, category: e.target.value})}
-                className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm"
-              >
-                <option value="All">All</option>
-                <option>Pothole</option>
-                <option>Garbage</option>
-                <option>Water Leak</option>
-                <option>Streetlight Outage</option>
-                <option>Public Nuisance</option>
-                <option>Other</option>
-              </select>
-            </div>
-            <div className="flex flex-col">
-              <label htmlFor="severity-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Severity</label>
-              <select
-                id="severity-filter"
-                value={filters.severity}
-                onChange={(e) => setFilters({...filters, severity: e.target.value})}
-                className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm"
-              >
-                <option value="All">All</option>
-                <option>Low</option>
-                <option>Medium</option>
-                <option>High</option>
-                <option>Critical</option>
-              </select>
-            </div>
-            <div className="flex flex-col">
-              <label htmlFor="sort-by" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sort By</label>
-              <select
-                id="sort-by"
-                value={filters.sortBy}
-                onChange={(e) => setFilters({...filters, sortBy: e.target.value})}
-                className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm"
-              >
-                <option>Newest First</option>
-                <option>Oldest First</option>
-              </select>
+
+          {/* Expandable Filters */}
+          {expandedFilters && (
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-fadeIn">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters({...filters, status: e.target.value})}
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+                >
+                  <option value="All">All Status</option>
+                  <option value="new">Reported</option>
+                  <option value="in-progress">In-Progress</option>
+                  <option value="resolved">Resolved</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+                <select
+                  value={filters.category}
+                  onChange={(e) => setFilters({...filters, category: e.target.value})}
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+                >
+                  <option value="All">All Categories</option>
+                  <option>Pothole</option>
+                  <option>Garbage</option>
+                  <option>Water Leak</option>
+                  <option>Streetlight Outage</option>
+                  <option>Public Nuisance</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Severity</label>
+                <select
+                  value={filters.severity}
+                  onChange={(e) => setFilters({...filters, severity: e.target.value})}
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+                >
+                  <option value="All">All Severity</option>
+                  <option>Low</option>
+                  <option>Medium</option>
+                  <option>High</option>
+                  <option>Critical</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Sort By</label>
+                <select
+                  value={filters.sortBy}
+                  onChange={(e) => setFilters({...filters, sortBy: e.target.value})}
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+                >
+                  <option>Newest First</option>
+                  <option>Oldest First</option>
+                  <option>Most Liked</option>
+                  <option>Most Viewed</option>
+                </select>
+              </div>
             </div>
           )}
         </div>
@@ -295,74 +399,174 @@ function Gallery() {
           </div>
         </div>
 
-        {/* Reports Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Interactive Reports Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {currentIssues.length === 0 ? (
-            <p className="text-center text-gray-500 dark:text-gray-400 col-span-full">
-              No issues found with the selected filters.
-            </p>
+            <div className="col-span-full text-center py-12">
+              <div className="text-6xl mb-4">🔍</div>
+              <p className="text-gray-400 text-lg mb-4">No reports found with the current filters</p>
+              <BubbleAnimation
+                onClick={clearFilters}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition"
+              >
+                Clear Filters
+              </BubbleAnimation>
+            </div>
           ) : (
-            currentIssues.map((issue) => (
-              <div key={issue.id} className="bg-white/10 backdrop-blur-sm p-6 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-1">
-                <div className="flex items-center mb-4">
-                  <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full text-white ${getStatusColor(issue.status)}`}>
-                    {getStatusDisplay(issue.status)}
-                  </span>
-                  <span className="text-sm text-gray-400 ml-auto">
-                    {issue.ts ? new Date(issue.ts.toDate()).toLocaleDateString() : 'Unknown date'}
-                  </span>
-                </div>
-                <p className="text-gray-200 mb-2">{issue.desc}</p>
-                {issue.imageUrl && (
-                  <div className="mt-4">
-                    <img src={issue.imageUrl} alt="Issue photo" className="w-full h-48 object-cover rounded-lg" />
+            currentIssues.map((issue, index) => (
+              <Link 
+                to={`/report/${issue.id}`} 
+                key={issue.id} 
+                className="block"
+                onClick={() => handleView(issue.id)}
+              >
+                <div 
+                  className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-white/10 hover:border-white/20 group animate-fadeIn"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  {/* Header with badges and coordinates */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <div className="flex items-center gap-2">
+                      <StatusBadge status={issue.status} />
+                      <SeverityBadge severity={issue.severity} />
+                      <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold bg-purple-600 text-white rounded-full">
+                        📝 {issue.type}
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-400">
+                      📍 {issue.lat?.toFixed(5)}, {issue.lng?.toFixed(5)}
+                    </span>
                   </div>
-                )}
-                <div className="mt-4 flex justify-between items-center">
-                  <div className="flex items-center space-x-2 text-gray-400">
-                    <span>0 upvotes</span>
+
+                  {/* Description */}
+                  <p className="text-gray-200 mb-4 line-clamp-3 group-hover:text-white transition-colors">
+                    {issue.desc}
+                  </p>
+
+                  {/* Image with overlay - no hover text */}
+                  {issue.imageUrl && (
+                    <div className="relative mb-4 overflow-hidden rounded-xl group/image">
+                      <img 
+                        src={issue.imageUrl} 
+                        alt="Issue" 
+                        className="w-full h-48 object-cover transition-transform duration-500 group-hover/image:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-black/10 group-hover/image:bg-black/30 transition-all duration-300"></div>
+                    </div>
+                  )}
+
+                  {/* Interactive Footer */}
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-4 text-gray-400">
+                      <BubbleAnimation
+                        onClick={(e) => { e.preventDefault(); handleUpvote(issue.id); }}
+                        className="flex items-center gap-1 transition-all duration-300 hover:text-blue-500"
+                      >
+                        <FaArrowAltCircleUp className={`text-xl ${likedIssues.has(issue.id) ? 'text-blue-500' : 'text-gray-400'}`} />
+                        <span className="text-sm font-semibold">
+                          {likedIssues.has(issue.id) ? 1 : 0}
+                        </span>
+                      </BubbleAnimation>
+                      
+                      <div className="flex items-center gap-1">
+                        <FaShare />
+                        <span className="text-sm">Share</span>
+                      </div>
+                    </div>
                   </div>
-                  <Link 
-                    to={`/report/${issue.id}`}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-sm transition"
-                  >
-                    View Details
-                  </Link>
                 </div>
-              );
-            })
+              </Link>
+            ))
           )}
         </div>
 
-        {/* Pagination */}
+        {/* Enhanced Pagination */}
         {totalPages > 1 && (
-          <div className="mt-8 flex justify-center items-center space-x-2">
-            <button 
-              onClick={() => handlePageChange(currentPage - 1)} 
-              disabled={currentPage === 1}
-              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg disabled:opacity-50"
-            >
-              <FaArrowLeft />
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => handlePageChange(i + 1)}
-                className={`px-4 py-2 rounded-lg text-sm ${currentPage === i + 1 ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-t border-white/10">
+            <div className="text-gray-400 text-sm">
+              Page {currentPage} of {totalPages}
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <BubbleAnimation
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl disabled:opacity-50 transition flex items-center gap-2"
               >
-                {i + 1}
-              </button>
-            ))}
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg disabled:opacity-50"
-            >
-              <FaArrowRight />
-            </button>
+                <FaArrowLeft />
+                Previous
+              </BubbleAnimation>
+
+              <div className="flex space-x-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = i + 1;
+                  return (
+                    <BubbleAnimation
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-4 py-2 rounded-xl text-sm transition ${
+                        currentPage === pageNum 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-gray-700 hover:bg-gray-600 text-white'
+                      }`}
+                    >
+                      {pageNum}
+                    </BubbleAnimation>
+                  );
+                })}
+              </div>
+
+              <BubbleAnimation
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl disabled:opacity-50 transition flex items-center gap-2"
+              >
+                Next
+                <FaArrowRight />
+              </BubbleAnimation>
+            </div>
           </div>
         )}
       </main>
+
+      {/* Add CSS animations */}
+      <style jsx>{`
+        @keyframes bubble {
+          0% {
+            transform: scale(0);
+            opacity: 0.7;
+          }
+          50% {
+            opacity: 0.4;
+          }
+          100% {
+            transform: scale(4);
+            opacity: 0;
+          }
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-bubble {
+          animation: bubble 0.6s ease-out forwards;
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+        .line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
     </div>
   );
 }

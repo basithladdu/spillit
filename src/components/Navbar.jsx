@@ -1,9 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { 
-  FaMap, FaChartBar, FaUsers, FaUser, 
-  FaSignInAlt, FaSignOutAlt, FaQuestionCircle, FaStar 
+import {
+  FaMap, FaChartBar, FaUsers, FaUser,
+  FaSignInAlt, FaSignOutAlt, FaQuestionCircle, FaStar
 } from 'react-icons/fa';
 
 // Bubble animation component
@@ -60,56 +60,78 @@ function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-sm text-white shadow-lg flex items-center justify-between px-4 py-3 font-semibold border-b border-gray-800 dark:bg-gray-900">
-      <div className="flex items-center space-x-3">
-        <Link to="/" className="text-2xl font-extrabold tracking-tight drop-shadow flex items-center gap-2">
-          <FaTools className="text-blue-500" />
-          <span>Fixit</span>
-        </Link>
-        <Link to="/" className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1" title="Map View">
-          <FaMap /> <span className="hidden sm:inline">Map</span>
-        </Link>
-        <Link to="/gallery" className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1" title="Gallery">
-          <FaUsers /> <span className="hidden sm:inline">Gallery</span>
-        </Link>
-        <Link to="/team" className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1" title="Team">
-          <FaUsers /> <span className="hidden sm:inline">Team</span>
-        </Link>
-        <Link to="/help" className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1" title="Help">
-          <FaQuestionCircle /> <span className="hidden sm:inline">Help</span>
-        </Link>
-        <Link to="/leaderboard" className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1" title="Leaderboard">
-          <FaStar /> <span className="hidden sm:inline">Leaderboard</span>
-        </Link>
-        
-        {currentUser && (
-          <Link to="/dashboard" className="text-base font-medium no-underline px-3 py-1 rounded hover:bg-blue-800 transition flex items-center gap-1" title="Dashboard">
-            <FaChartBar /> <span className="hidden sm:inline">Dashboard</span>
+    <nav className="fixed top-0 left-0 right-0 z-[1000] text-white flex items-center justify-between px-4 py-3 font-semibold bg-gray-800/90 backdrop-blur-sm">
+      {/* Left links */}
+      <div className="flex items-center space-x-4">
+        <BubbleAnimation
+          className="text-base font-medium no-underline px-3 py-2 rounded-2xl bg-gray-900 hover:bg-blue-800 transition flex items-center gap-1"
+          title="Map View"
+        >
+          <Link to="/" className="flex items-center gap-1">
+            <FaMap /> <span className="hidden sm:inline p-1 text-lg">Map</span>
           </Link>
-          
+        </BubbleAnimation>
+
+        <BubbleAnimation
+          className="text-base font-medium no-underline px-3 py-2 rounded-2xl bg-gray-900 hover:bg-blue-800 transition flex items-center gap-1"
+          title="Gallery"
+        >
+          <Link to="/gallery" className="flex items-center gap-1">
+            <FaUsers /> <span className="hidden sm:inline p-1 text-lg">Gallery</span>
+          </Link>
+        </BubbleAnimation>
+
+        <BubbleAnimation
+          className="text-base font-medium no-underline px-3 py-2 rounded-2xl bg-gray-900 hover:bg-blue-800 transition flex items-center gap-1"
+          title="Help"
+        >
+          <Link to="/help" className="flex items-center gap-1">
+            <FaQuestionCircle /> <span className="hidden sm:inline p-1 text-lg">Help</span>
+          </Link>
+        </BubbleAnimation>
+
+        <BubbleAnimation
+          className="text-base font-medium no-underline px-3 py-2 rounded-2xl bg-gray-900 hover:bg-blue-800 transition flex items-center gap-1"
+          title="Leaderboard"
+        >
+          <Link to="/leaderboard" className="flex items-center gap-1">
+            <FaStar /> <span className="hidden sm:inline p-1 text-lg">Leaderboard</span>
+          </Link>
+        </BubbleAnimation>
+
+        {/* SIH2025 button - KEPT */}
+        <BubbleAnimation
+          className="text-base font-medium no-underline px-3 py-2 rounded-2xl bg-gray-900 hover:bg-blue-800 transition flex items-center gap-1"
+          title="SIH 2025"
+        >
+          <Link to="/SIH2025" className="flex items-center gap-1">
+            <FaStar /> <span className="hidden sm:inline p-1 text-lg">SIH 2025</span>
+          </Link>
+        </BubbleAnimation>
+
+        {currentUser && (
+          <BubbleAnimation
+            className="text-base font-medium no-underline px-3 py-2 rounded-2xl bg-gray-900 hover:bg-blue-800 transition flex items-center gap-1"
+            title="Dashboard"
+          >
+            <Link to="/dashboard" className="flex items-center gap-1">
+              <FaChartBar /> <span className="hidden sm:inline p-1 text-lg">Dashboard</span>
+            </Link>
+          </BubbleAnimation>
         )}
       </div>
 
-      {/* Center Branding */}
+      {/* Center Branding - REMOVED */}
+      {/* The following div has been removed:
       <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-3">
         <span className="font-extrabold text-2xl sm:text-3xl bg-gradient-to-r from-orange-400 to-green-600 text-transparent bg-clip-text">
           SIH 2025
         </span>
-        {/* Sun-like SVG */}
         <svg className="h-8 w-8 sm:h-10 sm:w-10 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="5" fill="currentColor"/>
-          <g stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-            <line x1="12" y1="2" x2="12" y2="4"/>
-            <line x1="12" y1="20" x2="12" y2="22"/>
-            <line x1="4" y1="12" x2="6" y2="12"/>
-            <line x1="18" y1="12" x2="20" y2="12"/>
-            <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/>
-            <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/>
-            <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/>
-            <line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/>
-          </g>
+          ...
         </svg>
       </div>
+      */}
 
       {/* Right Side */}
       <div className="flex items-center space-x-4">
@@ -142,7 +164,7 @@ function Navbar() {
                 <FaUser className="text-xl" />
                 <span className="text-lg">{currentUser.email}</span>
               </div>
-              <BubbleAnimation 
+              <BubbleAnimation
                 onClick={handleLogout}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-2xl transition flex items-center gap-2"
               >

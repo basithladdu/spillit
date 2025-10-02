@@ -13,10 +13,10 @@ import Report from "./pages/Report";
 import Gallery from "./pages/Gallery";
 import Help from "./pages/Help";
 import Leaderboard from "./pages/Leaderboard";
-import SIH2025 from "./pages/SIH2025";
 
 import "./App.css";
 import "leaflet/dist/leaflet.css";
+import SIH2025 from "./pages/SIH2025";
 
 function App() {
   const location = useLocation();
@@ -36,7 +36,7 @@ function App() {
           <Route path="/help" element={<Help />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/team" element={<Team />} />
-          <Route path="/SIH2025" element={<SIH2025 />} />
+          <Route path="/sih2025" element={<SIH2025 />} />
 
           <Route 
             path="/dashboard" 

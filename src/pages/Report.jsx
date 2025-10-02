@@ -17,6 +17,8 @@ function Report() {
   const [map, setMap] = useState(null);
   const [user, setUser] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  // State to track upvote status for the current user
+  const [isUpvoted, setIsUpvoted] = useState(false);
 
   useEffect(() => {
     const auth = getAuth();
@@ -40,6 +42,9 @@ function Report() {
 
         if (docSnap.exists()) {
           setReport({ id: docSnap.id, ...docSnap.data() });
+          // Check localStorage for user's upvote status
+          const upvotedReports = JSON.parse(localStorage.getItem('upvotedReports')) || [];
+          setIsUpvoted(upvotedReports.includes(id));
         } else {
           setError(true);
         }
@@ -106,10 +111,25 @@ function Report() {
       setShowLoginModal(true);
       return; 
     }
+
     const issueRef = doc(db, 'issues', id);
+    const upvotedReports = JSON.parse(localStorage.getItem('upvotedReports')) || [];
+
     try {
-      await updateDoc(issueRef, { upvotes: increment(1) });
-      setReport(prev => ({ ...prev, upvotes: (prev.upvotes || 0) + 1 }));
+      if (isUpvoted) {
+        // User is un-upvoting
+        await updateDoc(issueRef, { upvotes: increment(-1) });
+        setReport(prev => ({ ...prev, upvotes: (prev.upvotes || 0) - 1 }));
+        const newUpvotedReports = upvotedReports.filter(reportId => reportId !== id);
+        localStorage.setItem('upvotedReports', JSON.stringify(newUpvotedReports));
+        setIsUpvoted(false);
+      } else {
+        // User is upvoting
+        await updateDoc(issueRef, { upvotes: increment(1) });
+        setReport(prev => ({ ...prev, upvotes: (prev.upvotes || 0) + 1 }));
+        localStorage.setItem('upvotedReports', JSON.stringify([...upvotedReports, id]));
+        setIsUpvoted(true);
+      }
     } catch (error) {
       console.error("Error upvoting issue:", error);
     }
@@ -196,10 +216,13 @@ function Report() {
           </div>
         )}
         <div className="mt-4 flex justify-center">
-            <button onClick={handleUpvote} className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition text-lg">
-                <FaThumbsUp />
-                <span>Upvote ({report.upvotes || 0})</span>
-            </button>
+          <button 
+            onClick={handleUpvote} 
+            className={`flex items-center space-x-2 px-6 py-3 rounded-lg transition text-lg font-semibold ${isUpvoted ? 'bg-blue-600 text-white' : 'bg-gray-400 hover:bg-gray-500 text-gray-800'}`}
+          >
+            <FaThumbsUp />
+            <span>{isUpvoted ? 'Upvoted' : 'Upvote'} ({report.upvotes || 0})</span>
+          </button>
         </div>
       </div>
       {showLoginModal && (
