@@ -8,24 +8,24 @@ function Team() {
     },
     {
       name: 'Awaiz',
-      role: 'Operations & Founding Engineer'
+      role: 'Co-Developer'
     },
-    {
-      name: 'Kabeer',
-      role: 'Founding Engineer'
-    },
-    {
-      name: 'Musa',
-      role: 'Founding Engineer'
-    },
+    // {
+    //   name: 'Kabeer',
+    //   role: 'Founding Engineer'
+    // },
+    // {
+    //   name: 'Musa',
+    //   role: 'Founding Engineer'
+    // },
     {
       name: 'Mubeen Taj',
       role: 'Co-Developer'
     },
-    {
-      name: 'Muqeeth',
-      role: 'Marketing & PR'
-    }
+    // {
+    //   name: 'Muqeeth',
+    //   role: 'Marketing & PR'
+    // }
   ];
 
   return (
