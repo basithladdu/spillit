@@ -17,7 +17,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { FaMap, FaChartBar, FaUsers, FaSignInAlt, FaSignOutAlt, FaTools, FaSearch, FaQuestionCircle, FaStar, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import ReportCard from './ReportCard'; // Adjust path if needed
-import { usePotholeDetection } from '../hooks/usePotholeDetection'; // Import the hook
 // ✅ Proper Leaflet imports
 import L from "leaflet";
 // "leaflet/dist/leaflet.css" is now imported in App.jsx
@@ -123,10 +122,7 @@ function Home() {
         return { color: 'bg-gray-500', icon: <FaQuestionCircle className="inline mr-2" /> };
     }
   };
-const { 
-        loading: mlLoading,         // Renamed to avoid conflict with your existing 'loading' state
-        detectPotholes 
-    } = usePotholeDetection(); 
+
   // ✅ Initialize map safely
   useEffect(() => {
     if (mapRef.current && !map) {
@@ -648,17 +644,12 @@ const {
             <Link to="/leaderboard" className="flex items-center gap-1">
               <FaStar /> <span className="hidden sm:inline p-1 text-lg">Leaderboard</span>
             </Link>
-          </BubbleAnimation>      <BubbleAnimation className="text-base font-medium no-underline px-3 py-1 bg-gray-900 p-2 rounded-2xl hover:bg-blue-800 transition flex items-center gap-1" title="Leaderboard">
-            <Link to="/sih2025" className="flex items-center gap-1">
-              <FaStar /> <span className="hidden sm:inline p-1 text-lg">SIH 2025</span>
-            </Link>
           </BubbleAnimation>
              <BubbleAnimation className="text-base font-medium no-underline px-3 py-1 bg-gray-900 p-2 rounded-2xl hover:bg-blue-800 transition flex items-center gap-1" title="Leaderboard">
-            <Link to="/team" className="flex items-center gap-1">
-              <FaStar /> <span className="hidden sm:inline p-1 text-lg">Team</span>
+            <Link to="/sih2025" className="flex items-center gap-1">
+              <FaStar /> <span className="hidden sm:inline p-1 text-lg">SIH2025</span>
             </Link>
           </BubbleAnimation>
-          
           {currentUser && (
             <BubbleAnimation className="text-base font-medium no-underline px-3 py-1 bg-gray-900 p-2 rounded-2xl hover:bg-blue-800 transition flex items-center gap-1" title="Dashboard">
               <Link to="/dashboard" className="flex items-center gap-1">
