@@ -1,244 +1,308 @@
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../utils/firebase';
-import NotFound from './NotFound';
-import { FaThumbsUp } from 'react-icons/fa';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-
+import { motion, AnimatePresence } from 'framer-motion';
 import L from "leaflet";
+import { 
+  FaMapMarkerAlt, FaCalendarAlt, FaShareAlt, FaHeart, FaRegHeart, 
+  FaExclamationTriangle, FaHashtag, FaLayerGroup, FaArrowLeft, FaLock 
+} from 'react-icons/fa';
+import { MdCheckCircle, MdWarning, MdError, MdPending } from 'react-icons/md';
+
+// --- Configuration & Helpers ---
+
+const SEVERITY_CONFIG = {
+  Critical: { color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', shadow: 'shadow-red-500/20', icon: MdError },
+  High: { color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20', shadow: 'shadow-orange-500/20', icon: MdWarning },
+  Medium: { color: 'text-yellow-400', bg: 'bg-yellow-400/10', border: 'border-yellow-400/20', shadow: 'shadow-yellow-400/20', icon: FaExclamationTriangle },
+  Low: { color: 'text-emerald-400', bg: 'bg-emerald-400/10', border: 'border-emerald-400/20', shadow: 'shadow-emerald-400/20', icon: MdCheckCircle },
+  Default: { color: 'text-gray-400', bg: 'bg-gray-700/30', border: 'border-gray-600/30', shadow: 'shadow-gray-500/10', icon: FaLayerGroup }
+};
+
+const STATUS_CONFIG = {
+  resolved: { color: 'text-emerald-400', bg: 'bg-emerald-500/20', label: 'Resolved' },
+  'in-progress': { color: 'text-blue-400', bg: 'bg-blue-500/20', label: 'In Progress' },
+  new: { color: 'text-amber-400', bg: 'bg-amber-500/20', label: 'Open Report' }
+};
+
+// --- Sub-Components ---
+
+const InfoBlock = ({ label, value, icon, mono = false }) => (
+  <div className="flex flex-col p-3 rounded-xl bg-white/5 border border-white/5 hover:border-cyan-500/30 transition-colors">
+    <div className="flex items-center gap-2 text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">
+      {icon} <span>{label}</span>
+    </div>
+    <div className={`text-gray-200 ${mono ? 'font-mono text-sm' : 'text-base font-medium'}`}>
+      {value}
+    </div>
+  </div>
+);
 
 function Report() {
   const { id } = useParams();
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const mapRef = useRef(null);
-  const [map, setMap] = useState(null);
   const [user, setUser] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  // State to track upvote status for the current user
   const [isUpvoted, setIsUpvoted] = useState(false);
+  
+  const mapRef = useRef(null);
+  const [map, setMap] = useState(null);
 
+  // --- Auth & Data Fetching ---
   useEffect(() => {
     const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
+    const unsubscribe = onAuthStateChanged(auth, setUser);
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (!id) {
-      setLoading(false);
-      setError(true);
-      return;
-    }
+    if (!id) return setError(true);
 
     const fetchReport = async () => {
       try {
-        const docRef = doc(db, 'issues', id);
-        const docSnap = await getDoc(docRef);
-
+        const docSnap = await getDoc(doc(db, 'issues', id));
         if (docSnap.exists()) {
           setReport({ id: docSnap.id, ...docSnap.data() });
-          // Check localStorage for user's upvote status
-          const upvotedReports = JSON.parse(localStorage.getItem('upvotedReports')) || [];
-          setIsUpvoted(upvotedReports.includes(id));
+          const upvotedList = JSON.parse(localStorage.getItem('upvotedReports')) || [];
+          setIsUpvoted(upvotedList.includes(id));
         } else {
           setError(true);
         }
       } catch (e) {
-        console.error("Error fetching document:", e);
+        console.error(e);
         setError(true);
       }
       setLoading(false);
     };
-
     fetchReport();
   }, [id]);
 
+  // --- Map Initialization ---
   useEffect(() => {
-    if (report && !map) {
-      if (mapRef.current._leaflet_id) {
-        mapRef.current._leaflet_id = null;
-      }
-      const mapInstance = L.map(mapRef.current, { dragging: true }).setView([report.lat, report.lng], 16);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(mapInstance);
-      setMap(mapInstance);
-
-      const icons = {
-        'Low': L.icon({
-          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
-          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-          iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
-        }),
-        'Medium': L.icon({
-          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png',
-          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-          iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
-        }),
-        'High': L.icon({
-          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-          iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
-        }),
-        'Critical': L.icon({
-          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png',
-          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-          iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
-        }),
-      };
+    if (report && !map && mapRef.current) {
+      if (mapRef.current._leaflet_id) mapRef.current._leaflet_id = null;
       
-      const icon = icons[report.severity] || icons['Low'];
-      L.marker([report.lat, report.lng], { icon: icon }).addTo(mapInstance).bindPopup(report.type).openPopup();
+      const mapInstance = L.map(mapRef.current, { 
+        zoomControl: false, 
+        dragging: !L.Browser.mobile, 
+        tap: !L.Browser.mobile 
+      }).setView([report.lat, report.lng], 15);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(mapInstance);
+
+      // Custom Marker Logic (simplified for theme)
+      const markerColor = report.severity === 'Critical' ? 'red' : report.severity === 'High' ? 'orange' : report.severity === 'Medium' ? 'yellow' : 'green';
+      const icon = L.icon({
+        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${markerColor}.png`,
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
+      });
+
+      L.marker([report.lat, report.lng], { icon }).addTo(mapInstance)
+        .bindPopup(`<b style="color:black">${report.type}</b>`).openPopup();
+      
+      setMap(mapInstance);
     }
   }, [report, map]);
 
+  // --- Handlers ---
   const handleCopyUrl = () => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-      alert('URL copied to clipboard!');
-    }).catch(err => {
-      console.error('Could not copy URL:', err);
-    });
+    navigator.clipboard.writeText(window.location.href);
+    alert('Link copied to clipboard!'); // Replace with toast in production
   };
 
   const handleUpvote = async () => {
-    if (!user) {
-      setShowLoginModal(true);
-      return; 
-    }
-
+    if (!user) return setShowLoginModal(true);
+    
     const issueRef = doc(db, 'issues', id);
-    const upvotedReports = JSON.parse(localStorage.getItem('upvotedReports')) || [];
-
+    const upvotedList = JSON.parse(localStorage.getItem('upvotedReports')) || [];
+    
     try {
       if (isUpvoted) {
-        // User is un-upvoting
         await updateDoc(issueRef, { upvotes: increment(-1) });
-        setReport(prev => ({ ...prev, upvotes: (prev.upvotes || 0) - 1 }));
-        const newUpvotedReports = upvotedReports.filter(reportId => reportId !== id);
-        localStorage.setItem('upvotedReports', JSON.stringify(newUpvotedReports));
+        setReport(p => ({ ...p, upvotes: (p.upvotes || 0) - 1 }));
+        localStorage.setItem('upvotedReports', JSON.stringify(upvotedList.filter(rid => rid !== id)));
         setIsUpvoted(false);
       } else {
-        // User is upvoting
         await updateDoc(issueRef, { upvotes: increment(1) });
-        setReport(prev => ({ ...prev, upvotes: (prev.upvotes || 0) + 1 }));
-        localStorage.setItem('upvotedReports', JSON.stringify([...upvotedReports, id]));
+        setReport(p => ({ ...p, upvotes: (p.upvotes || 0) + 1 }));
+        localStorage.setItem('upvotedReports', JSON.stringify([...upvotedList, id]));
         setIsUpvoted(true);
       }
-    } catch (error) {
-      console.error("Error upvoting issue:", error);
-    }
+    } catch (err) { console.error(err); }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 dark:border-white"></div>
-      </div>
-    );
-  }
+  // --- Render Logic ---
+  if (loading) return (
+    <div className="min-h-screen bg-[#0A0A1E] flex items-center justify-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-500"></div>
+    </div>
+  );
 
-  if (error || !report) {
-    return <NotFound />;
-  }
+  if (error || !report) return (
+    <div className="min-h-screen bg-[#0A0A1E] flex flex-col items-center justify-center text-white">
+      <h1 className="text-4xl font-bold text-red-500 mb-4">404</h1>
+      <p className="text-gray-400 mb-6">Report not found or deleted.</p>
+      <Link to="/" className="px-6 py-2 bg-cyan-600 rounded-full hover:bg-cyan-500 transition">Go Home</Link>
+    </div>
+  );
 
-  const timestamp = report.ts ? new Date(report.ts.toDate()).toLocaleString() : 'N/A';
-
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'Low': return 'bg-green-500';
-      case 'Medium': return 'bg-yellow-500';
-      case 'High': return 'bg-red-500';
-      case 'Critical': return 'bg-purple-500';
-      default: return 'bg-gray-500';
-    }
-  };
+  const sevTheme = SEVERITY_CONFIG[report.severity] || SEVERITY_CONFIG.Default;
+  const statTheme = STATUS_CONFIG[report.status] || STATUS_CONFIG.new;
+  const SeverityIcon = sevTheme.icon;
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl text-center">
-      <div className="h-20"></div>
-      <h1 className="text-3xl font-bold text-gray-800 dark:text-white mt-8 mb-4">
-        Report Details
-      </h1>
+    <div className="min-h-screen bg-[#0A0A1E] text-gray-200 font-sans selection:bg-cyan-500/30 pb-20">
       
-      <div className="bg-white/80 dark:bg-gray-900 p-8 rounded-xl shadow-lg space-y-6">
-        <div ref={mapRef} style={{ height: "300px", width: "100%" }} className="rounded-lg shadow-md border border-gray-200 dark:border-gray-700"></div>
+      {/* --- Background Glow --- */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-24 relative z-10">
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-          <div className="flex items-center space-x-2">
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Report ID:</span>
-            <span className="font-mono text-gray-900 dark:text-white break-all">{report.id}</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Share URL:</span>
-            <button onClick={handleCopyUrl} className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition">
-              Copy URL
-            </button>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Type:</span>
-            <span className="text-gray-900 dark:text-white">{report.type}</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Severity:</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-bold text-white ${getSeverityColor(report.severity)}`}>
-              {report.severity}
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Status:</span>
-            <span className="text-gray-900 dark:text-white">{report.status}</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Reported On:</span>
-            <span className="text-gray-900 dark:text-white">{timestamp}</span>
-          </div>
-          <div className="col-span-1 md:col-span-2">
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Coordinates:</span>
-            <span className="text-gray-900 dark:text-white">{report.lat?.toFixed(5)}, {report.lng?.toFixed(5)}</span>
-          </div>
-          <div className="col-span-1 md:col-span-2">
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Description:</span>
-            <p className="text-gray-900 dark:text-white mt-1 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-inner">
-              {report.desc}
-            </p>
-          </div>
-        </div>
-        {report.imageUrl && (
-          <div className="col-span-1 md:col-span-2">
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Photo:</span>
-            <img src={report.imageUrl} alt="Issue photo" className="mt-2 rounded-lg object-cover w-full shadow-md" />
-          </div>
-        )}
-        <div className="mt-4 flex justify-center">
-          <button 
-            onClick={handleUpvote} 
-            className={`flex items-center space-x-2 px-6 py-3 rounded-lg transition text-lg font-semibold ${isUpvoted ? 'bg-blue-600 text-white' : 'bg-gray-400 hover:bg-gray-500 text-gray-800'}`}
+        {/* --- Back Nav --- */}
+        <Link to="/gallery" className="inline-flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition-colors mb-6 group">
+          <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" /> Back to Gallery
+        </Link>
+
+        {/* --- Main Grid --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8">
+          
+          {/* --- Left Column: Visuals --- */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}
+            className="space-y-6"
           >
-            <FaThumbsUp />
-            <span>{isUpvoted ? 'Upvoted' : 'Upvote'} ({report.upvotes || 0})</span>
-          </button>
+            {/* Image Card */}
+            <div className="bg-[#0F172A]/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden shadow-2xl relative group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
+              {report.imageUrl ? (
+                <img 
+                  src={report.imageUrl} 
+                  alt="Evidence" 
+                  className="w-full h-80 md:h-96 object-cover transition-transform duration-700 group-hover:scale-105" 
+                />
+              ) : (
+                <div className="w-full h-80 flex items-center justify-center bg-black/40 text-gray-500">No Image Provided</div>
+              )}
+              
+              {/* Overlay Badge */}
+              <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2">
+                <FaHashtag className="text-cyan-500" />
+                <span className="font-mono text-xs text-white">{report.id.substring(0,8)}</span>
+              </div>
+            </div>
+
+            {/* Map Card */}
+            <div className="bg-[#0F172A]/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden shadow-lg h-64 relative">
+               <div ref={mapRef} className="w-full h-full z-0 filter brightness-[0.85] contrast-[1.1]" />
+               <div className="absolute inset-0 pointer-events-none border-[3px] border-[#0F172A]/50 rounded-2xl z-10"></div>
+            </div>
+          </motion.div>
+
+          {/* --- Right Column: Data --- */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
+            className="flex flex-col gap-6"
+          >
+            {/* Header Card */}
+            <div className="bg-[#0F172A]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+               {/* Decorative Severity Glow */}
+               <div className={`absolute -top-20 -right-20 w-40 h-40 rounded-full blur-[60px] opacity-20 ${sevTheme.bg.replace('/10', '')}`}></div>
+
+               <div className="flex justify-between items-start mb-6">
+                 <div>
+                   <div className="flex items-center gap-3 mb-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase border ${sevTheme.bg} ${sevTheme.color} ${sevTheme.border} flex items-center gap-1.5`}>
+                         <SeverityIcon /> {report.severity}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase border ${statTheme.bg} ${statTheme.color} border-transparent`}>
+                         {statTheme.label}
+                      </span>
+                   </div>
+                   <h1 className="text-3xl font-bold text-white">{report.type}</h1>
+                 </div>
+                 
+                 {/* Upvote Big Button */}
+                 <button 
+                   onClick={handleUpvote}
+                   className={`flex flex-col items-center justify-center w-16 h-16 rounded-2xl border transition-all ${isUpvoted ? 'bg-pink-500/10 border-pink-500 text-pink-500 shadow-[0_0_20px_rgba(236,72,153,0.3)]' : 'bg-white/5 border-white/10 text-gray-400 hover:border-pink-500/50 hover:text-pink-400'}`}
+                 >
+                    {isUpvoted ? <FaHeart className="text-xl mb-1" /> : <FaRegHeart className="text-xl mb-1" />}
+                    <span className="text-xs font-bold">{report.upvotes || 0}</span>
+                 </button>
+               </div>
+
+               <div className="mb-8">
+                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Description</h3>
+                  <p className="text-gray-300 leading-relaxed bg-black/20 p-4 rounded-xl border border-white/5 text-sm">
+                    {report.desc}
+                  </p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                  <InfoBlock 
+                    icon={<FaMapMarkerAlt />} label="Coordinates" mono 
+                    value={`${report.lat.toFixed(5)}, ${report.lng.toFixed(5)}`} 
+                  />
+                  <InfoBlock 
+                    icon={<FaCalendarAlt />} label="Reported" 
+                    value={report.ts ? new Date(report.ts.toDate()).toLocaleDateString() : 'Unknown'} 
+                  />
+               </div>
+
+               {/* Action Footer */}
+               <div className="mt-8 pt-6 border-t border-white/5 flex gap-4">
+                  <button 
+                    onClick={handleCopyUrl}
+                    className="flex-1 py-3 bg-cyan-600/10 border border-cyan-500/30 text-cyan-400 rounded-xl font-bold hover:bg-cyan-600 hover:text-black hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all flex items-center justify-center gap-2"
+                  >
+                     <FaShareAlt /> Share Report
+                  </button>
+               </div>
+            </div>
+          </motion.div>
         </div>
       </div>
-      {showLoginModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowLoginModal(false)} />
-          <div className="bg-white dark:bg-gray-900 p-8 rounded-lg shadow-xl max-w-sm w-full relative text-center">
-            <h2 className="text-xl font-bold mb-4 dark:text-white">Sign In to Upvote</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">You need to be signed in to show your support.</p>
-            <div className="flex flex-col gap-4">
-              <Link to="/login" className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition">Login</Link>
-              <Link to="/register" className="w-full px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded transition">Register</Link>
-            </div>
-            <button onClick={() => setShowLoginModal(false)} className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl font-bold">&times;</button>
-          </div>
-        </div>
-      )}
+
+      {/* --- Login Modal --- */}
+      <AnimatePresence>
+        {showLoginModal && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={() => setShowLoginModal(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-[#0F172A] border border-white/10 p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl relative overflow-hidden"
+            >
+               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 to-purple-500"></div>
+               <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                  <FaLock size={24} />
+               </div>
+               <h2 className="text-2xl font-bold text-white mb-2">Access Required</h2>
+               <p className="text-gray-400 mb-6 text-sm">You must be logged in to vote on community issues.</p>
+               
+               <div className="space-y-3">
+                  <Link to="/login" className="block w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold rounded-xl hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
+                     Login Now
+                  </Link>
+                  <button onClick={() => setShowLoginModal(false)} className="block w-full py-3 text-gray-400 hover:text-white transition-colors text-sm">
+                     Cancel
+                  </button>
+               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

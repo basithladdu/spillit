@@ -1,134 +1,160 @@
 import React from 'react';
-import { FaIdBadge, FaMapMarkerAlt, FaCalendarAlt, FaPaperclip, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { 
+  FaIdCard, FaMapMarkerAlt, FaCalendarAlt, FaClipboardList, 
+  FaTimes, FaCheckCircle, FaExclamationTriangle, FaLayerGroup 
+} from 'react-icons/fa';
+import { MdError, MdWarning, MdCheckCircle } from 'react-icons/md';
 
-// Helper function to get style based on severity
-const getSeverityStyles = (severity) => {
-    switch (severity) {
-        case 'Critical':
-            return { color: 'text-red-600', badge: 'bg-red-100 text-red-800', icon: <FaExclamationTriangle className="inline mr-2" /> };
-        case 'High':
-            return { color: 'text-orange-600', badge: 'bg-orange-100 text-orange-800', icon: <FaExclamationTriangle className="inline mr-2" /> };
-        case 'Medium':
-            return { color: 'text-yellow-600', badge: 'bg-yellow-100 text-yellow-800', icon: <FaExclamationTriangle className="inline mr-2" /> };
-        case 'Low':
-            return { color: 'text-green-600', badge: 'bg-green-100 text-green-800', icon: <FaCheckCircle className="inline mr-2" /> };
-        default:
-            return { color: 'text-gray-600', badge: 'bg-gray-100 text-gray-800', icon: <FaCheckCircle className="inline mr-2" /> };
-    }
+// --- Helper: Severity Styles (Neon Theme) ---
+const getSeverityConfig = (severity) => {
+  switch (severity) {
+    case 'Critical': 
+      return { 
+        color: 'text-red-500', 
+        border: 'border-red-500/50', 
+        bg: 'bg-red-500/10', 
+        shadow: 'shadow-[0_0_20px_rgba(239,68,68,0.3)]',
+        icon: <MdError />
+      };
+    case 'High': 
+      return { 
+        color: 'text-orange-500', 
+        border: 'border-orange-500/50', 
+        bg: 'bg-orange-500/10', 
+        shadow: 'shadow-[0_0_20px_rgba(249,115,22,0.3)]',
+        icon: <MdWarning />
+      };
+    case 'Medium': 
+      return { 
+        color: 'text-yellow-400', 
+        border: 'border-yellow-400/50', 
+        bg: 'bg-yellow-400/10', 
+        shadow: 'shadow-[0_0_20px_rgba(250,204,21,0.3)]',
+        icon: <FaExclamationTriangle />
+      };
+    case 'Low': 
+      return { 
+        color: 'text-emerald-400', 
+        border: 'border-emerald-400/50', 
+        bg: 'bg-emerald-400/10', 
+        shadow: 'shadow-[0_0_20px_rgba(52,211,153,0.3)]',
+        icon: <MdCheckCircle />
+      };
+    default: 
+      return { 
+        color: 'text-cyan-400', 
+        border: 'border-cyan-400/50', 
+        bg: 'bg-cyan-400/10', 
+        shadow: 'shadow-[0_0_20px_rgba(34,211,238,0.3)]',
+        icon: <FaCheckCircle />
+      };
+  }
 };
 
 const ReportCard = ({ summaryData, setShowSummary }) => {
-    if (!summaryData) return null;
+  if (!summaryData) return null;
 
-    const { color, icon } = getSeverityStyles(summaryData.severity);
+  const theme = getSeverityConfig(summaryData.severity);
 
-    return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center animate-fade-in">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                onClick={() => setShowSummary(false)}
-            />
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 font-sans">
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+        onClick={() => setShowSummary(false)}
+      />
+
+      {/* Modal Card */}
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ type: 'spring', duration: 0.5 }}
+        className="relative w-full max-w-md bg-[#0F172A] border border-cyan-500/30 rounded-2xl shadow-[0_0_50px_rgba(0,255,204,0.2)] overflow-hidden"
+      >
+        {/* Top Neon Line */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500"></div>
+
+        {/* Close Button */}
+        <button
+          onClick={() => setShowSummary(false)}
+          className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors z-10"
+        >
+          <FaTimes size={20} />
+        </button>
+
+        <div className="p-8 text-center">
+          {/* Success Icon */}
+          <div className="mx-auto w-20 h-20 bg-cyan-500/10 rounded-full flex items-center justify-center mb-6 border border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.2)]">
+            <FaCheckCircle className="text-4xl text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]" />
+          </div>
+
+          <h2 className="text-2xl font-bold text-white mb-2">Report Submitted!</h2>
+          <p className="text-gray-400 text-sm mb-8">
+            Your issue has been logged in the system and dispatched to the relevant department.
+          </p>
+
+          {/* Data Grid */}
+          <div className="bg-black/30 rounded-xl border border-white/5 p-4 space-y-4 text-left">
             
-            {/* Modal Content Card */}
-            <div className="bg-white dark:bg-gray-900 max-w-lg w-full mx-4 p-6 sm:p-8 rounded-xl shadow-2xl relative transform scale-100 transition-all duration-300 border-t-4 border-blue-500">
-                
-                {/* Close Button */}
-                <button
-                    onClick={() => setShowSummary(false)}
-                    className="absolute top-3 right-3 text-gray-500 hover:text-red-500 text-3xl font-light transition-colors"
-                    aria-label="Close"
-                >
-                    &times;
-                </button>
-                
-                {/* Header */}
-                <h2 className="text-2xl font-extrabold text-gray-800 dark:text-white mb-6 text-center">
-                    <span className="text-blue-500">🎉</span> Report Submitted!
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm text-center">
-                    Thank you! Your report has been logged for immediate action.
-                </p>
-                
-                {/* Summary Details Grid */}
-                <div className="space-y-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800 border dark:border-gray-700">
-                    
-                    {/* Tracking ID */}
-                    <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-700 dark:text-gray-300 flex items-center"><FaIdBadge className="mr-2 text-blue-500" /> Tracking ID:</span>
-                        <span className="text-sm font-mono break-all bg-blue-50 dark:bg-gray-700 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-md">{summaryData.id}</span>
-                    </div>
-                    
-                    {/* Issue Type */}
-                    <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-3">
-                        <span className="font-medium text-gray-700 dark:text-gray-300">Type:</span>
-                        <span className="font-semibold text-gray-900 dark:text-white">{summaryData.type}</span>
-                    </div>
-
-                    {/* Severity */}
-                    <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-700 dark:text-gray-300">Severity:</span>
-                        <span className={`font-semibold ${color} flex items-center`}>
-                            {icon} {summaryData.severity}
-                        </span>
-                    </div>
-
-                    {/* Department */}
-                    <div className="flex items-center justify-between">
-                        <span className="font-medium text-gray-700 dark:text-gray-300">Assigned Department:</span>
-                        <span className="font-medium text-purple-600 dark:text-purple-400">{summaryData.department || 'N/A'}</span>
-                    </div>
-                    
-                    {/* Location & Date */}
-                    <div className="grid grid-cols-2 gap-y-3 gap-x-4 border-t border-gray-200 dark:border-gray-700 pt-3">
-                        <span className="font-medium text-gray-700 dark:text-gray-300 flex items-center col-span-2 sm:col-span-1"><FaMapMarkerAlt className="mr-2 text-green-500" /> Coordinates:</span>
-                        <span className="text-sm text-gray-700 dark:text-gray-300 col-span-2 sm:col-span-1 break-all">{summaryData.lat?.toFixed(5)}, {summaryData.lng?.toFixed(5)}</span>
-                        
-                        <span className="font-medium text-gray-700 dark:text-gray-300 flex items-center col-span-2 sm:col-span-1"><FaCalendarAlt className="mr-2 text-yellow-500" /> Reported Date:</span>
-                        <span className="text-sm text-gray-700 dark:text-gray-300 col-span-2 sm:col-span-1">{summaryData.reportedDate}</span>
-                    </div>
+            {/* Row 1: ID & Type */}
+            <div className="flex justify-between items-center pb-3 border-b border-white/5">
+              <div>
+                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                   <FaIdCard /> Tracking ID
                 </div>
-                
-                {/* Description */}
-                <div className="mt-4 p-3 bg-white dark:bg-gray-700 rounded-lg border dark:border-gray-600">
-                    <span className="font-bold text-gray-800 dark:text-gray-200 flex items-center mb-1"><FaPaperclip className="mr-2 text-blue-500" /> Description:</span>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm italic">{summaryData.desc || 'No detailed description provided.'}</p>
+                <div className="font-mono text-cyan-400 text-sm mt-1">#{summaryData.id ? summaryData.id.substring(0, 8) : 'PENDING'}...</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center justify-end gap-1.5">
+                   <FaLayerGroup /> Type
                 </div>
-
-                {/* Image (if available) */}
-                {summaryData.imageUrl && (
-                    <div className="flex flex-col items-center mt-4">
-                        <img 
-                            src={summaryData.imageUrl} 
-                            alt="Reported issue photo" 
-                            className="max-w-full h-auto max-h-40 object-cover rounded-lg shadow-md border-2 border-blue-200 dark:border-blue-400" 
-                        />
-                    </div>
-                )}
-                
-                {/* Action Button */}
-                <div className="flex justify-center mt-6">
-                    <button
-                        onClick={() => setShowSummary(false)}
-                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full transition-colors shadow-lg"
-                    >
-                        Close Map
-                    </button>
-                </div>
+                <div className="font-bold text-white text-sm mt-1">{summaryData.type}</div>
+              </div>
             </div>
-            
-            {/* Inline CSS for Modal Animation */}
-            <style jsx="true">{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
-                    to { opacity: 1; transform: translateY(0) scale(1); }
-                }
-                .animate-fade-in > div:nth-child(2) {
-                    animation: fadeIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-                }
-            `}</style>
+
+            {/* Row 2: Severity Badge */}
+            <div className="flex justify-between items-center pb-3 border-b border-white/5">
+               <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Severity Level</div>
+               <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-bold uppercase ${theme.bg} ${theme.color} ${theme.border} ${theme.shadow}`}>
+                  {theme.icon} {summaryData.severity}
+               </div>
+            </div>
+
+            {/* Row 3: Location */}
+            <div>
+               <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+                  <FaMapMarkerAlt /> Coordinates
+               </div>
+               <div className="font-mono text-gray-300 text-xs">
+                  {summaryData.lat?.toFixed(5)}, {summaryData.lng?.toFixed(5)}
+               </div>
+            </div>
+          </div>
+
+          {/* Image Preview (Optional) */}
+          {summaryData.imageUrl && (
+            <div className="mt-6 relative group rounded-xl overflow-hidden border border-white/10 h-32">
+               <img src={summaryData.imageUrl} alt="Preview" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+               <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur px-2 py-1 rounded text-[10px] text-white font-bold">
+                  EVIDENCE ATTACHED
+               </div>
+            </div>
+          )}
+
+          {/* Action Button */}
+          <button
+            onClick={() => setShowSummary(false)}
+            className="w-full mt-8 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-cyan-500/20 transition-all transform hover:scale-[1.02]"
+          >
+            Return to Map
+          </button>
         </div>
-    );
+      </motion.div>
+    </div>
+  );
 };
 
 export default ReportCard;

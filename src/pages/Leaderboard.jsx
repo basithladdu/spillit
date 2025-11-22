@@ -1,7 +1,135 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '../utils/firebase';
-import { FaTrophy, FaCheckCircle, FaThumbsUp } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { FaTrophy, FaMedal, FaCheckCircle, FaArrowUp, FaCrown, FaLayerGroup } from 'react-icons/fa';
+
+// --- Sub-Component: The Podium Card (Top 3) ---
+const PodiumSpot = ({ dept, rank, delay }) => {
+  const isFirst = rank === 1;
+  
+  // Rank Specific Styles
+  const styles = {
+    1: { 
+      border: 'border-yellow-500/50', 
+      bg: 'bg-yellow-500/10', 
+      glow: 'shadow-[0_0_30px_rgba(234,179,8,0.2)]', 
+      iconColor: 'text-yellow-400',
+      height: 'h-64 md:h-80',
+      scale: 1.05
+    },
+    2: { 
+      border: 'border-slate-400/50', 
+      bg: 'bg-slate-400/10', 
+      glow: 'shadow-[0_0_30px_rgba(148,163,184,0.2)]', 
+      iconColor: 'text-slate-300',
+      height: 'h-56 md:h-72',
+      scale: 1
+    },
+    3: { 
+      border: 'border-orange-700/50', 
+      bg: 'bg-orange-700/10', 
+      glow: 'shadow-[0_0_30px_rgba(194,65,12,0.2)]', 
+      iconColor: 'text-orange-400',
+      height: 'h-52 md:h-64',
+      scale: 0.95
+    }
+  };
+
+  const style = styles[rank];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.6, type: 'spring' }}
+      className={`relative flex flex-col items-center justify-end p-6 rounded-2xl border backdrop-blur-xl ${style.border} ${style.bg} ${style.glow} ${style.height} w-full md:w-1/3 transition-transform hover:scale-[1.02]`}
+    >
+      {/* Crown for #1 */}
+      {isFirst && (
+        <div className="absolute -top-8 animate-bounce">
+          <FaCrown className="text-yellow-400 text-4xl drop-shadow-[0_0_10px_rgba(234,179,8,0.8)]" />
+        </div>
+      )}
+
+      {/* Avatar / Icon Placeholder */}
+      <div className={`mb-4 p-4 rounded-full border ${style.border} bg-black/30`}>
+        <FaTrophy className={`text-3xl ${style.iconColor}`} />
+      </div>
+
+      {/* Rank Badge */}
+      <div className={`absolute top-4 right-4 text-xs font-bold px-2 py-1 rounded border ${style.border} ${style.iconColor}`}>
+        #{rank}
+      </div>
+
+      <div className="text-center z-10">
+        <h3 className="text-xl font-bold text-white mb-1 line-clamp-1">{dept.name}</h3>
+        <div className="text-sm text-gray-400 font-mono mb-3">{dept.score.toFixed(0)} pts</div>
+        
+        {/* Stats Mini Grid */}
+        <div className="flex gap-3 text-xs justify-center border-t border-white/10 pt-3">
+          <div className="flex items-center gap-1 text-emerald-400">
+            <FaCheckCircle /> {dept.resolvedCount}
+          </div>
+          <div className="flex items-center gap-1 text-blue-400">
+            <FaArrowUp /> {dept.upvoteCount}
+          </div>
+        </div>
+      </div>
+
+      {/* Background Gradient Fill */}
+      <div className={`absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent rounded-b-2xl pointer-events-none`} />
+    </motion.div>
+  );
+};
+
+// --- Sub-Component: List Row (Rank 4+) ---
+const RankRow = ({ dept, rank, delay }) => (
+  <motion.div
+    initial={{ opacity: 0, x: -20 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ delay }}
+    className="group flex items-center justify-between p-4 bg-[#0F172A]/60 border border-white/5 rounded-xl hover:bg-white/5 hover:border-cyan-500/30 transition-all mb-3"
+  >
+    <div className="flex items-center gap-4">
+      <div className="w-8 h-8 flex items-center justify-center font-mono font-bold text-gray-500 bg-white/5 rounded-lg group-hover:text-cyan-400 group-hover:bg-cyan-500/10 transition-colors">
+        {rank}
+      </div>
+      <div>
+        <h4 className="font-bold text-gray-200 group-hover:text-white">{dept.name}</h4>
+        <div className="text-xs text-gray-500 flex gap-3 md:hidden">
+           <span>{dept.resolvedCount} Resolved</span>
+           <span>{dept.upvoteCount} Upvotes</span>
+        </div>
+      </div>
+    </div>
+
+    {/* Stats for Desktop */}
+    <div className="hidden md:flex items-center gap-8">
+      <div className="flex flex-col items-end">
+        <span className="text-xs text-gray-500 uppercase">Resolved</span>
+        <span className="font-mono text-emerald-400">{dept.resolvedCount}</span>
+      </div>
+      <div className="flex flex-col items-end">
+        <span className="text-xs text-gray-500 uppercase">Upvotes</span>
+        <span className="font-mono text-blue-400">{dept.upvoteCount}</span>
+      </div>
+      <div className="flex flex-col items-end w-24">
+        <span className="text-xs text-gray-500 uppercase">Efficiency</span>
+        <div className="w-full bg-gray-700 h-1.5 rounded-full mt-1">
+          <div 
+            className="bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full" 
+            style={{ width: `${dept.progressPercentage}%` }}
+          />
+        </div>
+      </div>
+      <div className="flex flex-col items-end w-16">
+        <span className="text-xs text-gray-500 uppercase">Score</span>
+        <span className="font-mono font-bold text-yellow-500">{dept.score.toFixed(0)}</span>
+      </div>
+    </div>
+  </motion.div>
+);
 
 function Leaderboard() {
   const [leaderboardData, setLeaderboardData] = useState([]);
@@ -10,112 +138,109 @@ function Leaderboard() {
   useEffect(() => {
     const q = query(collection(db, 'issues'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const departments = {};
+      const depts = {};
 
       snapshot.forEach((doc) => {
         const data = doc.data();
-        const department = data.department || 'Unassigned';
+        const deptName = data.department || 'Community Reports';
         const status = data.status;
         const upvotes = data.upvotes || 0;
 
-        if (!departments[department]) {
-          departments[department] = {
-            resolvedCount: 0,
-            upvoteCount: 0,
-            totalIssues: 0,
-          };
+        if (!depts[deptName]) {
+          depts[deptName] = { resolvedCount: 0, upvoteCount: 0, totalIssues: 0 };
         }
 
-        departments[department].totalIssues += 1;
-        if (status === 'resolved') {
-          departments[department].resolvedCount += 1;
-        }
-        departments[department].upvoteCount += upvotes;
+        depts[deptName].totalIssues += 1;
+        if (status === 'resolved') depts[deptName].resolvedCount += 1;
+        depts[deptName].upvoteCount += upvotes;
       });
 
-      const sortedDepartments = Object.entries(departments)
+      const sorted = Object.entries(depts)
         .map(([name, stats]) => ({
           name,
           ...stats,
           progressPercentage: stats.totalIssues > 0 ? (stats.resolvedCount / stats.totalIssues) * 100 : 0,
-          score: (stats.resolvedCount * 1.5) + (stats.upvoteCount * 0.1) // Increased resolved weight
+          score: (stats.resolvedCount * 50) + (stats.upvoteCount * 10) // Simple gamification formula
         }))
         .sort((a, b) => b.score - a.score);
 
-      setLeaderboardData(sortedDepartments);
+      setLeaderboardData(sorted);
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
+  if (loading) return (
+    <div className="min-h-screen bg-[#0A0A1E] flex items-center justify-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-500"></div>
+    </div>
+  );
+
+  const topThree = leaderboardData.slice(0, 3);
+  // Reorder for visual podium: 2nd (Left), 1st (Center), 3rd (Right)
+  const podiumOrder = [topThree[1], topThree[0], topThree[2]].filter(Boolean);
+  const restOfList = leaderboardData.slice(3);
+
   return (
-    <div className="bg-black text-white min-h-screen">
-      <div className="h-20"></div> {/* Navbar spacing */}
+    <div className="min-h-screen bg-[#0A0A1E] text-gray-200 font-sans selection:bg-cyan-500/30 pb-20">
+      <div className="h-20"></div> {/* Navbar Spacer */}
 
-      <main className="container mx-auto p-4 max-w-3xl flex-grow">
-        <h1 className="text-4xl font-extrabold text-white mt-8 mb-10 tracking-wide text-center drop-shadow-md">
-          <FaTrophy className="inline-block text-yellow-400 mr-2" />
-          Civic Leaderboard
-        </h1>
+      <main className="max-w-5xl mx-auto px-6 pt-10">
+        
+        {/* --- Header --- */}
+        <div className="text-center mb-16">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="inline-block p-4 rounded-full bg-cyan-500/10 border border-cyan-500/30 mb-4"
+          >
+            <FaMedal className="text-4xl text-cyan-400" />
+          </motion.div>
+          <h1 className="text-5xl font-bold text-white mb-2 tracking-tight">
+            Department <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500">Rankings</span>
+          </h1>
+          <p className="text-gray-400 text-lg max-w-xl mx-auto">
+            Recognizing the most responsive and effective teams in our community.
+          </p>
+        </div>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-40">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-400"></div>
+        {leaderboardData.length === 0 ? (
+          <div className="text-center py-20 border border-dashed border-gray-800 rounded-3xl">
+             <FaLayerGroup className="mx-auto text-6xl text-gray-800 mb-4" />
+             <p className="text-gray-500">No data available for ranking yet.</p>
           </div>
-        ) : leaderboardData.length === 0 ? (
-          <section className="bg-white/10 backdrop-blur-sm p-8 rounded-xl shadow-2xl glass text-center">
-            <p className="text-gray-400">
-              No data to display on the leaderboard yet. Report an issue to get started!
-            </p>
-          </section>
         ) : (
-          <section className="bg-white/10 backdrop-blur-sm p-8 rounded-xl shadow-2xl glass">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left table-auto">
-                <thead>
-                  <tr className="border-b border-gray-700 text-gray-400">
-                    <th className="p-4 text-center">Rank</th>
-                    <th className="p-4">Department</th>
-                    <th className="p-4 text-center">Resolved <FaCheckCircle className="inline-block text-green-500 ml-1" /></th>
-                    <th className="p-4 text-center">Upvotes <FaThumbsUp className="inline-block text-blue-500 ml-1" /></th>
-                    <th className="p-4 text-center">Progress</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaderboardData.map((dept, index) => (
-                    <tr key={dept.name} className="border-b border-gray-800 last:border-0 hover:bg-white/5 transition-colors">
-                      <td className="p-4 text-center">
-                        <span className="font-bold text-lg">
-                          {index + 1}
-                        </span>
-                      </td>
-                      <td className="p-4 font-semibold">
-                        {dept.name}
-                      </td>
-                      <td className="p-4 text-center text-green-400">
-                        {dept.resolvedCount}
-                      </td>
-                      <td className="p-4 text-center text-blue-400">
-                        {dept.upvoteCount}
-                      </td>
-                      <td className="p-4">
-                        <div className="w-24 bg-gray-700 rounded-full h-2.5 mx-auto">
-                          <div
-                            className="bg-green-500 h-2.5 rounded-full"
-                            style={{ width: `${dept.progressPercentage}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-xs block text-center mt-1 text-gray-400">
-                          {dept.progressPercentage.toFixed(0)}%
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <>
+            {/* --- The Podium (Top 3) --- */}
+            <div className="flex flex-col md:flex-row items-end justify-center gap-4 mb-16 min-h-[340px]">
+              {/* Rank 2 */}
+              {topThree[1] && <PodiumSpot dept={topThree[1]} rank={2} delay={0.2} />}
+              
+              {/* Rank 1 */}
+              {topThree[0] && <PodiumSpot dept={topThree[0]} rank={1} delay={0.1} />}
+              
+              {/* Rank 3 */}
+              {topThree[2] && <PodiumSpot dept={topThree[2]} rank={3} delay={0.3} />}
             </div>
-          </section>
+
+            {/* --- The List (Rank 4+) --- */}
+            {restOfList.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="bg-[#0F172A]/40 backdrop-blur-xl border border-white/5 rounded-2xl p-6"
+              >
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 pl-2">Honorable Mentions</h3>
+                <div className="flex flex-col">
+                  {restOfList.map((dept, index) => (
+                    <RankRow key={dept.name} dept={dept} rank={index + 4} delay={0.1 * index} />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </>
         )}
       </main>
     </div>

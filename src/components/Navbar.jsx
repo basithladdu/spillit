@@ -1,41 +1,19 @@
-import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+// Replaced react-icons with lucide-react for compatibility
+import { 
+  Map, BarChart3, Users, LogIn, LogOut, 
+  Search, HelpCircle, Star, UserCircle 
+} from 'lucide-react';
+
 import { useAuth } from '../hooks/useAuth';
-import {
-  FaMap, FaChartBar, FaUsers, FaUser,
-  FaSignInAlt, FaSignOutAlt, FaQuestionCircle, FaStar
-} from 'react-icons/fa';
-
-// Bubble animation component
-const BubbleAnimation = ({ children, onClick, className = "" }) => {
-  const [isAnimating, setIsAnimating] = useState(false);
-
-  const handleClick = (e) => {
-    setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 600);
-    if (onClick) onClick(e);
-  };
-
-  return (
-    <button
-      onClick={handleClick}
-      className={`relative overflow-hidden ${className}`}
-    >
-      {children}
-      {isAnimating && (
-        <span className="absolute inset-0 flex items-center justify-center">
-          <span className="animate-bubble absolute w-4 h-4 bg-white/30 rounded-full scale-0 opacity-70"></span>
-        </span>
-      )}
-    </button>
-  );
-};
 
 function Navbar() {
   const [searchId, setSearchId] = useState('');
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     try {
@@ -51,156 +29,115 @@ function Navbar() {
     if (searchId) {
       navigate(`/report/${searchId}`);
       setSearchId('');
-      setIsSearchExpanded(false);
     }
   };
 
-  const handleSearchInputChange = (e) => {
-    setSearchId(e.target.value);
+  // Helper Component for Navigation Links
+  const NavItem = ({ to, icon: Icon, label, colorClass = "text-gray-300" }) => {
+    const isActive = location.pathname === to;
+    
+    return (
+      <Link to={to} className="relative group">
+        <div className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 ${isActive ? 'text-cyan-400 bg-white/10' : `${colorClass} hover:text-cyan-400 hover:bg-white/5`}`}>
+          <span className="relative z-10"><Icon size={18} /></span>
+          <span className="hidden lg:inline font-medium text-sm relative z-10">{label}</span>
+          
+          {/* Active/Hover Glow Effect */}
+          {isActive && (
+            <motion.div 
+              layoutId="nav-pill"
+              className="absolute inset-0 rounded-full bg-cyan-500/10 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            />
+          )}
+        </div>
+      </Link>
+    );
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[1000] text-white flex items-center justify-between px-4 py-3 font-semibold bg-gray-800/90 backdrop-blur-sm">
-      {/* Left links */}
-      <div className="flex items-center space-x-4">
-        <BubbleAnimation
-          className="text-base font-medium no-underline px-3 py-2 rounded-2xl bg-gray-900 hover:bg-blue-800 transition flex items-center gap-1"
-          title="Map View"
-        >
-          <Link to="/" className="flex items-center gap-1">
-            <FaMap /> <span className="hidden sm:inline p-1 text-lg">Map</span>
-          </Link>
-        </BubbleAnimation>
-
-        <BubbleAnimation
-          className="text-base font-medium no-underline px-3 py-2 rounded-2xl bg-gray-900 hover:bg-blue-800 transition flex items-center gap-1"
-          title="Gallery"
-        >
-          <Link to="/gallery" className="flex items-center gap-1">
-            <FaUsers /> <span className="hidden sm:inline p-1 text-lg">Gallery</span>
-          </Link>
-        </BubbleAnimation>
-
-        <BubbleAnimation
-          className="text-base font-medium no-underline px-3 py-2 rounded-2xl bg-gray-900 hover:bg-blue-800 transition flex items-center gap-1"
-          title="Help"
-        >
-          <Link to="/help" className="flex items-center gap-1">
-            <FaQuestionCircle /> <span className="hidden sm:inline p-1 text-lg">Help</span>
-          </Link>
-        </BubbleAnimation>
-
-        <BubbleAnimation
-          className="text-base font-medium no-underline px-3 py-2 rounded-2xl bg-gray-900 hover:bg-blue-800 transition flex items-center gap-1"
-          title="Leaderboard"
-        >
-          <Link to="/leaderboard" className="flex items-center gap-1">
-            <FaStar /> <span className="hidden sm:inline p-1 text-lg">Leaderboard</span>
-          </Link>
-        </BubbleAnimation>
-
-        {/* SIH2025 button - KEPT */}
-        <BubbleAnimation
-          className="text-base font-medium no-underline px-3 py-2 rounded-2xl bg-gray-900 hover:bg-blue-800 transition flex items-center gap-1"
-          title="SIH 2025"
-        >
-          <Link to="/SIH2025" className="flex items-center gap-1">
-            <FaStar /> <span className="hidden sm:inline p-1 text-lg">SIH 2025</span>
-          </Link>
-        </BubbleAnimation>
-
+    <motion.nav 
+      initial={{ y: -100, opacity: 0 }} 
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-6 py-4 pointer-events-none"
+    >
+      {/* --- Left Menu Pill --- */}
+      <div className="pointer-events-auto bg-[#0F172A]/80 backdrop-blur-xl border border-cyan-500/30 rounded-full p-1 shadow-[0_0_20px_rgba(0,0,0,0.5)] flex items-center gap-1">
+        <NavItem to="/" icon={Map} label="Map" />
+        <NavItem to="/gallery" icon={Users} label="Gallery" />
+        <NavItem to="/leaderboard" icon={Star} label="Leaderboard" />
+        <NavItem to="/help" icon={HelpCircle} label="Help" />
+        <NavItem to="/SIH2025" icon={Star} label="SIH 2025" colorClass="text-yellow-400" />
+        
         {currentUser && (
-          <BubbleAnimation
-            className="text-base font-medium no-underline px-3 py-2 rounded-2xl bg-gray-900 hover:bg-blue-800 transition flex items-center gap-1"
-            title="Dashboard"
-          >
-            <Link to="/dashboard" className="flex items-center gap-1">
-              <FaChartBar /> <span className="hidden sm:inline p-1 text-lg">Dashboard</span>
-            </Link>
-          </BubbleAnimation>
+          <div className="hidden md:block h-6 w-[1px] bg-white/10 mx-1"></div>
+        )}
+        
+        {currentUser && (
+          <NavItem to="/dashboard" icon={BarChart3} label="Dashboard" />
         )}
       </div>
 
-      {/* Center Branding - REMOVED */}
-      {/* The following div has been removed:
-      <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-3">
-        <span className="font-extrabold text-2xl sm:text-3xl bg-gradient-to-r from-orange-400 to-green-600 text-transparent bg-clip-text">
-          SIH 2025
-        </span>
-        <svg className="h-8 w-8 sm:h-10 sm:w-10 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-          ...
-        </svg>
-      </div>
-      */}
-
-      {/* Right Side */}
-      <div className="flex items-center space-x-4">
-        {/* Animated Search Bar */}
-        <form onSubmit={handleSearch} className="hidden sm:flex items-center">
-          <div
-            className={`p-2 overflow-hidden bg-gray-900 shadow-[2px_2px_20px_rgba(0,0,0,0.08)] rounded-full flex group items-center transition-all duration-300 ${
-              isSearchExpanded ? 'w-[270px]' : 'w-[60px] hover:w-[270px]'
-            }`}
-            onMouseEnter={() => setIsSearchExpanded(true)}
-            onMouseLeave={() => !searchId && setIsSearchExpanded(false)}
-          >
-            <div className="flex items-center justify-center text-white ml-2">
-              🔍
-            </div>
-            <input
-              type="text"
-              value={searchId}
-              onChange={handleSearchInputChange}
-              placeholder="Search by ID"
-              className="outline-none text-lg bg-transparent w-full text-white font-normal px-4 placeholder-white/80"
-            />
-          </div>
+      {/* --- Right Actions Pill --- */}
+      <div className="flex items-center gap-4 pointer-events-auto">
+        
+        {/* Search Bar */}
+        <form 
+          onSubmit={handleSearch} 
+          className="relative flex items-center bg-black/40 backdrop-blur-md border border-white/10 rounded-full overflow-hidden transition-all duration-300 w-10 sm:w-40 focus-within:w-64 group hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+        >
+          <button type="submit" className="p-3 text-cyan-400 hover:text-white transition-colors z-10">
+            <Search size={18} />
+          </button>
+          <input 
+            type="text" 
+            placeholder="Search ID..." 
+            value={searchId} 
+            onChange={(e) => setSearchId(e.target.value)} 
+            className="bg-transparent border-none outline-none text-white text-sm w-full pr-4 placeholder-gray-500 h-full absolute inset-0 pl-10 sm:relative sm:inset-auto sm:pl-0 opacity-0 sm:opacity-100 focus:opacity-100 focus:relative" 
+          />
         </form>
 
-        {currentUser ? (
-          <>
+        {/* Auth Buttons */}
+        <AnimatePresence mode="wait">
+          {currentUser ? (
             <div className="flex items-center gap-3">
-              <div className="hidden md:flex items-center gap-2 text-gray-300">
-                <FaUser className="text-xl" />
-                <span className="text-lg">{currentUser.email}</span>
-              </div>
-              <BubbleAnimation
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-2xl transition flex items-center gap-2"
+              {/* User Email Chip (Desktop only) */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="hidden xl:flex items-center gap-2 bg-[#0F172A]/80 backdrop-blur-md border border-cyan-500/20 px-4 py-2 rounded-full"
               >
-                <FaSignOutAlt /> <span className="hidden sm:inline text-lg">Logout</span>
-              </BubbleAnimation>
-            </div>
-          </>
-        ) : (
-          <BubbleAnimation className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-2xl transition flex items-center gap-2">
-            <Link to="/login" className="flex items-center gap-2">
-              <FaSignInAlt /> <span className="hidden sm:inline text-lg">Login</span>
-            </Link>
-          </BubbleAnimation>
-        )}
-      </div>
+                <UserCircle size={16} className="text-cyan-400" />
+                <span className="text-xs text-gray-300 font-mono">{currentUser.email?.split('@')[0]}</span>
+              </motion.div>
 
-      {/* Add CSS for bubble animation */}
-      <style jsx>{`
-        @keyframes bubble {
-          0% {
-            transform: scale(0);
-            opacity: 0.7;
-          }
-          50% {
-            opacity: 0.4;
-          }
-          100% {
-            transform: scale(4);
-            opacity: 0;
-          }
-        }
-        .animate-bubble {
-          animation: bubble 0.6s ease-out forwards;
-        }
-      `}</style>
-    </nav>
+              <motion.button 
+                whileHover={{ scale: 1.05 }} 
+                whileTap={{ scale: 0.95 }}
+                onClick={handleLogout} 
+                className="bg-red-500/10 text-red-400 border border-red-500/30 p-3 rounded-full hover:bg-red-500/20 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] backdrop-blur-md transition-all"
+                title="Logout"
+              >
+                <LogOut size={18} />
+              </motion.button>
+            </div>
+          ) : (
+            <Link to="/login">
+              <motion.button 
+                whileHover={{ scale: 1.05 }} 
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold px-5 py-2 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] border border-white/10 transition-all"
+              >
+                <LogIn size={18} /> 
+                <span className="text-sm">Login</span>
+              </motion.button>
+            </Link>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.nav>
   );
 }
 

@@ -1,572 +1,360 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../utils/firebase';
-import { FaArrowLeft, FaArrowRight, FaSearch, FaFilter, FaShare, FaArrowAltCircleUp } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  FaSearch, FaFilter, FaShareAlt, FaHeart, FaRegHeart, 
+  FaChevronLeft, FaChevronRight, FaMapMarkerAlt, FaCalendarAlt, 
+  FaTools, FaInfoCircle, FaCheckCircle, FaExclamationTriangle, 
+  FaLayerGroup, FaTimes 
+} from 'react-icons/fa';
+import { MdError, MdWarning, MdCheckCircle, MdGpsFixed } from 'react-icons/md';
 
-// Bubble animation component
-const BubbleAnimation = ({ children, onClick, className = "" }) => {
-  const [isAnimating, setIsAnimating] = useState(false);
+// --- 1. Shared Style Helpers (Matched to Home.jsx) ---
 
-  const handleClick = (e) => {
-    setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 600);
-    if (onClick) onClick(e);
-  };
-
-  return (
-    <button
-      onClick={handleClick}
-      className={`relative overflow-hidden ${className}`}
-    >
-      {children}
-      {isAnimating && (
-        <span className="absolute inset-0 flex items-center justify-center">
-          <span className="animate-bubble absolute w-4 h-4 bg-white/30 rounded-full scale-0 opacity-70"></span>
-        </span>
-      )}
-    </button>
-  );
+const getSeverityIcon = (severity) => {
+  switch (severity) {
+    case 'Critical': return <MdError className="text-red-500" />;
+    case 'High': return <MdWarning className="text-orange-500" />;
+    case 'Medium': return <FaExclamationTriangle className="text-yellow-500" />;
+    case 'Low': return <FaCheckCircle className="text-green-500" />;
+    default: return <FaInfoCircle className="text-gray-500" />;
+  }
 };
 
-// Interactive Stats Card - Sized Down
-const StatsCard = ({ title, value, color, icon, onClick }) => (
-  <BubbleAnimation
+const getSeverityStyles = (severity) => {
+  switch (severity) {
+    case 'Critical': return { bg: 'bg-red-500/10', border: 'border-red-500/30', text: 'text-red-400', glow: 'shadow-red-500/20' };
+    case 'High': return { bg: 'bg-orange-500/10', border: 'border-orange-500/30', text: 'text-orange-400', glow: 'shadow-orange-500/20' };
+    case 'Medium': return { bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', text: 'text-yellow-400', glow: 'shadow-yellow-500/20' };
+    case 'Low': return { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', glow: 'shadow-emerald-500/20' };
+    default: return { bg: 'bg-gray-500/10', border: 'border-gray-500/30', text: 'text-gray-400', glow: 'shadow-gray-500/20' };
+  }
+};
+
+const getStatusStyles = (status) => {
+  const s = (status || 'new').toLowerCase();
+  if (s === 'resolved') return { bg: 'bg-green-500/20', text: 'text-green-400', label: 'Resolved' };
+  if (s === 'in_progress') return { bg: 'bg-blue-500/20', text: 'text-blue-400', label: 'In Progress' };
+  return { bg: 'bg-amber-500/20', text: 'text-amber-400', label: 'Open' };
+};
+
+// --- 2. Sub-Components ---
+
+const StatBox = ({ label, value, icon, colorClass, onClick }) => (
+  <motion.div 
+    whileHover={{ y: -5, boxShadow: "0 0 20px rgba(6,182,212,0.15)" }}
     onClick={onClick}
-    className={`bg-white/10 p-3 rounded-xl shadow-lg text-center hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer backdrop-blur-sm ${color}`}
+    className={`
+      cursor-pointer relative overflow-hidden rounded-2xl p-5 border border-white/5 
+      bg-[#0F172A]/60 backdrop-blur-md flex items-center justify-between group
+    `}
   >
-    <div className="text-xl mb-1">{icon}</div>
-    <h3 className="text-sm font-semibold mb-1">{title}</h3>
-    <p className="text-xl font-bold">{value}</p>
-  </BubbleAnimation>
+    <div className="z-10">
+      <p className="text-gray-400 text-xs uppercase tracking-wider font-bold mb-1">{label}</p>
+      <h3 className={`text-3xl font-bold ${colorClass} drop-shadow-lg`}>{value}</h3>
+    </div>
+    <div className={`text-3xl opacity-20 group-hover:opacity-50 group-hover:scale-110 transition-all duration-500 ${colorClass}`}>
+      {icon}
+    </div>
+    {/* Decorative glow */}
+    <div className={`absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-10 ${colorClass.replace('text-', 'bg-')}`}></div>
+  </motion.div>
 );
 
-// Status Badge with animations
-const StatusBadge = ({ status }) => {
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'new': return 'bg-blue-600 text-white';
-      case 'in-progress': return 'bg-yellow-600 text-white';
-      case 'resolved': return 'bg-green-600 text-white';
-      default: return 'bg-gray-600 text-white';
-    }
-  };
+const FilterSelect = ({ label, value, onChange, options }) => (
+  <div className="flex flex-col gap-1.5">
+    <label className="text-[10px] font-bold text-cyan-500/80 uppercase tracking-widest ml-1">{label}</label>
+    <div className="relative">
+      <select 
+        value={value} 
+        onChange={onChange}
+        className="w-full bg-[#0A0A1E] text-gray-300 text-sm rounded-lg border border-white/10 px-3 py-2.5 outline-none focus:border-cyan-500 focus:shadow-[0_0_10px_rgba(6,182,212,0.3)] appearance-none transition-all"
+      >
+        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+      </select>
+      <FaLayerGroup className="absolute right-3 top-3 text-gray-600 pointer-events-none text-xs" />
+    </div>
+  </div>
+);
 
-  const getStatusIcon = (status) => {
-    switch(status) {
-      case 'new': return '🆕';
-      case 'in-progress': return '🔄';
-      case 'resolved': return '✅';
-      default: return '📋';
-    }
-  };
-
-  return (
-    <span className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full transition-all duration-300 hover:scale-110 ${getStatusColor(status)}`}>
-      {getStatusIcon(status)}
-      {status.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('-')}
-    </span>
-  );
-};
-
-// Severity Badge
-const SeverityBadge = ({ severity }) => {
-  const getSeverityColor = (severity) => {
-    switch(severity) {
-      case 'Critical': return 'bg-red-600 text-white';
-      case 'High': return 'bg-orange-600 text-white';
-      case 'Medium': return 'bg-yellow-600 text-white';
-      case 'Low': return 'bg-green-600 text-white';
-      default: return 'bg-gray-600 text-white';
-    }
-  };
-
-  const getSeverityIcon = (severity) => {
-    switch(severity) {
-      case 'Critical': return '🔥';
-      case 'High': return '⚠️';
-      case 'Medium': return '📢';
-      case 'Low': return '💚';
-      default: return '📋';
-    }
-  };
-
-  return (
-    <span className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full transition-all duration-300 hover:scale-110 ${getSeverityColor(severity)}`}>
-      {getSeverityIcon(severity)}
-      {severity}
-    </span>
-  );
-};
+// --- 3. Main Gallery Component ---
 
 function Gallery() {
+ 
+
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    status: 'All',
-    category: 'All',
-    severity: 'All',
-    sortBy: 'Newest First'
+    status: 'All', category: 'All', severity: 'All', sortBy: 'Newest First'
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [expandedFilters, setExpandedFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [likedIssues, setLikedIssues] = useState(new Set());
-  const [viewCounts, setViewCounts] = useState({});
   const itemsPerPage = 9;
 
+  // --- Data Fetching ---
   useEffect(() => {
     const q = query(collection(db, 'issues'), orderBy('ts', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const issuesData = [];
-      snapshot.forEach((doc) => {
-        issuesData.push({ id: doc.id, ...doc.data() });
-      });
-      setIssues(issuesData);
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setIssues(data);
       setLoading(false);
     });
 
     const savedLikes = localStorage.getItem('galleryLikes');
-    if (savedLikes) {
-      setLikedIssues(new Set(JSON.parse(savedLikes)));
-    }
-
-    const savedViews = localStorage.getItem('galleryViews');
-    if (savedViews) {
-      setViewCounts(JSON.parse(savedViews));
-    }
+    if (savedLikes) setLikedIssues(new Set(JSON.parse(savedLikes)));
+    
+    return () => unsubscribe();
   }, []);
 
-  // Updated upvote logic
-  const handleUpvote = (issueId) => {
-    const newLikedIssues = new Set(likedIssues);
-    if (newLikedIssues.has(issueId)) {
-      newLikedIssues.delete(issueId);
-    } else {
-      newLikedIssues.add(issueId);
-    }
-    setLikedIssues(newLikedIssues);
-    localStorage.setItem('galleryLikes', JSON.stringify([...newLikedIssues]));
-  };
-
-  const handleView = (issueId) => {
-    const newViewCounts = { ...viewCounts };
-    newViewCounts[issueId] = (newViewCounts[issueId] || 0) + 1;
-    setViewCounts(newViewCounts);
-    localStorage.setItem('galleryViews', JSON.stringify(newViewCounts));
+  // --- Actions ---
+  const handleUpvote = (e, issueId) => {
+    e.preventDefault();
+    const newLiked = new Set(likedIssues);
+    newLiked.has(issueId) ? newLiked.delete(issueId) : newLiked.add(issueId);
+    setLikedIssues(newLiked);
+    localStorage.setItem('galleryLikes', JSON.stringify([...newLiked]));
   };
 
   const handleShare = async (e, issue) => {
     e.preventDefault();
-    e.stopPropagation();
-    const shareUrl = `${window.location.origin}/report/${issue.id}`;
-    const shareText = `Check out this community issue: ${issue.desc}`;
-    
+    const url = `${window.location.origin}/report/${issue.id}`;
     if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Community Issue Report',
-          text: shareText,
-          url: shareUrl,
-        });
-      } catch (error) {
-        console.log('Error sharing:', error);
-      }
+      try { await navigator.share({ title: 'FixIt Report', text: issue.desc, url }); } catch (err) { console.log(err); }
     } else {
-      navigator.clipboard.writeText(shareUrl);
-      alert('Link copied to clipboard!');
+      navigator.clipboard.writeText(url);
+      alert('Link copied!');
     }
   };
 
-  const filteredAndSortedIssues = issues.filter(issue => {
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch =
-      issue.desc.toLowerCase().includes(searchLower) ||
-      issue.type.toLowerCase().includes(searchLower) ||
-      (issue.lat?.toFixed(5) + ', ' + issue.lng?.toFixed(5)).includes(searchLower);
-
-    return (
-      (filters.status === 'All' || issue.status === filters.status) &&
-      (filters.category === 'All' || issue.type === filters.category) &&
-      (filters.severity === 'All' || issue.severity === filters.severity) &&
-      matchesSearch
-    );
+  // --- Filtering Logic ---
+  const filteredIssues = issues.filter(issue => {
+    const matchesSearch = issue.desc?.toLowerCase().includes(searchQuery.toLowerCase()) || issue.type?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filters.status === 'All' || issue.status === filters.status;
+    const matchesCat = filters.category === 'All' || issue.type === filters.category;
+    const matchesSev = filters.severity === 'All' || issue.severity === filters.severity;
+    return matchesSearch && matchesStatus && matchesCat && matchesSev;
   }).sort((a, b) => {
-    if (filters.sortBy === 'Newest First') {
-      return b.ts?.toDate() - a.ts?.toDate();
-    }
-    if (filters.sortBy === 'Oldest First') {
-      return a.ts?.toDate() - b.ts?.toDate();
-    }
-    if (filters.sortBy === 'Most Liked') {
-      const aLiked = likedIssues.has(a.id) ? 1 : 0;
-      const bLiked = likedIssues.has(b.id) ? 1 : 0;
-      return bLiked - aLiked;
-    }
-    if (filters.sortBy === 'Most Viewed') {
-      return (viewCounts[b.id] || 0) - (viewCounts[a.id] || 0);
-    }
+    if (filters.sortBy === 'Newest First') return b.ts?.toDate() - a.ts?.toDate();
+    if (filters.sortBy === 'Oldest First') return a.ts?.toDate() - b.ts?.toDate();
+    if (filters.sortBy === 'Most Liked') return (likedIssues.has(b.id) ? 1 : 0) - (likedIssues.has(a.id) ? 1 : 0);
     return 0;
   });
 
-  const totalPages = Math.ceil(filteredAndSortedIssues.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentIssues = filteredAndSortedIssues.slice(startIndex, startIndex + itemsPerPage);
+  // --- Pagination ---
+  const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
+  const currentData = filteredIssues.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const handlePageChange = (page) => {
-    if (page > 0 && page <= totalPages) {
-      setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const clearFilters = () => {
-    setFilters({
-      status: 'All',
-      category: 'All',
-      severity: 'All',
-      sortBy: 'Newest First'
-    });
-    setSearchQuery('');
-    setCurrentPage(1);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-black">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white text-lg">Loading community reports...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen bg-[#0A0A1E] flex items-center justify-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-500"></div>
+    </div>
+  );
 
   return (
-    <div className="bg-gradient-to-br from-gray-900 to-black text-white min-h-screen">
-      <div className="h-20"></div>
+    <div className="min-h-screen bg-[#0A0A1E] text-gray-200 font-sans selection:bg-cyan-500/30 selection:text-cyan-100 pb-20">
+      
+      {/* --- Header Section --- */}
+      <div className="relative pt-24 pb-10 px-6 max-w-7xl mx-auto">
+        {/* Background Glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-      <main className="container mx-auto p-4 max-w-7xl">
-        {/* Header */}
-        <div className="text-center mb-8 animate-fadeIn">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-4">
-            Community Reports Gallery
-          </h1>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Explore all public reports, support your community, and track progress in real-time
-          </p>
-        </div>
-
-        {/* Interactive Stats Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-          <StatsCard
-            title="Total Reports"
-            value={issues.length}
-            color="text-blue-400"
-            icon="📊"
-          />
-          <StatsCard
-            title="In Progress"
-            value={issues.filter(i => i.status === 'in-progress').length}
-            color="text-yellow-400"
-            icon="🚧"
-            onClick={() => setFilters({...filters, status: 'in-progress'})}
-          />
-          <StatsCard
-            title="Resolved"
-            value={issues.filter(i => i.status === 'resolved').length}
-            color="text-green-400"
-            icon="✅"
-            onClick={() => setFilters({...filters, status: 'resolved'})}
-          />
-          <StatsCard
-            title="Community Upvotes"
-            value={Array.from(likedIssues).length}
-            color="text-purple-400"
-            icon="👍"
-          />
-        </div>
-
-        {/* Enhanced Filter and Search Section */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-white/10">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-            {/* Search Bar */}
-            <div className="flex-1 w-full">
-              <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search reports by description, type, or location..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                />
-              </div>
-            </div>
-
-            {/* Filter Toggle */}
-            <div className="flex items-center gap-4">
-              <BubbleAnimation
-                onClick={() => setExpandedFilters(!expandedFilters)}
-                className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center gap-2"
-              >
-                <FaFilter />
-                {expandedFilters ? 'Hide Filters' : 'Show Filters'}
-              </BubbleAnimation>
-
-              <BubbleAnimation
-                onClick={clearFilters}
-                className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition"
-              >
-                Clear All
-              </BubbleAnimation>
-            </div>
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
+          <div>
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-2 tracking-tight">
+              Community <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Gallery</span>
+            </h1>
+            <p className="text-gray-400 text-lg max-w-xl">
+              Track real-time infrastructure reports. visualize data, and support your local community improvements.
+            </p>
           </div>
-
-          {/* Expandable Filters */}
-          {expandedFilters && (
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-fadeIn">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
-                <select
-                  value={filters.status}
-                  onChange={(e) => setFilters({...filters, status: e.target.value})}
-                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-                >
-                  <option value="All">All Status</option>
-                  <option value="new">Reported</option>
-                  <option value="in-progress">In-Progress</option>
-                  <option value="resolved">Resolved</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
-                <select
-                  value={filters.category}
-                  onChange={(e) => setFilters({...filters, category: e.target.value})}
-                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-                >
-                  <option value="All">All Categories</option>
-                  <option>Pothole</option>
-                  <option>Garbage</option>
-                  <option>Water Leak</option>
-                  <option>Streetlight Outage</option>
-                  <option>Public Nuisance</option>
-                  <option>Other</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Severity</label>
-                <select
-                  value={filters.severity}
-                  onChange={(e) => setFilters({...filters, severity: e.target.value})}
-                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-                >
-                  <option value="All">All Severity</option>
-                  <option>Low</option>
-                  <option>Medium</option>
-                  <option>High</option>
-                  <option>Critical</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Sort By</label>
-                <select
-                  value={filters.sortBy}
-                  onChange={(e) => setFilters({...filters, sortBy: e.target.value})}
-                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 transition-all duration-300"
-                >
-                  <option>Newest First</option>
-                  <option>Oldest First</option>
-                  <option>Most Liked</option>
-                  <option>Most Viewed</option>
-                </select>
-              </div>
+          
+          {/* Quick Search Pill */}
+          <div className="relative group w-full md:w-auto">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
             </div>
-          )}
-        </div>
-
-        {/* Results Info */}
-        <div className="flex justify-between items-center mb-6">
-          <p className="text-gray-400">
-            Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredAndSortedIssues.length)} of {filteredAndSortedIssues.length} reports
-          </p>
-          <div className="text-gray-400 text-sm">
-            {filteredAndSortedIssues.length === 0 ? 'No reports found' : `${totalPages} page${totalPages > 1 ? 's' : ''}`}
+            <input 
+              type="text" 
+              placeholder="Search reports..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full md:w-80 pl-11 pr-4 py-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-full text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all"
+            />
           </div>
         </div>
 
-        {/* Interactive Reports Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {currentIssues.length === 0 ? (
-            <div className="col-span-full text-center py-12">
-              <div className="text-6xl mb-4">🔍</div>
-              <p className="text-gray-400 text-lg mb-4">No reports found with the current filters</p>
-              <BubbleAnimation
-                onClick={clearFilters}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition"
+        {/* --- Stats Grid --- */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <StatBox label="Total Reports" value={issues.length} icon={<FaLayerGroup />} colorClass="text-cyan-400" />
+          <StatBox label="In Progress" value={issues.filter(i => i.status === 'in-progress').length} icon={<FaTools />} colorClass="text-blue-400" onClick={() => setFilters({...filters, status: 'in-progress'})} />
+          <StatBox label="Resolved" value={issues.filter(i => i.status === 'resolved').length} icon={<MdCheckCircle />} colorClass="text-emerald-400" onClick={() => setFilters({...filters, status: 'resolved'})} />
+          <StatBox label="Critical Issues" value={issues.filter(i => i.severity === 'Critical').length} icon={<MdWarning />} colorClass="text-red-400" onClick={() => setFilters({...filters, severity: 'Critical'})} />
+        </div>
+
+        {/* --- Controls Bar --- */}
+        <div className="bg-[#0F172A]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-4 mb-8 shadow-lg">
+          <div className="flex justify-between items-center">
+             <div className="flex items-center gap-2 text-sm text-gray-400">
+                <FaFilter className="text-cyan-500" />
+                <span>Filters</span>
+             </div>
+             <motion.button 
+               whileTap={{ scale: 0.95 }}
+               onClick={() => setShowFilters(!showFilters)}
+               className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all ${showFilters ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}
+             >
+               {showFilters ? 'Hide Controls' : 'Expand Controls'}
+             </motion.button>
+          </div>
+
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }} 
+                animate={{ height: 'auto', opacity: 1 }} 
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
               >
-                Clear Filters
-              </BubbleAnimation>
-            </div>
-          ) : (
-            currentIssues.map((issue, index) => (
-              <Link 
-                to={`/report/${issue.id}`} 
-                key={issue.id} 
-                className="block"
-                onClick={() => handleView(issue.id)}
-              >
-                <div 
-                  className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-white/10 hover:border-white/20 group animate-fadeIn"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {/* Header with badges and coordinates */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                    <div className="flex items-center gap-2">
-                      <StatusBadge status={issue.status} />
-                      <SeverityBadge severity={issue.severity} />
-                      <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold bg-purple-600 text-white rounded-full">
-                        📝 {issue.type}
-                      </span>
-                    </div>
-                    <span className="text-sm text-gray-400">
-                      📍 {issue.lat?.toFixed(5)}, {issue.lng?.toFixed(5)}
-                    </span>
-                  </div>
-
-                  {/* Description */}
-                  <p className="text-gray-200 mb-4 line-clamp-3 group-hover:text-white transition-colors">
-                    {issue.desc}
-                  </p>
-
-                  {/* Image with overlay - no hover text */}
-                  {issue.imageUrl && (
-                    <div className="relative mb-4 overflow-hidden rounded-xl group/image">
-                      <img 
-                        src={issue.imageUrl} 
-                        alt="Issue" 
-                        className="w-full h-48 object-cover transition-transform duration-500 group-hover/image:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-black/10 group-hover/image:bg-black/30 transition-all duration-300"></div>
-                    </div>
-                  )}
-
-                  {/* Interactive Footer */}
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-4 text-gray-400">
-                      <BubbleAnimation
-                        onClick={(e) => { e.preventDefault(); handleUpvote(issue.id); }}
-                        className="flex items-center gap-1 transition-all duration-300 hover:text-blue-500"
-                      >
-                        <FaArrowAltCircleUp className={`text-xl ${likedIssues.has(issue.id) ? 'text-blue-500' : 'text-gray-400'}`} />
-                        <span className="text-sm font-semibold">
-                          {likedIssues.has(issue.id) ? 1 : 0}
-                        </span>
-                      </BubbleAnimation>
-                      
-                      <div className="flex items-center gap-1">
-                        <FaShare />
-                        <span className="text-sm">Share</span>
-                      </div>
-                    </div>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 mt-4 border-t border-white/5">
+                  <FilterSelect label="Status" value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})} options={['All', 'new', 'in-progress', 'resolved']} />
+                  <FilterSelect label="Category" value={filters.category} onChange={e => setFilters({...filters, category: e.target.value})} options={['All', 'Pothole', 'Garbage', 'Water Leak', 'Other']} />
+                  <FilterSelect label="Severity" value={filters.severity} onChange={e => setFilters({...filters, severity: e.target.value})} options={['All', 'Low', 'Medium', 'High', 'Critical']} />
+                  <FilterSelect label="Sort By" value={filters.sortBy} onChange={e => setFilters({...filters, sortBy: e.target.value})} options={['Newest First', 'Oldest First', 'Most Liked']} />
                 </div>
-              </Link>
-            ))
-          )}
+                <div className="mt-4 flex justify-end">
+                   <button onClick={() => setFilters({status:'All', category:'All', severity:'All', sortBy:'Newest First'})} className="text-xs text-red-400 hover:text-red-300 underline">Reset All Filters</button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Enhanced Pagination */}
-        {totalPages > 1 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-t border-white/10">
-            <div className="text-gray-400 text-sm">
-              Page {currentPage} of {totalPages}
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <BubbleAnimation
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl disabled:opacity-50 transition flex items-center gap-2"
-              >
-                <FaArrowLeft />
-                Previous
-              </BubbleAnimation>
+        {/* --- Gallery Grid --- */}
+        {currentData.length === 0 ? (
+           <div className="text-center py-20 border border-dashed border-gray-800 rounded-3xl">
+              <FaSearch className="mx-auto text-6xl text-gray-800 mb-4" />
+              <p className="text-gray-500 text-xl">No reports found matching your criteria.</p>
+              <button onClick={() => setFilters({status:'All', category:'All', severity:'All', sortBy:'Newest First'})} className="mt-4 text-cyan-400 font-bold hover:underline">Clear Filters</button>
+           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentData.map((issue, index) => {
+              const sevStyle = getSeverityStyles(issue.severity);
+              const statusStyle = getStatusStyles(issue.status);
+              const isLiked = likedIssues.has(issue.id);
+              const dateStr = issue.ts ? new Date(issue.ts.toDate()).toLocaleDateString() : 'N/A';
 
-              <div className="flex space-x-1">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  const pageNum = i + 1;
-                  return (
-                    <BubbleAnimation
-                      key={pageNum}
-                      onClick={() => handlePageChange(pageNum)}
-                      className={`px-4 py-2 rounded-xl text-sm transition ${
-                        currentPage === pageNum 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-gray-700 hover:bg-gray-600 text-white'
-                      }`}
+              return (
+                <motion.div
+                  key={issue.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Link to={`/report/${issue.id}`} className="block h-full">
+                    <motion.div 
+                      whileHover={{ y: -5 }}
+                      className={`
+                        h-full bg-[#0F172A]/80 backdrop-blur-md rounded-xl overflow-hidden border border-white/5 
+                        hover:border-cyan-500/30 hover:shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-all group
+                      `}
                     >
-                      {pageNum}
-                    </BubbleAnimation>
-                  );
-                })}
-              </div>
+                      {/* Card Header */}
+                      <div className={`px-4 py-3 flex justify-between items-center border-b border-white/5 ${sevStyle.bg}`}>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm ${sevStyle.text}`}>{getSeverityIcon(issue.severity)}</span>
+                          <span className={`text-xs font-bold uppercase tracking-wider text-gray-200`}>{issue.type}</span>
+                        </div>
+                        <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusStyle.bg} ${statusStyle.text} border-white/5`}>
+                           {statusStyle.label}
+                        </div>
+                      </div>
 
-              <BubbleAnimation
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl disabled:opacity-50 transition flex items-center gap-2"
-              >
-                Next
-                <FaArrowRight />
-              </BubbleAnimation>
-            </div>
+                      {/* Image Area */}
+                      <div className="relative h-48 overflow-hidden bg-black">
+                        {issue.imageUrl ? (
+                          <img src={issue.imageUrl} alt="Issue" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-700"><FaTools size={30}/></div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] to-transparent opacity-60"></div>
+                        
+                        {/* Floating ID */}
+                        <div className="absolute top-2 right-2 bg-black/60 backdrop-blur text-[10px] text-cyan-400 font-mono px-2 py-1 rounded border border-cyan-500/20">
+                          #{issue.id.substring(0,6)}
+                        </div>
+                      </div>
+
+                      {/* Card Body */}
+                      <div className="p-5">
+                         <p className="text-gray-300 text-sm mb-4 line-clamp-2 h-10 leading-relaxed">
+                           {issue.desc || "No description provided."}
+                         </p>
+
+                         <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
+                            <div className="flex items-center gap-1.5">
+                               <FaMapMarkerAlt className="text-cyan-500/50" />
+                               <span>{issue.lat?.toFixed(4)}, {issue.lng?.toFixed(4)}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                               <FaCalendarAlt className="text-cyan-500/50" />
+                               <span>{dateStr}</span>
+                            </div>
+                         </div>
+
+                         {/* Footer Actions */}
+                         <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                            <button 
+                              onClick={(e) => handleUpvote(e, issue.id)}
+                              className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${isLiked ? 'text-pink-500' : 'text-gray-500 hover:text-pink-400'}`}
+                            >
+                               {isLiked ? <FaHeart /> : <FaRegHeart />}
+                               <span>Support</span>
+                            </button>
+
+                            <button 
+                              onClick={(e) => handleShare(e, issue)}
+                              className="text-gray-500 hover:text-cyan-400 transition-colors"
+                            >
+                               <FaShareAlt size={14} />
+                            </button>
+                         </div>
+                      </div>
+                    </motion.div>
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
         )}
-      </main>
 
-      {/* Add CSS animations */}
-      <style jsx>{`
-        @keyframes bubble {
-          0% {
-            transform: scale(0);
-            opacity: 0.7;
-          }
-          50% {
-            opacity: 0.4;
-          }
-          100% {
-            transform: scale(4);
-            opacity: 0;
-          }
-        }
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-bubble {
-          animation: bubble 0.6s ease-out forwards;
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out forwards;
-        }
-        .line-clamp-3 {
-          display: -webkit-box;
-          -webkit-line-clamp: 3;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      `}</style>
+        {/* --- Pagination --- */}
+        {totalPages > 1 && (
+           <div className="flex justify-center items-center gap-4 mt-12">
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p-1))}
+                disabled={currentPage === 1}
+                className="p-3 rounded-full bg-black/40 border border-white/10 text-gray-400 hover:text-white hover:border-cyan-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                 <FaChevronLeft />
+              </button>
+              <span className="text-sm font-mono text-cyan-500 font-bold">
+                 Page {currentPage} / {totalPages}
+              </span>
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))}
+                disabled={currentPage === totalPages}
+                className="p-3 rounded-full bg-black/40 border border-white/10 text-gray-400 hover:text-white hover:border-cyan-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                 <FaChevronRight />
+              </button>
+           </div>
+        )}
+      </div>
     </div>
   );
 }
