@@ -68,7 +68,7 @@ function Navbar() {
         <NavItem to="/gallery" icon={Users} label="Gallery" />
         <NavItem to="/leaderboard" icon={Star} label="Leaderboard" />
         <NavItem to="/help" icon={HelpCircle} label="Help" />
-        <NavItem to="/SIH2025" icon={Star} label="SIH 2025" colorClass="text-yellow-400" />
+        {/* <NavItem to="/SIH2025" icon={Star} label="SIH 2025" colorClass="text-yellow-400" /> */}
         
         {currentUser && (
           <div className="hidden md:block h-6 w-[1px] bg-white/10 mx-1"></div>
