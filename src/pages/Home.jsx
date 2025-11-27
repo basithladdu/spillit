@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { renderToString } from 'react-dom/server';
 import {
   collection, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp,
-  orderBy, query
+  orderBy, query, limit
 } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { useNavigate, Link } from 'react-router-dom';
@@ -10,6 +10,7 @@ import { useAuth } from '../hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 import L from 'leaflet';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
+import imageCompression from 'browser-image-compression';
 
 // --- Icons ---
 import {
@@ -96,7 +97,7 @@ function Home() {
 
   // --- Data & Markers ---
   useEffect(() => {
-    const q = query(collection(db, 'issues'), orderBy('ts', 'desc'));
+    const q = query(collection(db, 'issues'), orderBy('ts', 'desc'), limit(50));
     const unsubscribe = onSnapshot(q, (snap) => {
       const issues = {};
       snap.forEach(d => issues[d.id] = { id: d.id, ...d.data() });
@@ -186,10 +187,24 @@ function Home() {
 
     setIsSubmitting(true);
 
+    // Image Compression
+    let imageFile = formData.image;
+    try {
+      const options = {
+        maxSizeMB: 0.15, // 150KB
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+      imageFile = await imageCompression(formData.image, options);
+      console.log(`Image compressed from ${formData.image.size / 1024}KB to ${imageFile.size / 1024}KB`);
+    } catch (error) {
+      console.error("Image compression failed:", error);
+    }
+
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const imgUrl = await uploadToCloudinary(formData.image);
+          const imgUrl = await uploadToCloudinary(imageFile);
           const { image, ...cleanData } = formData;
 
           const newDoc = await addDoc(collection(db, "issues"), {
@@ -219,8 +234,6 @@ function Home() {
       }
     );
   };
-
-
 
   // --- Navigation Item Component ---
   const NavItem = ({ to, icon, label }) => (

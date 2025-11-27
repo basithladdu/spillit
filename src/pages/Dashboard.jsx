@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, orderBy, query, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, orderBy, query, deleteDoc, doc, updateDoc, limit } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
@@ -92,7 +92,7 @@ function Dashboard() {
 
   // Fetch Data
   useEffect(() => {
-    const q = query(collection(db, 'issues'), orderBy('ts', 'desc'));
+    const q = query(collection(db, 'issues'), orderBy('ts', 'desc'), limit(100));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = [];
       const catCounts = {};
