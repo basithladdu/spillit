@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { renderToString } from 'react-dom/server';
 import {
-  collection, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp,
+  collection, onSnapshot, addDoc, serverTimestamp,
   orderBy, query, limit
 } from 'firebase/firestore';
 import { db } from '../utils/firebase';
@@ -16,10 +15,10 @@ import imageCompression from 'browser-image-compression';
 import {
   FaMap, FaChartBar, FaUsers, FaSignInAlt, FaSignOutAlt, FaTools,
   FaSearch, FaLayerGroup, FaTimes, FaPaperPlane, FaCamera, FaCrosshairs,
-  FaMapMarkerAlt, FaCalendarAlt, FaCopy, FaStar
+  FaStar
 } from 'react-icons/fa';
 import { SiGoogledocs } from 'react-icons/si';
-import { MdGpsFixed, MdWarning, MdError, MdCheckCircle } from 'react-icons/md';
+import { MdGpsFixed, MdCheckCircle } from 'react-icons/md';
 
 import ReportCard from './ReportCard';
 
@@ -32,7 +31,8 @@ L.Icon.Default.mergeOptions({
 });
 
 // --- Configuration ---
-const MAPBOX_TOKEN = process.env.REACT_APP_MAPBOX_TOKEN || 'pk.eyJ1IjoiYXdhaXpzaGFpazI1IiwiYSI6ImNtY3J5MHQzMTEwZjcyanMzYWJuMnMxcTUifQ.bLPhS0-UAAouYlHOK396XQ';
+// Use import.meta.env for Vite
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || process.env.REACT_APP_MAPBOX_TOKEN || 'pk.eyJ1IjoiYXdhaXpzaGFpazI1IiwiYSI6ImNtY3J5MHQzMTEwZjcyanMzYWJuMnMxcTUifQ.bLPhS0-UAAouYlHOK396XQ';
 const CLOUDINARY_CREDENTIALS = [{ cloudName: 'fixit', uploadPreset: 'fixit_unsigned' }];
 
 const MAP_STYLES = [
@@ -67,7 +67,7 @@ function Home() {
   const [summaryData, setSummaryData] = useState(null);
   const [formData, setFormData] = useState({ type: 'Pothole', severity: 'Low', desc: '', image: null, status: 'new' });
   const [searchId, setSearchId] = useState('');
-  const [mapStyle, setMapStyle] = useState('mapbox/navigation-night-v1');
+  const [mapStyle, setMapStyle] = useState('mapbox/outdoors-v12');
 
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
@@ -88,12 +88,16 @@ function Home() {
         .setView([15.8281, 78.0373], 15); // Default View
 
       loadMapboxStyle(mapInstance, mapStyle);
-      L.control.zoom({ position: 'bottomright' }).addTo(mapInstance);
+      // Changed position to bottomleft to avoid conflict with mobile report button (bottom-right) and layers (top-right)
+      L.control.zoom({ position: 'bottomleft' }).addTo(mapInstance);
       setMap(mapInstance);
     }
-  }, []);
+  }, []); // Intentionally empty dependency array for initial map setup
 
-  useEffect(() => { if (map) loadMapboxStyle(map, mapStyle); }, [mapStyle, map]);
+  // Update map style when mapStyle state changes
+  useEffect(() => {
+    if (map) loadMapboxStyle(map, mapStyle);
+  }, [mapStyle, map]);
 
   // --- Data & Markers ---
   useEffect(() => {
@@ -205,7 +209,8 @@ function Home() {
       async (pos) => {
         try {
           const imgUrl = await uploadToCloudinary(imageFile);
-          const { image, ...cleanData } = formData;
+          // eslint-disable-next-line no-unused-vars
+          const { image: _unused, ...cleanData } = formData;
 
           const newDoc = await addDoc(collection(db, "issues"), {
             ...cleanData,
@@ -300,12 +305,31 @@ function Home() {
             </button>
           </div>
         </div>
+
+        {/* Mobile Style Drawer (AnimatePresence needs to be here or outside hidden block) */}
+        <AnimatePresence>
+          {isStyleOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+              className="md:hidden absolute top-20 right-4 bg-[#0F172A]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 w-48 shadow-2xl pointer-events-auto z-[2000]"
+            >
+              <div className="text-[10px] font-bold text-gray-500 px-2 py-1 uppercase mb-1">Map Layers</div>
+              <div className="space-y-1">
+                {MAP_STYLES.map(s => (
+                  <button key={s.id} onClick={() => { setMapStyle(s.id); setIsStyleOpen(false); }} className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2 ${mapStyle === s.id ? 'bg-cyan-500/20 text-cyan-400' : 'hover:bg-white/5 text-gray-300'}`}>
+                    <div className={`w-3 h-3 rounded-full ${s.color}`}></div> {s.name}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.nav>
 
       {/* --- HUD: Floating Controls --- */}
       <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.5rem)] right-4 md:bottom-24 md:right-6 z-[900] flex flex-col gap-4 items-end pointer-events-auto">
 
-        {/* Style Switcher (Desktop Position / Mobile handled in header or here) */}
+        {/* Style Switcher (Desktop Only) */}
         <div className="relative hidden md:block">
           <motion.button
             whileTap={{ scale: 0.9 }}
@@ -355,8 +379,8 @@ function Home() {
         </motion.button>
       </div>
 
-      {/* --- HUD: Branding (Bottom Left - Desktop Only) --- */}
-      <div className="fixed bottom-8 left-8 z-[900] pointer-events-none hidden md:block">
+      {/* --- HUD: Branding (Top Left - Desktop Only) --- */}
+      <div className="fixed top-28 left-8 z-[900] pointer-events-none hidden md:block">
         <div className="flex items-center gap-3 bg-[#0F172A]/80 backdrop-blur-xl border border-white/10 px-5 py-3 rounded-2xl shadow-2xl">
           <div className="bg-cyan-500 text-black p-2 rounded-lg"><FaTools /></div>
           <div>
