@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom';
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FaSearch, FaFilter, FaShareAlt, FaHeart, FaRegHeart, 
-  FaChevronLeft, FaChevronRight, FaMapMarkerAlt, FaCalendarAlt, 
-  FaTools, FaInfoCircle, FaCheckCircle, FaExclamationTriangle, 
-  FaLayerGroup, FaTimes 
+import {
+  FaSearch, FaFilter, FaShareAlt, FaHeart, FaRegHeart,
+  FaChevronLeft, FaChevronRight, FaMapMarkerAlt, FaCalendarAlt,
+  FaTools, FaInfoCircle, FaCheckCircle, FaExclamationTriangle,
+  FaLayerGroup, FaTimes
 } from 'react-icons/fa';
 import { MdError, MdWarning, MdCheckCircle, MdGpsFixed } from 'react-icons/md';
 
@@ -35,24 +35,24 @@ const getSeverityStyles = (severity) => {
 
 const getStatusStyles = (status) => {
   const s = (status || 'new').toLowerCase();
-  if (s === 'resolved') return { bg: 'bg-green-500/20', text: 'text-green-400', label: 'Resolved' };
-  if (s === 'in_progress') return { bg: 'bg-blue-500/20', text: 'text-blue-400', label: 'In Progress' };
-  return { bg: 'bg-amber-500/20', text: 'text-amber-400', label: 'Open' };
+  if (s === 'resolved') return { bg: 'bg-[#046A38]/20', text: 'text-[#046A38]', label: 'Resolved' };
+  if (s === 'in_progress') return { bg: 'bg-[#06038D]/20', text: 'text-[#06038D]', label: 'In Progress' };
+  return { bg: 'bg-[#FF671F]/20', text: 'text-[#FF671F]', label: 'Open' };
 };
 
 // --- 2. Sub-Components ---
 
 const StatBox = ({ label, value, icon, colorClass, onClick }) => (
-  <motion.div 
-    whileHover={{ y: -5, boxShadow: "0 0 20px rgba(6,182,212,0.15)" }}
+  <motion.div
+    whileHover={{ y: -5, boxShadow: "0 0 20px rgba(255,103,31,0.15)" }}
     onClick={onClick}
     className={`
       cursor-pointer relative overflow-hidden rounded-2xl p-5 border border-white/5 
-      bg-[#0F172A]/60 backdrop-blur-md flex items-center justify-between group
+      bg-[var(--muni-surface)]/60 backdrop-blur-md flex items-center justify-between group
     `}
   >
     <div className="z-10">
-      <p className="text-gray-400 text-xs uppercase tracking-wider font-bold mb-1">{label}</p>
+      <p className="text-[var(--muni-text-muted)] text-xs uppercase tracking-wider font-bold mb-1">{label}</p>
       <h3 className={`text-3xl font-bold ${colorClass} drop-shadow-lg`}>{value}</h3>
     </div>
     <div className={`text-3xl opacity-20 group-hover:opacity-50 group-hover:scale-110 transition-all duration-500 ${colorClass}`}>
@@ -65,12 +65,12 @@ const StatBox = ({ label, value, icon, colorClass, onClick }) => (
 
 const FilterSelect = ({ label, value, onChange, options }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="text-[10px] font-bold text-cyan-500/80 uppercase tracking-widest ml-1">{label}</label>
+    <label className="text-[10px] font-bold text-[#FF671F]/80 uppercase tracking-widest ml-1">{label}</label>
     <div className="relative">
-      <select 
-        value={value} 
+      <select
+        value={value}
         onChange={onChange}
-        className="w-full bg-[#0A0A1E] text-gray-300 text-sm rounded-lg border border-white/10 px-3 py-2.5 outline-none focus:border-cyan-500 focus:shadow-[0_0_10px_rgba(6,182,212,0.3)] appearance-none transition-all"
+        className="w-full bg-[var(--muni-bg)] text-gray-300 text-sm rounded-lg border border-white/10 px-3 py-2.5 outline-none focus:border-[#FF671F] focus:shadow-[0_0_10px_rgba(255,103,31,0.3)] appearance-none transition-all"
       >
         {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
       </select>
@@ -82,7 +82,7 @@ const FilterSelect = ({ label, value, onChange, options }) => (
 // --- 3. Main Gallery Component ---
 
 function Gallery() {
- 
+
 
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -106,7 +106,7 @@ function Gallery() {
 
     const savedLikes = localStorage.getItem('galleryLikes');
     if (savedLikes) setLikedIssues(new Set(JSON.parse(savedLikes)));
-    
+
     return () => unsubscribe();
   }, []);
 
@@ -149,84 +149,84 @@ function Gallery() {
   const currentData = filteredIssues.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   if (loading) return (
-    <div className="min-h-screen bg-[#0A0A1E] flex items-center justify-center">
-      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-500"></div>
+    <div className="min-h-screen bg-[var(--muni-bg)] flex items-center justify-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#FF671F]"></div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#0A0A1E] text-gray-200 font-sans selection:bg-cyan-500/30 selection:text-cyan-100 pb-20">
-      
+    <div className="min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans selection:bg-[#FF671F]/30 selection:text-white pb-20">
+
       {/* --- Header Section --- */}
       <div className="relative pt-24 pb-10 px-6 max-w-7xl mx-auto">
         {/* Background Glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#FF671F]/10 rounded-full blur-[100px] pointer-events-none"></div>
 
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
           <div>
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-2 tracking-tight">
-              Community <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Gallery</span>
+              Community <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF671F] via-white to-[#046A38]">Gallery</span>
             </h1>
-            <p className="text-gray-400 text-lg max-w-xl">
+            <p className="text-[var(--muni-text-muted)] text-lg max-w-xl">
               Track real-time infrastructure reports. visualize data, and support your local community improvements.
             </p>
           </div>
-          
+
           {/* Quick Search Pill */}
           <div className="relative group w-full md:w-auto">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <FaSearch className="text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
+              <FaSearch className="text-gray-500 group-focus-within:text-[#FF671F] transition-colors" />
             </div>
-            <input 
-              type="text" 
-              placeholder="Search reports..." 
+            <input
+              type="text"
+              placeholder="Search reports..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full md:w-80 pl-11 pr-4 py-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-full text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all"
+              className="w-full md:w-80 pl-11 pr-4 py-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-full text-sm text-white focus:outline-none focus:border-[#FF671F]/50 focus:shadow-[0_0_20px_rgba(255,103,31,0.2)] transition-all"
             />
           </div>
         </div>
 
         {/* --- Stats Grid --- */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatBox label="Total Reports" value={issues.length} icon={<FaLayerGroup />} colorClass="text-cyan-400" />
-          <StatBox label="In Progress" value={issues.filter(i => i.status === 'in-progress').length} icon={<FaTools />} colorClass="text-blue-400" onClick={() => setFilters({...filters, status: 'in-progress'})} />
-          <StatBox label="Resolved" value={issues.filter(i => i.status === 'resolved').length} icon={<MdCheckCircle />} colorClass="text-emerald-400" onClick={() => setFilters({...filters, status: 'resolved'})} />
-          <StatBox label="Critical Issues" value={issues.filter(i => i.severity === 'Critical').length} icon={<MdWarning />} colorClass="text-red-400" onClick={() => setFilters({...filters, severity: 'Critical'})} />
+          <StatBox label="Total Reports" value={issues.length} icon={<FaLayerGroup />} colorClass="text-[#FF671F]" />
+          <StatBox label="In Progress" value={issues.filter(i => i.status === 'in-progress').length} icon={<FaTools />} colorClass="text-[#06038D]" onClick={() => setFilters({ ...filters, status: 'in-progress' })} />
+          <StatBox label="Resolved" value={issues.filter(i => i.status === 'resolved').length} icon={<MdCheckCircle />} colorClass="text-[#046A38]" onClick={() => setFilters({ ...filters, status: 'resolved' })} />
+          <StatBox label="Critical Issues" value={issues.filter(i => i.severity === 'Critical').length} icon={<MdWarning />} colorClass="text-red-400" onClick={() => setFilters({ ...filters, severity: 'Critical' })} />
         </div>
 
         {/* --- Controls Bar --- */}
-        <div className="bg-[#0F172A]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-4 mb-8 shadow-lg">
+        <div className="bg-[var(--muni-surface)]/80 backdrop-blur-xl border border-white/5 rounded-2xl p-4 mb-8 shadow-lg">
           <div className="flex justify-between items-center">
-             <div className="flex items-center gap-2 text-sm text-gray-400">
-                <FaFilter className="text-cyan-500" />
-                <span>Filters</span>
-             </div>
-             <motion.button 
-               whileTap={{ scale: 0.95 }}
-               onClick={() => setShowFilters(!showFilters)}
-               className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all ${showFilters ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}
-             >
-               {showFilters ? 'Hide Controls' : 'Expand Controls'}
-             </motion.button>
+            <div className="flex items-center gap-2 text-sm text-[var(--muni-text-muted)]">
+              <FaFilter className="text-[#FF671F]" />
+              <span>Filters</span>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all ${showFilters ? 'bg-[#FF671F]/20 text-[#FF671F] border-[#FF671F]/30' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}
+            >
+              {showFilters ? 'Hide Controls' : 'Expand Controls'}
+            </motion.button>
           </div>
 
           <AnimatePresence>
             {showFilters && (
-              <motion.div 
-                initial={{ height: 0, opacity: 0 }} 
-                animate={{ height: 'auto', opacity: 1 }} 
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden"
               >
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 mt-4 border-t border-white/5">
-                  <FilterSelect label="Status" value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})} options={['All', 'new', 'in-progress', 'resolved']} />
-                  <FilterSelect label="Category" value={filters.category} onChange={e => setFilters({...filters, category: e.target.value})} options={['All', 'Pothole', 'Garbage', 'Water Leak', 'Other']} />
-                  <FilterSelect label="Severity" value={filters.severity} onChange={e => setFilters({...filters, severity: e.target.value})} options={['All', 'Low', 'Medium', 'High', 'Critical']} />
-                  <FilterSelect label="Sort By" value={filters.sortBy} onChange={e => setFilters({...filters, sortBy: e.target.value})} options={['Newest First', 'Oldest First', 'Most Liked']} />
+                  <FilterSelect label="Status" value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })} options={['All', 'new', 'in-progress', 'resolved']} />
+                  <FilterSelect label="Category" value={filters.category} onChange={e => setFilters({ ...filters, category: e.target.value })} options={['All', 'Pothole', 'Garbage', 'Water Leak', 'Other']} />
+                  <FilterSelect label="Severity" value={filters.severity} onChange={e => setFilters({ ...filters, severity: e.target.value })} options={['All', 'Low', 'Medium', 'High', 'Critical']} />
+                  <FilterSelect label="Sort By" value={filters.sortBy} onChange={e => setFilters({ ...filters, sortBy: e.target.value })} options={['Newest First', 'Oldest First', 'Most Liked']} />
                 </div>
                 <div className="mt-4 flex justify-end">
-                   <button onClick={() => setFilters({status:'All', category:'All', severity:'All', sortBy:'Newest First'})} className="text-xs text-red-400 hover:text-red-300 underline">Reset All Filters</button>
+                  <button onClick={() => setFilters({ status: 'All', category: 'All', severity: 'All', sortBy: 'Newest First' })} className="text-xs text-red-400 hover:text-red-300 underline">Reset All Filters</button>
                 </div>
               </motion.div>
             )}
@@ -235,11 +235,11 @@ function Gallery() {
 
         {/* --- Gallery Grid --- */}
         {currentData.length === 0 ? (
-           <div className="text-center py-20 border border-dashed border-gray-800 rounded-3xl">
-              <FaSearch className="mx-auto text-6xl text-gray-800 mb-4" />
-              <p className="text-gray-500 text-xl">No reports found matching your criteria.</p>
-              <button onClick={() => setFilters({status:'All', category:'All', severity:'All', sortBy:'Newest First'})} className="mt-4 text-cyan-400 font-bold hover:underline">Clear Filters</button>
-           </div>
+          <div className="text-center py-20 border border-dashed border-gray-800 rounded-3xl">
+            <FaSearch className="mx-auto text-6xl text-gray-800 mb-4" />
+            <p className="text-[var(--muni-text-muted)] text-xl">No reports found matching your criteria.</p>
+            <button onClick={() => setFilters({ status: 'All', category: 'All', severity: 'All', sortBy: 'Newest First' })} className="mt-4 text-[#FF671F] font-bold hover:underline">Clear Filters</button>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {currentData.map((issue, index) => {
@@ -256,11 +256,11 @@ function Gallery() {
                   transition={{ delay: index * 0.05 }}
                 >
                   <Link to={`/report/${issue.id}`} className="block h-full">
-                    <motion.div 
+                    <motion.div
                       whileHover={{ y: -5 }}
                       className={`
-                        h-full bg-[#0F172A]/80 backdrop-blur-md rounded-xl overflow-hidden border border-white/5 
-                        hover:border-cyan-500/30 hover:shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-all group
+                        h-full bg-[var(--muni-surface)]/80 backdrop-blur-md rounded-xl overflow-hidden border border-white/5 
+                        hover:border-[#FF671F]/30 hover:shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-all group
                       `}
                     >
                       {/* Card Header */}
@@ -270,7 +270,7 @@ function Gallery() {
                           <span className={`text-xs font-bold uppercase tracking-wider text-gray-200`}>{issue.type}</span>
                         </div>
                         <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusStyle.bg} ${statusStyle.text} border-white/5`}>
-                           {statusStyle.label}
+                          {statusStyle.label}
                         </div>
                       </div>
 
@@ -279,50 +279,50 @@ function Gallery() {
                         {issue.imageUrl ? (
                           <img src={issue.imageUrl} alt="Issue" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-700"><FaTools size={30}/></div>
+                          <div className="w-full h-full flex items-center justify-center text-gray-700"><FaTools size={30} /></div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] to-transparent opacity-60"></div>
-                        
+
                         {/* Floating ID */}
-                        <div className="absolute top-2 right-2 bg-black/60 backdrop-blur text-[10px] text-cyan-400 font-mono px-2 py-1 rounded border border-cyan-500/20">
-                          #{issue.id.substring(0,6)}
+                        <div className="absolute top-2 right-2 bg-black/60 backdrop-blur text-[10px] text-[#FF671F] font-mono px-2 py-1 rounded border border-[#FF671F]/20">
+                          #{issue.id.substring(0, 6)}
                         </div>
                       </div>
 
                       {/* Card Body */}
                       <div className="p-5">
-                         <p className="text-gray-300 text-sm mb-4 line-clamp-2 h-10 leading-relaxed">
-                           {issue.desc || "No description provided."}
-                         </p>
+                        <p className="text-gray-300 text-sm mb-4 line-clamp-2 h-10 leading-relaxed">
+                          {issue.desc || "No description provided."}
+                        </p>
 
-                         <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
-                            <div className="flex items-center gap-1.5">
-                               <FaMapMarkerAlt className="text-cyan-500/50" />
-                               <span>{issue.lat?.toFixed(4)}, {issue.lng?.toFixed(4)}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                               <FaCalendarAlt className="text-cyan-500/50" />
-                               <span>{dateStr}</span>
-                            </div>
-                         </div>
+                        <div className="flex items-center gap-4 text-xs text-[var(--muni-text-muted)] mb-4">
+                          <div className="flex items-center gap-1.5">
+                            <FaMapMarkerAlt className="text-[#FF671F]/50" />
+                            <span>{issue.lat?.toFixed(4)}, {issue.lng?.toFixed(4)}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <FaCalendarAlt className="text-[#FF671F]/50" />
+                            <span>{dateStr}</span>
+                          </div>
+                        </div>
 
-                         {/* Footer Actions */}
-                         <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                            <button 
-                              onClick={(e) => handleUpvote(e, issue.id)}
-                              className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${isLiked ? 'text-pink-500' : 'text-gray-500 hover:text-pink-400'}`}
-                            >
-                               {isLiked ? <FaHeart /> : <FaRegHeart />}
-                               <span>Support</span>
-                            </button>
+                        {/* Footer Actions */}
+                        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                          <button
+                            onClick={(e) => handleUpvote(e, issue.id)}
+                            className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${isLiked ? 'text-pink-500' : 'text-gray-500 hover:text-pink-400'}`}
+                          >
+                            {isLiked ? <FaHeart /> : <FaRegHeart />}
+                            <span>Support</span>
+                          </button>
 
-                            <button 
-                              onClick={(e) => handleShare(e, issue)}
-                              className="text-gray-500 hover:text-cyan-400 transition-colors"
-                            >
-                               <FaShareAlt size={14} />
-                            </button>
-                         </div>
+                          <button
+                            onClick={(e) => handleShare(e, issue)}
+                            className="text-gray-500 hover:text-[#FF671F] transition-colors"
+                          >
+                            <FaShareAlt size={14} />
+                          </button>
+                        </div>
                       </div>
                     </motion.div>
                   </Link>
@@ -334,25 +334,25 @@ function Gallery() {
 
         {/* --- Pagination --- */}
         {totalPages > 1 && (
-           <div className="flex justify-center items-center gap-4 mt-12">
-              <button 
-                onClick={() => setCurrentPage(p => Math.max(1, p-1))}
-                disabled={currentPage === 1}
-                className="p-3 rounded-full bg-black/40 border border-white/10 text-gray-400 hover:text-white hover:border-cyan-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              >
-                 <FaChevronLeft />
-              </button>
-              <span className="text-sm font-mono text-cyan-500 font-bold">
-                 Page {currentPage} / {totalPages}
-              </span>
-              <button 
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))}
-                disabled={currentPage === totalPages}
-                className="p-3 rounded-full bg-black/40 border border-white/10 text-gray-400 hover:text-white hover:border-cyan-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              >
-                 <FaChevronRight />
-              </button>
-           </div>
+          <div className="flex justify-center items-center gap-4 mt-12">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-3 rounded-full bg-black/40 border border-white/10 text-gray-400 hover:text-white hover:border-[#FF671F] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <FaChevronLeft />
+            </button>
+            <span className="text-sm font-mono text-[#FF671F] font-bold">
+              Page {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-3 rounded-full bg-black/40 border border-white/10 text-gray-400 hover:text-white hover:border-[#FF671F] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <FaChevronRight />
+            </button>
+          </div>
         )}
       </div>
     </div>

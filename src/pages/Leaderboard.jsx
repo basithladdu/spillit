@@ -7,29 +7,29 @@ import { FaTrophy, FaMedal, FaCheckCircle, FaArrowUp, FaCrown, FaLayerGroup } fr
 // --- Sub-Component: The Podium Card (Top 3) ---
 const PodiumSpot = ({ dept, rank, delay }) => {
   const isFirst = rank === 1;
-  
+
   // Rank Specific Styles
   const styles = {
-    1: { 
-      border: 'border-yellow-500/50', 
-      bg: 'bg-yellow-500/10', 
-      glow: 'shadow-[0_0_30px_rgba(234,179,8,0.2)]', 
+    1: {
+      border: 'border-yellow-500/50',
+      bg: 'bg-yellow-500/10',
+      glow: 'shadow-[0_0_30px_rgba(234,179,8,0.2)]',
       iconColor: 'text-yellow-400',
       height: 'h-64 md:h-80',
       scale: 1.05
     },
-    2: { 
-      border: 'border-slate-400/50', 
-      bg: 'bg-slate-400/10', 
-      glow: 'shadow-[0_0_30px_rgba(148,163,184,0.2)]', 
+    2: {
+      border: 'border-slate-400/50',
+      bg: 'bg-slate-400/10',
+      glow: 'shadow-[0_0_30px_rgba(148,163,184,0.2)]',
       iconColor: 'text-slate-300',
       height: 'h-56 md:h-72',
       scale: 1
     },
-    3: { 
-      border: 'border-orange-700/50', 
-      bg: 'bg-orange-700/10', 
-      glow: 'shadow-[0_0_30px_rgba(194,65,12,0.2)]', 
+    3: {
+      border: 'border-orange-700/50',
+      bg: 'bg-orange-700/10',
+      glow: 'shadow-[0_0_30px_rgba(194,65,12,0.2)]',
       iconColor: 'text-orange-400',
       height: 'h-52 md:h-64',
       scale: 0.95
@@ -64,14 +64,14 @@ const PodiumSpot = ({ dept, rank, delay }) => {
 
       <div className="text-center z-10">
         <h3 className="text-xl font-bold text-white mb-1 line-clamp-1">{dept.name}</h3>
-        <div className="text-sm text-gray-400 font-mono mb-3">{dept.score.toFixed(0)} pts</div>
-        
+        <div className="text-sm text-[var(--muni-text-muted)] font-mono mb-3">{dept.score.toFixed(0)} pts</div>
+
         {/* Stats Mini Grid */}
         <div className="flex gap-3 text-xs justify-center border-t border-white/10 pt-3">
-          <div className="flex items-center gap-1 text-emerald-400">
+          <div className="flex items-center gap-1 text-[#046A38]">
             <FaCheckCircle /> {dept.resolvedCount}
           </div>
-          <div className="flex items-center gap-1 text-blue-400">
+          <div className="flex items-center gap-1 text-[#06038D]">
             <FaArrowUp /> {dept.upvoteCount}
           </div>
         </div>
@@ -89,17 +89,17 @@ const RankRow = ({ dept, rank, delay }) => (
     initial={{ opacity: 0, x: -20 }}
     animate={{ opacity: 1, x: 0 }}
     transition={{ delay }}
-    className="group flex items-center justify-between p-4 bg-[#0F172A]/60 border border-white/5 rounded-xl hover:bg-white/5 hover:border-cyan-500/30 transition-all mb-3"
+    className="group flex items-center justify-between p-4 bg-[var(--muni-surface)]/60 border border-white/5 rounded-xl hover:bg-white/5 hover:border-[#FF671F]/30 transition-all mb-3"
   >
     <div className="flex items-center gap-4">
-      <div className="w-8 h-8 flex items-center justify-center font-mono font-bold text-gray-500 bg-white/5 rounded-lg group-hover:text-cyan-400 group-hover:bg-cyan-500/10 transition-colors">
+      <div className="w-8 h-8 flex items-center justify-center font-mono font-bold text-[var(--muni-text-muted)] bg-white/5 rounded-lg group-hover:text-[#FF671F] group-hover:bg-[#FF671F]/10 transition-colors">
         {rank}
       </div>
       <div>
         <h4 className="font-bold text-gray-200 group-hover:text-white">{dept.name}</h4>
-        <div className="text-xs text-gray-500 flex gap-3 md:hidden">
-           <span>{dept.resolvedCount} Resolved</span>
-           <span>{dept.upvoteCount} Upvotes</span>
+        <div className="text-xs text-[var(--muni-text-muted)] flex gap-3 md:hidden">
+          <span>{dept.resolvedCount} Resolved</span>
+          <span>{dept.upvoteCount} Upvotes</span>
         </div>
       </div>
     </div>
@@ -107,24 +107,24 @@ const RankRow = ({ dept, rank, delay }) => (
     {/* Stats for Desktop */}
     <div className="hidden md:flex items-center gap-8">
       <div className="flex flex-col items-end">
-        <span className="text-xs text-gray-500 uppercase">Resolved</span>
-        <span className="font-mono text-emerald-400">{dept.resolvedCount}</span>
+        <span className="text-xs text-[var(--muni-text-muted)] uppercase">Resolved</span>
+        <span className="font-mono text-[#046A38]">{dept.resolvedCount}</span>
       </div>
       <div className="flex flex-col items-end">
-        <span className="text-xs text-gray-500 uppercase">Upvotes</span>
-        <span className="font-mono text-blue-400">{dept.upvoteCount}</span>
+        <span className="text-xs text-[var(--muni-text-muted)] uppercase">Upvotes</span>
+        <span className="font-mono text-[#06038D]">{dept.upvoteCount}</span>
       </div>
       <div className="flex flex-col items-end w-24">
-        <span className="text-xs text-gray-500 uppercase">Efficiency</span>
+        <span className="text-xs text-[var(--muni-text-muted)] uppercase">Efficiency</span>
         <div className="w-full bg-gray-700 h-1.5 rounded-full mt-1">
-          <div 
-            className="bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full" 
+          <div
+            className="bg-gradient-to-r from-[#046A38] to-[#06038D] h-full rounded-full"
             style={{ width: `${dept.progressPercentage}%` }}
           />
         </div>
       </div>
       <div className="flex flex-col items-end w-16">
-        <span className="text-xs text-gray-500 uppercase">Score</span>
+        <span className="text-xs text-[var(--muni-text-muted)] uppercase">Score</span>
         <span className="font-mono font-bold text-yellow-500">{dept.score.toFixed(0)}</span>
       </div>
     </div>
@@ -172,43 +172,41 @@ function Leaderboard() {
   }, []);
 
   if (loading) return (
-    <div className="min-h-screen bg-[#0A0A1E] flex items-center justify-center">
-      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-500"></div>
+    <div className="min-h-screen bg-[var(--muni-bg)] flex items-center justify-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#FF671F]"></div>
     </div>
   );
 
   const topThree = leaderboardData.slice(0, 3);
-  // Reorder for visual podium: 2nd (Left), 1st (Center), 3rd (Right)
-  const podiumOrder = [topThree[1], topThree[0], topThree[2]].filter(Boolean);
   const restOfList = leaderboardData.slice(3);
 
   return (
-    <div className="min-h-screen bg-[#0A0A1E] text-gray-200 font-sans selection:bg-cyan-500/30 pb-20">
+    <div className="min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans selection:bg-[#FF671F]/30 pb-20">
       <div className="h-20"></div> {/* Navbar Spacer */}
 
       <main className="max-w-5xl mx-auto px-6 pt-10">
-        
+
         {/* --- Header --- */}
         <div className="text-center mb-16">
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="inline-block p-4 rounded-full bg-cyan-500/10 border border-cyan-500/30 mb-4"
+            className="inline-block p-4 rounded-full bg-[#FF671F]/10 border border-[#FF671F]/30 mb-4"
           >
-            <FaMedal className="text-4xl text-cyan-400" />
+            <FaMedal className="text-4xl text-[#FF671F]" />
           </motion.div>
           <h1 className="text-5xl font-bold text-white mb-2 tracking-tight">
-            Department <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500">Rankings</span>
+            Department <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF671F] via-white to-[#046A38]">Rankings</span>
           </h1>
-          <p className="text-gray-400 text-lg max-w-xl mx-auto">
+          <p className="text-[var(--muni-text-muted)] text-lg max-w-xl mx-auto">
             Recognizing the most responsive and effective teams in our community.
           </p>
         </div>
 
         {leaderboardData.length === 0 ? (
           <div className="text-center py-20 border border-dashed border-gray-800 rounded-3xl">
-             <FaLayerGroup className="mx-auto text-6xl text-gray-800 mb-4" />
-             <p className="text-gray-500">No data available for ranking yet.</p>
+            <FaLayerGroup className="mx-auto text-6xl text-gray-800 mb-4" />
+            <p className="text-[var(--muni-text-muted)]">No data available for ranking yet.</p>
           </div>
         ) : (
           <>
@@ -216,23 +214,23 @@ function Leaderboard() {
             <div className="flex flex-col md:flex-row items-end justify-center gap-4 mb-16 min-h-[340px]">
               {/* Rank 2 */}
               {topThree[1] && <PodiumSpot dept={topThree[1]} rank={2} delay={0.2} />}
-              
+
               {/* Rank 1 */}
               {topThree[0] && <PodiumSpot dept={topThree[0]} rank={1} delay={0.1} />}
-              
+
               {/* Rank 3 */}
               {topThree[2] && <PodiumSpot dept={topThree[2]} rank={3} delay={0.3} />}
             </div>
 
             {/* --- The List (Rank 4+) --- */}
             {restOfList.length > 0 && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="bg-[#0F172A]/40 backdrop-blur-xl border border-white/5 rounded-2xl p-6"
+                className="bg-[var(--muni-surface)]/40 backdrop-blur-xl border border-white/5 rounded-2xl p-6"
               >
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 pl-2">Honorable Mentions</h3>
+                <h3 className="text-xs font-bold text-[var(--muni-text-muted)] uppercase tracking-wider mb-4 pl-2">Honorable Mentions</h3>
                 <div className="flex flex-col">
                   {restOfList.map((dept, index) => (
                     <RankRow key={dept.name} dept={dept} rank={index + 4} delay={0.1 * index} />

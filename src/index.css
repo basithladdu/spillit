@@ -1,48 +1,89 @@
 @import "tailwindcss";
 
-/* --- Mobile Optimization Base --- */
+/* --- Municipal Theme & User Tokens --- */
 :root {
+  /* Core Municipal Theme Colors (Tesla-Grade) */
+  --muni-bg: #000000;
+  --muni-surface: #09090b;
+  --muni-border: #27272a;
+  --muni-text-main: #ffffff;
+  --muni-text-muted: #a1a1aa;
+  --muni-accent: #22c55e;
+  /* The "Green" user requested */
+  --muni-error: #ef4444;
+
+  /* User Requested Token Mappings (Overridden to match Municipal Theme) */
+  --text-color: var(--muni-text-main);
+  --bg-color: var(--muni-bg);
+  /* Enforcing Pure Black */
+  --border-color: var(--muni-border);
+  /* Enforcing Zinc Border for premium look */
+  --button-hover-color: #27272a;
+  --highlight-color: var(--muni-accent);
+  /* Green instead of Yellow */
+  --thread-action-color: var(--muni-accent);
+  --error-color: var(--muni-error);
+  --surface-dark: var(--muni-surface);
+
+  /* Additional Utility Colors */
+  --submit-thread-hover: #15803d;
+  /* Darker Green */
+  --submit-project-hover: #ca8a04;
+  --cta-blue: #3b82f6;
+
+  /* Mobile Safe Areas */
   --sat: env(safe-area-inset-top);
   --sab: env(safe-area-inset-bottom);
   --sal: env(safe-area-inset-left);
   --sar: env(safe-area-inset-right);
 }
 
-html, body {
+html,
+body {
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+}
+
+/* Global Animation Disable (Tesla-Grade Performance) */
+* {
+  transition: none !important;
 }
 
 /* Prevent iOS Zoom on inputs */
 @media screen and (max-width: 768px) {
-  input, select, textarea {
+
+  input,
+  select,
+  textarea {
     font-size: 16px !important;
   }
 }
 
-/* Custom Scrollbar for Webkit */
+/* Custom Scrollbar (Hidden/Minimal) */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 0px;
+  background: transparent;
 }
+
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
+  background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: rgba(6, 182, 212, 0.5);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(6, 182, 212, 0.8);
+  background: transparent;
 }
 
 /* Fix for Leaflet popup styling conflicts */
 .leaflet-popup-content-wrapper {
   padding: 0 !important;
   border: none !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
+  background-color: var(--surface-dark) !important;
+  color: var(--text-color) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important;
 }
 
 .leaflet-popup-content {
@@ -51,9 +92,7 @@ html, body {
 }
 
 .leaflet-popup-tip {
-  background-color: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
+  background-color: var(--surface-dark) !important;
 }
 
 /* Mobile Leaflet Popup Overrides */

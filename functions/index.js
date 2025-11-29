@@ -47,6 +47,37 @@ exports.onIssueReported = functions.firestore
     });
 
 /**
+ * Handles Municipal Admin Registration
+ * Callable function to securely register a new municipal admin request.
+ */
+exports.registerMunicipalAdmin = functions.https.onCall(async (data, context) => {
+    // 1. Validate Data
+    const required = ['organisation_name', 'official_email', 'admin_full_name', 'designation', 'office_phone', 'mobile_phone', 'office_address'];
+    for (const field of required) {
+        if (!data[field]) {
+            throw new functions.https.HttpsError('invalid-argument', `Missing field: ${field}`);
+        }
+    }
+
+    // 2. Save to Firestore
+    try {
+        const docRef = admin.firestore().collection('municipal_registrations').doc();
+        await docRef.set({
+            ...data,
+            status: 'pending',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            // Capture user agent if available, useful for audit
+            userAgent: context.rawRequest ? context.rawRequest.headers['user-agent'] : 'unknown'
+        });
+
+        return { success: true, message: 'Registration submitted successfully', id: docRef.id };
+    } catch (error) {
+        console.error("Registration Error:", error);
+        throw new functions.https.HttpsError('internal', 'Database error during registration.');
+    }
+});
+
+/**
  * Simple heuristic to calculate initial priority
  */
 function calculatePriority(data) {

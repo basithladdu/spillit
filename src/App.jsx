@@ -18,7 +18,13 @@ const Help = lazy(() => import("./pages/Help"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const SIH2025 = lazy(() => import("./pages/SIH2025"));
 
+// Municipal Pages
+const MunicipalRegistration = lazy(() => import("./pages/MunicipalRegistration"));
+const MunicipalDashboard = lazy(() => import("./pages/MunicipalDashboard"));
+const OpsDashboard = lazy(() => import("./pages/OpsDashboard"));
+
 import "./App.css";
+import "./styles/municipal.css";
 import "leaflet/dist/leaflet.css";
 
 // Loading Component
@@ -49,13 +55,32 @@ function App() {
             <Route path="/team" element={<Team />} />
             <Route path="/sih2025" element={<SIH2025 />} />
 
-            <Route 
-              path="/dashboard" 
+            {/* Municipal Routes */}
+            <Route path="/municipal-register" element={<MunicipalRegistration />} />
+            <Route
+              path="/municipal-dashboard"
+              element={
+                <ProtectedRoute role="municipal_admin">
+                  <MunicipalDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ops-dashboard"
+              element={
+                <ProtectedRoute>
+                  <OpsDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/dashboard"
               element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,15 +1,14 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
+import React, { useContext, useEffect, useState } from 'react';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
 import { auth } from '../utils/firebase';
-
-const AuthContext = createContext();
+import { AuthContext } from '../context/AuthContext';
 
 export function useAuth() {
   const context = useContext(AuthContext);
@@ -21,6 +20,7 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
+  const [userRole, setUserRole] = useState(null); // 'municipal_admin' | 'user' | null
   const [loading, setLoading] = useState(true);
 
   // Register user with email/password
@@ -45,7 +45,19 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const tokenResult = await user.getIdTokenResult();
+          const role = tokenResult.claims.municipal_admin ? 'municipal_admin' : 'user';
+          setUserRole(role);
+        } catch (e) {
+          console.error("Error fetching claims", e);
+          setUserRole('user');
+        }
+      } else {
+        setUserRole(null);
+      }
       setCurrentUser(user);
       setLoading(false);
     });
@@ -55,6 +67,7 @@ export function AuthProvider({ children }) {
 
   const value = {
     currentUser,
+    userRole,
     register,
     login,
     logout,

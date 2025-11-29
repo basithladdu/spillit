@@ -5,9 +5,9 @@ import { db } from '../utils/firebase';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import L from "leaflet";
-import { 
-  FaMapMarkerAlt, FaCalendarAlt, FaShareAlt, FaHeart, FaRegHeart, 
-  FaExclamationTriangle, FaHashtag, FaLayerGroup, FaArrowLeft, FaLock 
+import {
+  FaMapMarkerAlt, FaCalendarAlt, FaShareAlt, FaHeart, FaRegHeart,
+  FaExclamationTriangle, FaHashtag, FaLayerGroup, FaArrowLeft, FaLock
 } from 'react-icons/fa';
 import { MdCheckCircle, MdWarning, MdError, MdPending } from 'react-icons/md';
 
@@ -22,19 +22,19 @@ const SEVERITY_CONFIG = {
 };
 
 const STATUS_CONFIG = {
-  resolved: { color: 'text-emerald-400', bg: 'bg-emerald-500/20', label: 'Resolved' },
-  'in-progress': { color: 'text-blue-400', bg: 'bg-blue-500/20', label: 'In Progress' },
-  new: { color: 'text-amber-400', bg: 'bg-amber-500/20', label: 'Open Report' }
+  resolved: { color: 'text-[#046A38]', bg: 'bg-[#046A38]/20', label: 'Resolved' },
+  'in-progress': { color: 'text-[#06038D]', bg: 'bg-[#06038D]/20', label: 'In Progress' },
+  new: { color: 'text-[#FF671F]', bg: 'bg-[#FF671F]/20', label: 'Open Report' }
 };
 
 // --- Sub-Components ---
 
 const InfoBlock = ({ label, value, icon, mono = false }) => (
-  <div className="flex flex-col p-3 rounded-xl bg-white/5 border border-white/5 hover:border-cyan-500/30 transition-colors">
-    <div className="flex items-center gap-2 text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">
+  <div className="flex flex-col p-3 rounded-xl bg-white/5 border border-white/5 hover:border-[#FF671F]/30 transition-colors">
+    <div className="flex items-center gap-2 text-[var(--muni-text-muted)] text-xs font-bold uppercase tracking-wider mb-1">
       {icon} <span>{label}</span>
     </div>
-    <div className={`text-gray-200 ${mono ? 'font-mono text-sm' : 'text-base font-medium'}`}>
+    <div className={`text-white ${mono ? 'font-mono text-sm' : 'text-base font-medium'}`}>
       {value}
     </div>
   </div>
@@ -48,7 +48,7 @@ function Report() {
   const [user, setUser] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isUpvoted, setIsUpvoted] = useState(false);
-  
+
   const mapRef = useRef(null);
   const [map, setMap] = useState(null);
 
@@ -85,11 +85,11 @@ function Report() {
   useEffect(() => {
     if (report && !map && mapRef.current) {
       if (mapRef.current._leaflet_id) mapRef.current._leaflet_id = null;
-      
-      const mapInstance = L.map(mapRef.current, { 
-        zoomControl: false, 
-        dragging: !L.Browser.mobile, 
-        tap: !L.Browser.mobile 
+
+      const mapInstance = L.map(mapRef.current, {
+        zoomControl: false,
+        dragging: !L.Browser.mobile,
+        tap: !L.Browser.mobile
       }).setView([report.lat, report.lng], 15);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -106,7 +106,7 @@ function Report() {
 
       L.marker([report.lat, report.lng], { icon }).addTo(mapInstance)
         .bindPopup(`<b style="color:black">${report.type}</b>`).openPopup();
-      
+
       setMap(mapInstance);
     }
   }, [report, map]);
@@ -119,10 +119,10 @@ function Report() {
 
   const handleUpvote = async () => {
     if (!user) return setShowLoginModal(true);
-    
+
     const issueRef = doc(db, 'issues', id);
     const upvotedList = JSON.parse(localStorage.getItem('upvotedReports')) || [];
-    
+
     try {
       if (isUpvoted) {
         await updateDoc(issueRef, { upvotes: increment(-1) });
@@ -140,16 +140,16 @@ function Report() {
 
   // --- Render Logic ---
   if (loading) return (
-    <div className="min-h-screen bg-[#0A0A1E] flex items-center justify-center">
-      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-500"></div>
+    <div className="min-h-screen bg-[var(--muni-bg)] flex items-center justify-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#FF671F]"></div>
     </div>
   );
 
   if (error || !report) return (
-    <div className="min-h-screen bg-[#0A0A1E] flex flex-col items-center justify-center text-white">
+    <div className="min-h-screen bg-[var(--muni-bg)] flex flex-col items-center justify-center text-white">
       <h1 className="text-4xl font-bold text-red-500 mb-4">404</h1>
-      <p className="text-gray-400 mb-6">Report not found or deleted.</p>
-      <Link to="/" className="px-6 py-2 bg-cyan-600 rounded-full hover:bg-cyan-500 transition">Go Home</Link>
+      <p className="text-[var(--muni-text-muted)] mb-6">Report not found or deleted.</p>
+      <Link to="/" className="px-6 py-2 bg-[#046A38] rounded-full hover:bg-[#046A38]/80 transition">Go Home</Link>
     </div>
   );
 
@@ -158,113 +158,113 @@ function Report() {
   const SeverityIcon = sevTheme.icon;
 
   return (
-    <div className="min-h-screen bg-[#0A0A1E] text-gray-200 font-sans selection:bg-cyan-500/30 pb-20">
-      
+    <div className="min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans selection:bg-[#FF671F]/30 pb-20">
+
       {/* --- Background Glow --- */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#FF671F]/10 rounded-full blur-[120px] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-24 relative z-10">
-        
+
         {/* --- Back Nav --- */}
-        <Link to="/gallery" className="inline-flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition-colors mb-6 group">
+        <Link to="/gallery" className="inline-flex items-center gap-2 text-[var(--muni-text-muted)] hover:text-[#FF671F] transition-colors mb-6 group">
           <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" /> Back to Gallery
         </Link>
 
         {/* --- Main Grid --- */}
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8">
-          
+
           {/* --- Left Column: Visuals --- */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}
             className="space-y-6"
           >
             {/* Image Card */}
-            <div className="bg-[#0F172A]/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden shadow-2xl relative group">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
+            <div className="bg-[var(--muni-surface)]/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden shadow-2xl relative group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FF671F] via-white to-[#046A38] opacity-50"></div>
               {report.imageUrl ? (
-                <img 
-                  src={report.imageUrl} 
-                  alt="Evidence" 
-                  className="w-full h-80 md:h-96 object-cover transition-transform duration-700 group-hover:scale-105" 
+                <img
+                  src={report.imageUrl}
+                  alt="Evidence"
+                  className="w-full h-80 md:h-96 object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               ) : (
-                <div className="w-full h-80 flex items-center justify-center bg-black/40 text-gray-500">No Image Provided</div>
+                <div className="w-full h-80 flex items-center justify-center bg-black/40 text-[var(--muni-text-muted)]">No Image Provided</div>
               )}
-              
+
               {/* Overlay Badge */}
               <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2">
-                <FaHashtag className="text-cyan-500" />
-                <span className="font-mono text-xs text-white">{report.id.substring(0,8)}</span>
+                <FaHashtag className="text-[#FF671F]" />
+                <span className="font-mono text-xs text-white">{report.id.substring(0, 8)}</span>
               </div>
             </div>
 
             {/* Map Card */}
-            <div className="bg-[#0F172A]/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden shadow-lg h-64 relative">
-               <div ref={mapRef} className="w-full h-full z-0 filter brightness-[0.85] contrast-[1.1]" />
-               <div className="absolute inset-0 pointer-events-none border-[3px] border-[#0F172A]/50 rounded-2xl z-10"></div>
+            <div className="bg-[var(--muni-surface)]/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden shadow-lg h-64 relative">
+              <div ref={mapRef} className="w-full h-full z-0 filter brightness-[0.85] contrast-[1.1]" />
+              <div className="absolute inset-0 pointer-events-none border-[3px] border-[var(--muni-surface)]/50 rounded-2xl z-10"></div>
             </div>
           </motion.div>
 
           {/* --- Right Column: Data --- */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
             className="flex flex-col gap-6"
           >
             {/* Header Card */}
-            <div className="bg-[#0F172A]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-               {/* Decorative Severity Glow */}
-               <div className={`absolute -top-20 -right-20 w-40 h-40 rounded-full blur-[60px] opacity-20 ${sevTheme.bg.replace('/10', '')}`}></div>
+            <div className="bg-[var(--muni-surface)]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+              {/* Decorative Severity Glow */}
+              <div className={`absolute -top-20 -right-20 w-40 h-40 rounded-full blur-[60px] opacity-20 ${sevTheme.bg.replace('/10', '')}`}></div>
 
-               <div className="flex justify-between items-start mb-6">
-                 <div>
-                   <div className="flex items-center gap-3 mb-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase border ${sevTheme.bg} ${sevTheme.color} ${sevTheme.border} flex items-center gap-1.5`}>
-                         <SeverityIcon /> {report.severity}
-                      </span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase border ${statTheme.bg} ${statTheme.color} border-transparent`}>
-                         {statTheme.label}
-                      </span>
-                   </div>
-                   <h1 className="text-3xl font-bold text-white">{report.type}</h1>
-                 </div>
-                 
-                 {/* Upvote Big Button */}
-                 <button 
-                   onClick={handleUpvote}
-                   className={`flex flex-col items-center justify-center w-16 h-16 rounded-2xl border transition-all ${isUpvoted ? 'bg-pink-500/10 border-pink-500 text-pink-500 shadow-[0_0_20px_rgba(236,72,153,0.3)]' : 'bg-white/5 border-white/10 text-gray-400 hover:border-pink-500/50 hover:text-pink-400'}`}
-                 >
-                    {isUpvoted ? <FaHeart className="text-xl mb-1" /> : <FaRegHeart className="text-xl mb-1" />}
-                    <span className="text-xs font-bold">{report.upvotes || 0}</span>
-                 </button>
-               </div>
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase border ${sevTheme.bg} ${sevTheme.color} ${sevTheme.border} flex items-center gap-1.5`}>
+                      <SeverityIcon /> {report.severity}
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase border ${statTheme.bg} ${statTheme.color} border-transparent`}>
+                      {statTheme.label}
+                    </span>
+                  </div>
+                  <h1 className="text-3xl font-bold text-white">{report.type}</h1>
+                </div>
 
-               <div className="mb-8">
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Description</h3>
-                  <p className="text-gray-300 leading-relaxed bg-black/20 p-4 rounded-xl border border-white/5 text-sm">
-                    {report.desc}
-                  </p>
-               </div>
+                {/* Upvote Big Button */}
+                <button
+                  onClick={handleUpvote}
+                  className={`flex flex-col items-center justify-center w-16 h-16 rounded-2xl border transition-all ${isUpvoted ? 'bg-[#FF671F]/10 border-[#FF671F] text-[#FF671F] shadow-[0_0_20px_rgba(255,103,31,0.3)]' : 'bg-white/5 border-white/10 text-[var(--muni-text-muted)] hover:border-[#FF671F]/50 hover:text-[#FF671F]'}`}
+                >
+                  {isUpvoted ? <FaHeart className="text-xl mb-1" /> : <FaRegHeart className="text-xl mb-1" />}
+                  <span className="text-xs font-bold">{report.upvotes || 0}</span>
+                </button>
+              </div>
 
-               <div className="grid grid-cols-2 gap-4">
-                  <InfoBlock 
-                    icon={<FaMapMarkerAlt />} label="Coordinates" mono 
-                    value={`${report.lat.toFixed(5)}, ${report.lng.toFixed(5)}`} 
-                  />
-                  <InfoBlock 
-                    icon={<FaCalendarAlt />} label="Reported" 
-                    value={report.ts ? new Date(report.ts.toDate()).toLocaleDateString() : 'Unknown'} 
-                  />
-               </div>
+              <div className="mb-8">
+                <h3 className="text-xs font-bold text-[var(--muni-text-muted)] uppercase tracking-wider mb-3">Description</h3>
+                <p className="text-gray-300 leading-relaxed bg-black/20 p-4 rounded-xl border border-white/5 text-sm">
+                  {report.desc}
+                </p>
+              </div>
 
-               {/* Action Footer */}
-               <div className="mt-8 pt-6 border-t border-white/5 flex gap-4">
-                  <button 
-                    onClick={handleCopyUrl}
-                    className="flex-1 py-3 bg-cyan-600/10 border border-cyan-500/30 text-cyan-400 rounded-xl font-bold hover:bg-cyan-600 hover:text-black hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all flex items-center justify-center gap-2"
-                  >
-                     <FaShareAlt /> Share Report
-                  </button>
-               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <InfoBlock
+                  icon={<FaMapMarkerAlt />} label="Coordinates" mono
+                  value={`${report.lat.toFixed(5)}, ${report.lng.toFixed(5)}`}
+                />
+                <InfoBlock
+                  icon={<FaCalendarAlt />} label="Reported"
+                  value={report.ts ? new Date(report.ts.toDate()).toLocaleDateString() : 'Unknown'}
+                />
+              </div>
+
+              {/* Action Footer */}
+              <div className="mt-8 pt-6 border-t border-white/5 flex gap-4">
+                <button
+                  onClick={handleCopyUrl}
+                  className="flex-1 py-3 bg-gradient-to-r from-[#FF671F] via-white to-[#046A38] text-black rounded-xl font-bold shadow-lg hover:shadow-[0_0_20px_rgba(4,106,56,0.4)] transition-all flex items-center justify-center gap-2"
+                >
+                  <FaShareAlt /> Share Report
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -273,31 +273,31 @@ function Report() {
       {/* --- Login Modal --- */}
       <AnimatePresence>
         {showLoginModal && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
             onClick={() => setShowLoginModal(false)}
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
               onClick={e => e.stopPropagation()}
-              className="bg-[#0F172A] border border-white/10 p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl relative overflow-hidden"
+              className="bg-[var(--muni-surface)] border border-white/10 p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl relative overflow-hidden"
             >
-               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 to-purple-500"></div>
-               <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-                  <FaLock size={24} />
-               </div>
-               <h2 className="text-2xl font-bold text-white mb-2">Access Required</h2>
-               <p className="text-gray-400 mb-6 text-sm">You must be logged in to vote on community issues.</p>
-               
-               <div className="space-y-3">
-                  <Link to="/login" className="block w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold rounded-xl hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all">
-                     Login Now
-                  </Link>
-                  <button onClick={() => setShowLoginModal(false)} className="block w-full py-3 text-gray-400 hover:text-white transition-colors text-sm">
-                     Cancel
-                  </button>
-               </div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FF671F] via-white to-[#046A38]"></div>
+              <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-[var(--muni-text-muted)]">
+                <FaLock size={24} />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">Access Required</h2>
+              <p className="text-[var(--muni-text-muted)] mb-6 text-sm">You must be logged in to vote on community issues.</p>
+
+              <div className="space-y-3">
+                <Link to="/login" className="block w-full py-3 bg-gradient-to-r from-[#FF671F] via-white to-[#046A38] text-black font-bold rounded-xl hover:shadow-[0_0_20px_rgba(255,103,31,0.3)] transition-all">
+                  Login Now
+                </Link>
+                <button onClick={() => setShowLoginModal(false)} className="block w-full py-3 text-[var(--muni-text-muted)] hover:text-white transition-colors text-sm">
+                  Cancel
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
