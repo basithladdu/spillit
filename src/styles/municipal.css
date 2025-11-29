@@ -145,4 +145,18 @@
   background-color: rgba(234, 179, 8, 0.1);
   color: #eab308;
   border: 1px solid rgba(234, 179, 8, 0.2);
+}/* --- FIXES FOR NAVBAR LINES --- */
+
+/* 1. Kills the Orange Line on the active sidebar tab */
+.active, .nav-item.active, a[aria-current="page"] {
+  border-right: none !important;
+  border: none !important;
+}
+
+/* 2. Kills the Grey Box/Outline around the top Gallery/Map menu */
+header, nav, .navbar-container {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background-color: transparent !important;
 }

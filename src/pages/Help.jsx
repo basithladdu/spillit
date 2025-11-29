@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { MdSupportAgent } from 'react-icons/md';
 import { FaMapMarkedAlt, FaInfoCircle, FaTrophy, FaRoute, FaUserShield, FaLock } from 'react-icons/fa';
+import '../styles/municipal.css';
 
 // --- Sub-Component: FAQ Card ---
 const FaqCard = ({ question, answer, icon, delay }) => {
@@ -10,14 +11,14 @@ const FaqCard = ({ question, answer, icon, delay }) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay, duration: 0.5 }}
-      className="bg-[var(--muni-surface)]/70 backdrop-blur-md border border-white/5 rounded-2xl p-6 hover:border-[var(--muni-accent)]/30 hover:bg-[var(--muni-surface)]/90 transition-all duration-300 group h-full"
+      className="muni-card p-6 h-full hover:border-[#FF671F] transition-colors group"
     >
       <div className="flex items-start gap-4">
-        <div className="p-3 rounded-lg bg-white/5 text-[var(--muni-accent)] group-hover:text-white group-hover:bg-[var(--muni-accent)]/20 transition-colors shrink-0">
+        <div className="p-3 rounded-lg bg-white/5 text-[#FF671F] group-hover:text-white group-hover:bg-[#FF671F] transition-colors shrink-0 border border-[#FF671F]/20">
           {icon}
         </div>
         <div>
-          <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[var(--muni-accent)] transition-colors">
+          <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#FF671F] transition-colors">
             {question}
           </h3>
           <p className="text-[var(--muni-text-muted)] text-sm leading-relaxed">
@@ -65,27 +66,21 @@ function Help() {
   ];
 
   return (
-    <div className="min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans selection:bg-[var(--muni-accent)]/30 pb-20 relative overflow-hidden" >
+    <div className="municipal-theme min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans pt-24 pb-20">
 
-      {/* --- Background Atmosphere --- */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-[#06038D]/20 to-transparent pointer-events-none" ></div>
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[var(--muni-accent)]/10 rounded-full blur-[120px] pointer-events-none"></div>
-
-      <div className="h-20"></div> {/* Navbar Spacer */}
-
-      <main className="container mx-auto px-6 py-10 max-w-6xl relative z-10" >
+      <main className="container mx-auto px-6 max-w-6xl">
 
         {/* --- Header --- */}
-        <div className="text-center mb-16" >
+        <div className="text-center mb-16">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="inline-block p-4 rounded-full bg-[#06038D]/10 border border-[#06038D]/30 mb-4"
+            className="inline-flex items-center justify-center p-4 rounded-full bg-[#046A38]/10 border border-[#046A38]/30 mb-6"
           >
-            <MdSupportAgent className="text-4xl text-[#06038D]" />
+            <MdSupportAgent className="text-4xl text-[#046A38]" />
           </motion.div>
-          <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
-            Help Center & <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF671F] via-white to-[#046A38]">FAQs</span>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+            Help Center & <span className="text-[#FF671F]">FAQs</span>
           </h1>
           <p className="text-[var(--muni-text-muted)] text-lg max-w-2xl mx-auto">
             Everything you need to know about using Fixit to improve your community.
@@ -93,35 +88,30 @@ function Help() {
         </div>
 
         {/* --- FAQ Grid --- */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6" >
-          {
-            faqs.map((faq, index) => (
-              <FaqCard
-                key={index}
-                {...faq}
-                delay={index * 0.1}
-              />
-            ))
-          }
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {faqs.map((faq, index) => (
+            <FaqCard
+              key={index}
+              {...faq}
+              delay={index * 0.1}
+            />
+          ))}
         </div>
 
         {/* --- Contact Footer --- */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }
-          }
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-16 p-8 rounded-3xl bg-gradient-to-r from-[#06038D]/20 to-[var(--muni-surface)] border border-[var(--muni-border)] text-center relative overflow-hidden"
+          className="mt-16 muni-card p-8 border-t-4 border-[#046A38] text-center relative overflow-hidden"
         >
           <div className="relative z-10">
             <h3 className="text-2xl font-bold text-white mb-2">Still have questions?</h3>
             <p className="text-[var(--muni-text-muted)] mb-6">Our support team is available to assist with technical issues.</p>
-            <button className="px-8 py-3 rounded-full bg-gradient-to-r from-[#FF671F] via-white to-[#046A38] text-black font-bold hover:shadow-lg hover:shadow-[#046A38]/20 transition-all">
+            <button className="muni-btn-primary px-8 py-3 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all">
               Contact Support
             </button>
           </div>
-          {/* Decorative Overlay */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--muni-accent)]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         </motion.div>
 
       </main>

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import L from "leaflet";
 import {
   FaMapMarkerAlt, FaCalendarAlt, FaShareAlt, FaHeart, FaRegHeart,
-  FaExclamationTriangle, FaHashtag, FaLayerGroup, FaArrowLeft, FaLock
+  FaExclamationTriangle, FaHashtag, FaLayerGroup, FaArrowLeft, FaLock, FaTwitter
 } from 'react-icons/fa';
 import { MdCheckCircle, MdWarning, MdError, MdPending } from 'react-icons/md';
 
@@ -257,12 +257,23 @@ function Report() {
               </div>
 
               {/* Action Footer */}
-              <div className="mt-8 pt-6 border-t border-white/5 flex gap-4">
+              <div className="mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={handleCopyUrl}
-                  className="flex-1 py-3 bg-gradient-to-r from-[#FF671F] via-white to-[#046A38] text-black rounded-xl font-bold shadow-lg hover:shadow-[0_0_20px_rgba(4,106,56,0.4)] transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2"
                 >
-                  <FaShareAlt /> Share Report
+                  <FaShareAlt /> Copy Link
+                </button>
+
+                <button
+                  onClick={() => {
+                    const text = encodeURIComponent(`Check out this issue on FixIt! @letsfixindia`);
+                    const url = encodeURIComponent(window.location.href);
+                    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+                  }}
+                  className="flex-1 py-3 bg-[#1DA1F2] hover:bg-[#1DA1F2]/90 text-white rounded-xl font-bold shadow-lg shadow-[#1DA1F2]/20 transition-all flex items-center justify-center gap-2"
+                >
+                  <FaTwitter /> Tweet This
                 </button>
               </div>
             </div>

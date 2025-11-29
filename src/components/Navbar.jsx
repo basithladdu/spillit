@@ -93,7 +93,7 @@ function Navbar() {
 
             {currentUser && (
               <NavItem
-                to={userRole === 'municipal_admin' ? "/municipal-dashboard" : "/municipal-dashboard"}
+                to={userRole === 'municipal_admin' ? "/municipal-dashboard" : "/dashboard"}
                 icon={BarChart3}
                 label="Dashboard"
               />
