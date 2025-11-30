@@ -14,7 +14,7 @@ function Register() {
 
   useEffect(() => {
     if (currentUser) {
-      navigate('/dashboard');
+      navigate('/');
     }
   }, [currentUser, navigate]);
 
@@ -150,7 +150,12 @@ function Register() {
               Login here
             </Link>
           </p>
-
+<p className="text-center text-[var(--muni-text-muted)] text-xs mt-4">
+            Are you a municipality looking to access dashboard?{' '}
+            <Link to="/municipal-register" className="text-[#FF671F] hover:text-[#FF671F]/80 font-semibold hover:underline transition-colors">
+              Register here
+            </Link>
+          </p>
         </div>
       </motion.div>
     </div>

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { FaEnvelope, FaLock, FaArrowRight, FaExclamationCircle } from 'react-icons/fa';
+
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -136,12 +137,16 @@ function Login() {
             </button>
           </form>
 
-
-
           {/* Footer Link */}
           <p className="text-center text-[var(--muni-text-muted)] text-sm mt-8">
             Don't have an account?{' '}
             <Link to="/register" className="text-[#046A38] hover:text-[#046A38]/80 font-semibold hover:underline transition-colors">
+              Register here
+            </Link>
+          </p>
+          <p className="text-center text-[var(--muni-text-muted)] text-xs mt-4">
+            Are you a municipality looking to access dashboard?{' '}
+            <Link to="/municipal-register" className="text-[#FF671F] hover:text-[#FF671F]/80 font-semibold hover:underline transition-colors">
               Register here
             </Link>
           </p>

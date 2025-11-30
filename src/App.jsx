@@ -12,6 +12,7 @@ const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Team = lazy(() => import("./pages/Team"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const About = lazy(() => import("./pages/About"));
 const Report = lazy(() => import("./pages/Report"));
 const Gallery = lazy(() => import("./pages/Gallery"));
 const Help = lazy(() => import("./pages/Help"));
@@ -53,6 +54,7 @@ function App() {
             <Route path="/help" element={<Help />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/team" element={<Team />} />
+            <Route path="/about" element={<About />} />
             <Route path="/sih2025" element={<SIH2025 />} />
 
             {/* Municipal Routes */}
@@ -74,6 +76,7 @@ function App() {
               }
             />
 
+            {/* 
             <Route
               path="/dashboard"
               element={
@@ -81,7 +84,8 @@ function App() {
                   <Dashboard />
                 </ProtectedRoute>
               }
-            />
+            /> 
+            */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

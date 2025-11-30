@@ -4,7 +4,8 @@ import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 // Replaced react-icons with lucide-react for compatibility
 import {
   Map, BarChart3, Users, LogIn, LogOut,
-  Search, HelpCircle, Star, UserCircle, Menu, X
+  Search, HelpCircle, Star, UserCircle, Menu, X,
+  UserIcon
 } from 'lucide-react';
 
 import { useAuth } from '../hooks/useAuth';
@@ -65,6 +66,7 @@ function Navbar() {
   return (
     <>
       <motion.nav
+        id="navbar-root"
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -86,17 +88,17 @@ function Navbar() {
             <NavItem to="/gallery" icon={Users} label="Gallery" />
             <NavItem to="/leaderboard" icon={Star} label="Leaderboard" />
             <NavItem to="/help" icon={HelpCircle} label="Help" />
+            <NavItem to="/about" icon={UserCircle} label="About" />
 
-            {currentUser && (
-              <div className="h-6 w-[1px] bg-[var(--muni-border)] mx-1"></div>
-            )}
-
-            {currentUser && (
-              <NavItem
-                to={userRole === 'municipal_admin' ? "/municipal-dashboard" : "/dashboard"}
-                icon={BarChart3}
-                label="Dashboard"
-              />
+            {currentUser && userRole === 'municipal_admin' && (
+              <>
+                <div className="h-6 w-[1px] bg-[var(--muni-border)] mx-1"></div>
+                <NavItem
+                  to="/municipal-dashboard"
+                  icon={BarChart3}
+                  label="Dashboard"
+                />
+              </>
             )}
           </LayoutGroup>
         </div>
@@ -197,10 +199,12 @@ function Navbar() {
               <NavItem to="/" icon={Map} label="Map View" onClick={() => setIsMenuOpen(false)} />
               <NavItem to="/gallery" icon={Users} label="Community Gallery" onClick={() => setIsMenuOpen(false)} />
               <NavItem to="/leaderboard" icon={Star} label="Leaderboard" onClick={() => setIsMenuOpen(false)} />
-              <NavItem to="/help" icon={HelpCircle} label="Help & Support" onClick={() => setIsMenuOpen(false)} />
-              {currentUser && (
+                            <NavItem to="/help" icon={HelpCircle} label="Help" onClick={() => setIsMenuOpen(false)} />
+
+              <NavItem to="/about" icon={UserIcon} label="About" onClick={() => setIsMenuOpen(false)} />
+              {currentUser && userRole === 'municipal_admin' && (
                 <NavItem
-                  to={userRole === 'municipal_admin' ? "/municipal-dashboard" : "/dashboard"}
+                  to="/municipal-dashboard"
                   icon={BarChart3}
                   label="Dashboard"
                   onClick={() => setIsMenuOpen(false)}

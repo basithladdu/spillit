@@ -14,7 +14,8 @@ export default function MunicipalRegistration() {
         office_phone: '',
         mobile_phone: '',
         office_address: '',
-        brief_purpose: ''
+        brief_purpose: '',
+        password: ''
     });
     const [files, setFiles] = useState({
         government_id: null,
@@ -205,6 +206,17 @@ export default function MunicipalRegistration() {
                                     required
                                     className="muni-input focus:border-white"
                                     placeholder="+91 XXXXX XXXXX"
+                                    onChange={handleInputChange}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm text-[var(--muni-text-muted)]">Password (Remember this Password)</label>
+                                <input
+                                    name="password"
+                                    type="password"
+                                    required
+                                    className="muni-input focus:border-white"
+                                    placeholder="Set a secure password"
                                     onChange={handleInputChange}
                                 />
                             </div>
