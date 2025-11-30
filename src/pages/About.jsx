@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FaUsers, FaLightbulb, FaHandshake, FaCode } from 'react-icons/fa';
+import { FaUsers, FaLightbulb, FaHandshake, FaCode, FaInstagram, FaTwitter, FaEnvelope, FaGlobe, FaLinkedin } from 'react-icons/fa';
 import '../styles/municipal.css';
 
 const About = () => {
@@ -74,6 +74,22 @@ const About = () => {
                     </motion.div>
                 </div>
 
+                {/* Contribution / Partnership Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="muni-card p-8 mb-16 border-l-4 border-[#FF671F] bg-gradient-to-r from-[#FF671F]/10 to-transparent"
+                >
+                    <h3 className="text-2xl font-bold text-white mb-4">Partner with Us</h3>
+                    <p className="text-[var(--muni-text-muted)] leading-relaxed mb-6">
+                        We are actively seeking collaborations to scale our impact. Whether you represent a <strong>Municipality</strong>, <strong>Government Body</strong>, <strong>NGO</strong>, or are looking for <strong>CSR (Corporate Social Responsibility)</strong> opportunities or <strong>Investment or Incubation support</strong>, we want to work with you to transform civic infrastructure.
+                    </p>
+                    <a href="mailto:workwithdevit@gmail.com" className="inline-flex items-center gap-2 text-[#FF671F] font-bold hover:text-white transition-colors">
+                        <FaEnvelope /> Get in Touch
+                    </a>
+                </motion.div>
+
                 {/* Team Section */}
                 <motion.section
                     initial={{ opacity: 0, y: 20 }}
@@ -89,12 +105,21 @@ const About = () => {
                         LetsFixIndia is an initiative driven by a community of developers, designers, and civic enthusiasts committed to digital public infrastructure. It is developed by the people at Devit.
                     </p>
 
-                    <div className="flex justify-center gap-4">
-                        <a href="https://www.wedevit.in" target="_blank" rel="noopener noreferrer" className="muni-btn-primary no-underline">
-                            Visit Devit
+                    <div className="flex justify-center gap-4 flex-wrap">
+                        <a href="https://www.wedevit.in" target="_blank" rel="noopener noreferrer" className="muni-btn-primary no-underline flex items-center gap-2">
+                            <FaGlobe /> Visit Devit
                         </a>
-                        <a href="https://www.wedevit.in/contact" target="_blank" rel="noopener noreferrer" className="muni-btn-ghost no-underline">
-                            Contact Us
+                        <a href="https://www.linkedin.com/company/thedevit" target="_blank" rel="noopener noreferrer" className="muni-btn-ghost no-underline flex items-center gap-2">
+                            <FaLinkedin /> LinkedIn
+                        </a>
+                        <a href="https://instagram.com/devit.company" target="_blank" rel="noopener noreferrer" className="muni-btn-ghost no-underline flex items-center gap-2">
+                            <FaInstagram /> devit.company
+                        </a>
+                        <a href="https://twitter.com/letsfixindia" target="_blank" rel="noopener noreferrer" className="muni-btn-ghost no-underline flex items-center gap-2">
+                            <FaTwitter /> @letsfixindia
+                        </a>
+                        <a href="mailto:workwithdevit@gmail.com" className="muni-btn-ghost no-underline flex items-center gap-2">
+                            <FaEnvelope /> Contact Us
                         </a>
                     </div>
                 </motion.section>

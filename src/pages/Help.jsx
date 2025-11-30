@@ -107,7 +107,14 @@ function Help() {
         >
           <div className="relative z-10">
             <h3 className="text-2xl font-bold text-white mb-2">Still have questions?</h3>
-            <p className="text-[var(--muni-text-muted)] mb-6">Our support team is available to assist with technical issues.</p>
+            <p className="text-[var(--muni-text-muted)] mb-6">
+              Our support team is available to assist with technical issues. <br />
+              Email us at <a href="mailto:workwithdevit@gmail.com" className="text-[#FF671F] hover:underline">workwithdevit@gmail.com</a> or visit <a href="https://wedevit.in" target="_blank" rel="noopener noreferrer" className="text-[#FF671F] hover:underline">wedevit.in</a>.
+            </p>
+            <p className="text-sm text-[var(--muni-text-muted)] mb-6">
+              Found a bug or glitch? Please let us know! <br />
+              Want to contribute to the development? We'd love your help.
+            </p>
             <button className="muni-btn-primary px-8 py-3 rounded-lg font-bold shadow-lg hover:shadow-xl transition-all">
               Contact Support
             </button>

@@ -442,7 +442,7 @@ function Home() {
       <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.5rem)] right-4 md:bottom-24 md:right-6 z-[900] flex flex-col gap-4 items-end pointer-events-auto">
 
         {/* Style Switcher (Desktop Only) */}
-        <div className="relative hidden md:block">
+        <div className="relative">
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => setIsStyleOpen(!isStyleOpen)}
@@ -499,13 +499,12 @@ function Home() {
           <div className="bg-[var(--muni-accent)] text-black p-2 rounded-lg"><FaTools /></div>
           <div>
             <div className="text-white font-black text-xl tracking-widest leading-none flex items-center gap-1">
-              <span className="text-[#FF671F]">FIX</span><span className="text-white">IT</span><span className="text-[#046A38]">.IN</span>
+              <span className="text-[#FF671F]">Lets</span><span className="text-white">Fix</span><span className="text-[#046A38]">India</span>
             </div>
             <div className="text-[10px] text-[var(--muni-accent)] font-mono uppercase tracking-widest">Community Ops</div>
           </div>
         </div>
       </div>
-
       {/* --- Modal: New Report Form --- */}
       <AnimatePresence>
         {showForm && (
@@ -595,7 +594,7 @@ function Home() {
       <style jsx global>{`
         .leaflet-popup-content-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; border: none !important; }
         .leaflet-popup-tip { display: none !important; }
-        .leaflet-control-zoom { border: none !important; margin-bottom: 20px !important; margin-right: 20px !important; }
+        .leaflet-control-zoom { border: none !important; margin-bottom: 30px !important; margin-right: 30px !important; }
         .leaflet-control-zoom a { background-color: rgba(15, 23, 42, 0.9) !important; color: white !important; border: 1px solid rgba(255,255,255,0.1) !important; backdrop-filter: blur(10px); border-radius: 8px !important; margin-bottom: 5px !important; }
         .leaflet-control-zoom a:hover { background-color: var(--muni-accent) !important; color: black !important; }
       `}</style>

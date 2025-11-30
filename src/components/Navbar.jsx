@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
-// Replaced react-icons with lucide-react for compatibility
 import {
   Map, BarChart3, Users, LogIn, LogOut,
   Search, HelpCircle, Star, UserCircle, Menu, X,
-  UserIcon
+  User as UserIcon, Handshake
 } from 'lucide-react';
 
 import { useAuth } from '../hooks/useAuth';
@@ -88,7 +87,8 @@ function Navbar() {
             <NavItem to="/gallery" icon={Users} label="Gallery" />
             <NavItem to="/leaderboard" icon={Star} label="Leaderboard" />
             <NavItem to="/help" icon={HelpCircle} label="Help" />
-            <NavItem to="/about" icon={UserCircle} label="About" />
+            <NavItem to="/about" icon={UserIcon} label="About" />
+            <NavItem to="/partner" icon={Handshake} label="Partner/Fund Us" />
 
             {currentUser && userRole === 'municipal_admin' && (
               <>
@@ -199,9 +199,10 @@ function Navbar() {
               <NavItem to="/" icon={Map} label="Map View" onClick={() => setIsMenuOpen(false)} />
               <NavItem to="/gallery" icon={Users} label="Community Gallery" onClick={() => setIsMenuOpen(false)} />
               <NavItem to="/leaderboard" icon={Star} label="Leaderboard" onClick={() => setIsMenuOpen(false)} />
-                            <NavItem to="/help" icon={HelpCircle} label="Help" onClick={() => setIsMenuOpen(false)} />
+              <NavItem to="/help" icon={HelpCircle} label="Help" onClick={() => setIsMenuOpen(false)} />
 
               <NavItem to="/about" icon={UserIcon} label="About" onClick={() => setIsMenuOpen(false)} />
+              <NavItem to="/partner" icon={Handshake} label="Partner/Fund Us" onClick={() => setIsMenuOpen(false)} />
               {currentUser && userRole === 'municipal_admin' && (
                 <NavItem
                   to="/municipal-dashboard"

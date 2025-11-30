@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Suspense, lazy } from "react";
-
+import { Analytics } from "@vercel/analytics/react"
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
@@ -18,6 +18,7 @@ const Gallery = lazy(() => import("./pages/Gallery"));
 const Help = lazy(() => import("./pages/Help"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const SIH2025 = lazy(() => import("./pages/SIH2025"));
+const Partner = lazy(() => import("./pages/Partner"));
 
 // Municipal Pages
 const MunicipalRegistration = lazy(() => import("./pages/MunicipalRegistration"));
@@ -56,6 +57,7 @@ function App() {
             <Route path="/team" element={<Team />} />
             <Route path="/about" element={<About />} />
             <Route path="/sih2025" element={<SIH2025 />} />
+            <Route path="/partner" element={<Partner />} />
 
             {/* Municipal Routes */}
             <Route path="/municipal-register" element={<MunicipalRegistration />} />

@@ -7,11 +7,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import L from "leaflet";
 import {
   FaMapMarkerAlt, FaCalendarAlt, FaShareAlt, FaHeart, FaRegHeart,
-  FaExclamationTriangle, FaHashtag, FaLayerGroup, FaArrowLeft, FaLock, FaTwitter
+  FaExclamationTriangle, FaHashtag, FaLayerGroup, FaArrowLeft, FaLock, FaTwitter, FaCopy
 } from 'react-icons/fa';
 import { MdCheckCircle, MdWarning, MdError, MdPending } from 'react-icons/md';
-
-// --- Configuration & Helpers ---
 
 const SEVERITY_CONFIG = {
   Critical: { color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', shadow: 'shadow-red-500/20', icon: MdError },
@@ -194,7 +192,16 @@ function Report() {
               {/* Overlay Badge */}
               <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2">
                 <FaHashtag className="text-[#FF671F]" />
-                <span className="font-mono text-xs text-white">{report.id.substring(0, 8)}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs text-white" title={report.id}>{report.id}</span>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(report.id)}
+                    className="text-[#FF671F] hover:text-white transition-colors"
+                    title="Copy ID"
+                  >
+                    <FaCopy size={12} />
+                  </button>
+                </div>
               </div>
             </div>
 

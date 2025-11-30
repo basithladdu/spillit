@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
 import 'mapbox-gl/dist/mapbox-gl.css';
 import "./index.css";
+import { Analytics } from "@vercel/analytics/react";
 
 // This is the fix for Leaflet marker issue
 import L from 'leaflet';
@@ -19,6 +20,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <App />
+        <Analytics />
     </BrowserRouter>
   </React.StrictMode>
 );

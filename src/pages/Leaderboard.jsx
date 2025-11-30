@@ -203,6 +203,21 @@ function Leaderboard() {
           </p>
         </div>
 
+        {/* --- Future Data Note --- */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-center mb-12 bg-[#FF671F]/5 border border-[#FF671F]/20 rounded-2xl p-6 max-w-3xl mx-auto"
+        >
+          <p className="text-[var(--muni-text-muted)] text-sm">
+            <strong className="text-[#FF671F]">Coming Soon:</strong> We are working on integrating data for <span className="text-white">MLAs, MPs, and Municipality Wards</span> to provide a comprehensive view of civic performance.
+          </p>
+          <p className="text-[var(--muni-text-muted)] text-xs mt-2">
+            Want to help us gather this data or contribute to the development? <a href="mailto:workwithdevit@gmail.com" target="_blank" className="text-[#FF671F] hover:underline">Contact us</a>.
+          </p>
+        </motion.div>
+
         {leaderboardData.length === 0 ? (
           <div className="text-center py-20 border border-dashed border-gray-800 rounded-3xl">
             <FaLayerGroup className="mx-auto text-6xl text-gray-800 mb-4" />

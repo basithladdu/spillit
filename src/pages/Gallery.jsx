@@ -25,19 +25,19 @@ const getSeverityIcon = (severity) => {
 
 const getSeverityStyles = (severity) => {
   switch (severity) {
-    case 'Critical': return { bg: 'bg-red-500/10', border: 'border-red-500/30', text: 'text-red-400', glow: 'shadow-red-500/20' };
-    case 'High': return { bg: 'bg-orange-500/10', border: 'border-orange-500/30', text: 'text-orange-400', glow: 'shadow-orange-500/20' };
-    case 'Medium': return { bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', text: 'text-yellow-400', glow: 'shadow-yellow-500/20' };
-    case 'Low': return { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', glow: 'shadow-emerald-500/20' };
-    default: return { bg: 'bg-gray-500/10', border: 'border-gray-500/30', text: 'text-gray-400', glow: 'shadow-gray-500/20' };
+    case 'Critical': return { bg: 'bg-red-500/20', border: 'border-red-500/40', text: 'text-red-300', glow: 'shadow-red-500/30' };
+    case 'High': return { bg: 'bg-orange-500/20', border: 'border-orange-500/40', text: 'text-orange-300', glow: 'shadow-orange-500/30' };
+    case 'Medium': return { bg: 'bg-yellow-500/20', border: 'border-yellow-500/40', text: 'text-yellow-300', glow: 'shadow-yellow-500/30' };
+    case 'Low': return { bg: 'bg-emerald-500/20', border: 'border-emerald-500/40', text: 'text-emerald-300', glow: 'shadow-emerald-500/30' };
+    default: return { bg: 'bg-gray-500/20', border: 'border-gray-500/40', text: 'text-gray-300', glow: 'shadow-gray-500/30' };
   }
 };
 
 const getStatusStyles = (status) => {
   const s = (status || 'new').toLowerCase();
-  if (s === 'resolved') return { bg: 'bg-[#046A38]/20', text: 'text-[#046A38]', label: 'Resolved' };
-  if (s === 'in_progress') return { bg: 'bg-[#06038D]/20', text: 'text-[#06038D]', label: 'In Progress' };
-  return { bg: 'bg-[#FF671F]/20', text: 'text-[#FF671F]', label: 'Open' };
+  if (s === 'resolved') return { bg: 'bg-[#046A38]/30', text: 'text-[#046A38]', label: 'Resolved' };
+  if (s === 'in_progress') return { bg: 'bg-[#06038D]/30', text: 'text-[#06038D]', label: 'In Progress' };
+  return { bg: 'bg-[#FF671F]/30', text: 'text-[#FF671F]', label: 'Open' };
 };
 
 // --- 2. Sub-Components ---
@@ -82,8 +82,6 @@ const FilterSelect = ({ label, value, onChange, options }) => (
 // --- 3. Main Gallery Component ---
 
 function Gallery() {
-
-
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -140,7 +138,7 @@ function Gallery() {
   }).sort((a, b) => {
     if (filters.sortBy === 'Newest First') return b.ts?.toDate() - a.ts?.toDate();
     if (filters.sortBy === 'Oldest First') return a.ts?.toDate() - b.ts?.toDate();
-    if (filters.sortBy === 'Most Liked') return (likedIssues.has(b.id) ? 1 : 0) - (likedIssues.has(a.id) ? 1 : 0);
+    if (filters.sortBy === 'Most Supported') return (b.upvotes || 0) - (a.upvotes || 0);
     return 0;
   });
 
@@ -219,14 +217,31 @@ function Gallery() {
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden"
               >
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 mt-4 border-t border-white/5">
-                  <FilterSelect label="Status" value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })} options={['All', 'new', 'in-progress', 'resolved']} />
-                  <FilterSelect label="Category" value={filters.category} onChange={e => setFilters({ ...filters, category: e.target.value })} options={['All', 'Pothole', 'Garbage', 'Water Leak', 'Other']} />
-                  <FilterSelect label="Severity" value={filters.severity} onChange={e => setFilters({ ...filters, severity: e.target.value })} options={['All', 'Low', 'Medium', 'High', 'Critical']} />
-                  <FilterSelect label="Sort By" value={filters.sortBy} onChange={e => setFilters({ ...filters, sortBy: e.target.value })} options={['Newest First', 'Oldest First', 'Most Liked']} />
-                </div>
-                <div className="mt-4 flex justify-end">
-                  <button onClick={() => setFilters({ status: 'All', category: 'All', severity: 'All', sortBy: 'Newest First' })} className="text-xs text-red-400 hover:text-red-300 underline">Reset All Filters</button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-4 mt-4 border-t border-white/5">
+                  <FilterSelect
+                    label="Status"
+                    value={filters.status}
+                    onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                    options={['All', 'new', 'in-progress', 'resolved']}
+                  />
+                  <FilterSelect
+                    label="Category"
+                    value={filters.category}
+                    onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+                    options={['All', 'Pothole', 'Street Light', 'Garbage', 'Water Leak', 'Other']}
+                  />
+                  <FilterSelect
+                    label="Severity"
+                    value={filters.severity}
+                    onChange={(e) => setFilters({ ...filters, severity: e.target.value })}
+                    options={['All', 'Critical', 'High', 'Medium', 'Low']}
+                  />
+                  <FilterSelect
+                    label="Sort By"
+                    value={filters.sortBy}
+                    onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
+                    options={['Newest First', 'Oldest First', 'Most Supported']}
+                  />
                 </div>
               </motion.div>
             )}
@@ -234,126 +249,105 @@ function Gallery() {
         </div>
 
         {/* --- Gallery Grid --- */}
-        {currentData.length === 0 ? (
-          <div className="text-center py-20 border border-dashed border-gray-800 rounded-3xl">
-            <FaSearch className="mx-auto text-6xl text-gray-800 mb-4" />
-            <p className="text-[var(--muni-text-muted)] text-xl">No reports found matching your criteria.</p>
-            <button onClick={() => setFilters({ status: 'All', category: 'All', severity: 'All', sortBy: 'Newest First' })} className="mt-4 text-[#FF671F] font-bold hover:underline">Clear Filters</button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {currentData.map((issue, index) => {
-              const sevStyle = getSeverityStyles(issue.severity);
-              const statusStyle = getStatusStyles(issue.status);
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <AnimatePresence>
+            {currentData.map((issue) => {
+              const sevStyles = getSeverityStyles(issue.severity);
+              const statusStyles = getStatusStyles(issue.status);
               const isLiked = likedIssues.has(issue.id);
-              const dateStr = issue.ts ? new Date(issue.ts.toDate()).toLocaleDateString() : 'N/A';
 
               return (
                 <motion.div
                   key={issue.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="group relative bg-[var(--muni-surface)]/60 backdrop-blur-md border border-white/5 rounded-2xl overflow-hidden hover:border-[#FF671F]/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,103,31,0.1)]"
                 >
-                  <Link to={`/report/${issue.id}`} className="block h-full">
-                    <motion.div
-                      whileHover={{ y: -5 }}
-                      className={`
-                        h-full bg-[var(--muni-surface)]/80 backdrop-blur-md rounded-xl overflow-hidden border border-white/5 
-                        hover:border-[#FF671F]/30 hover:shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-all group
-                      `}
-                    >
-                      {/* Card Header */}
-                      <div className={`px-4 py-3 flex justify-between items-center border-b border-white/5 ${sevStyle.bg}`}>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-sm ${sevStyle.text}`}>{getSeverityIcon(issue.severity)}</span>
-                          <span className={`text-xs font-bold uppercase tracking-wider text-gray-200`}>{issue.type}</span>
-                        </div>
-                        <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusStyle.bg} ${statusStyle.text} border-white/5`}>
-                          {statusStyle.label}
-                        </div>
+                  {/* Image Section */}
+                  <div className="relative h-48 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10"></div>
+                    {issue.imageUrl ? (
+                      <img src={issue.imageUrl} alt={issue.type} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    ) : (
+                      <div className="w-full h-full bg-white/5 flex items-center justify-center text-[var(--muni-text-muted)]">
+                        <FaMapMarkerAlt className="text-3xl opacity-20" />
+                      </div>
+                    )}
+
+                    {/* Floating Badges */}
+                    <div className="absolute top-3 left-3 z-20 flex gap-2">
+                      <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase border backdrop-blur-md ${sevStyles.bg} ${sevStyles.text} ${sevStyles.border}`}>
+                        {issue.severity}
+                      </span>
+                    </div>
+                    <div className="absolute top-3 right-3 z-20">
+                      <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase border backdrop-blur-md ${statusStyles.bg} ${statusStyles.text} border-transparent`}>
+                        {statusStyles.label}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Content Section */}
+                  <div className="p-5">
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-xl font-bold text-white group-hover:text-[#FF671F] transition-colors line-clamp-1">{issue.type}</h3>
+                      <button
+                        onClick={(e) => handleUpvote(e, issue.id)}
+                        className={`p-2 rounded-full transition-all ${isLiked ? 'text-red-500 bg-red-500/10' : 'text-gray-500 hover:text-red-500 hover:bg-white/5'}`}
+                      >
+                        {isLiked ? <FaHeart /> : <FaRegHeart />}
+                      </button>
+                    </div>
+
+                    <p className="text-[var(--muni-text-muted)] text-sm line-clamp-2 mb-4 h-10">
+                      {issue.desc}
+                    </p>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                      <div className="flex items-center gap-2 text-xs text-[var(--muni-text-muted)]">
+                        <FaCalendarAlt />
+                        <span>{issue.ts?.toDate().toLocaleDateString()}</span>
                       </div>
 
-                      {/* Image Area */}
-                      <div className="relative h-48 overflow-hidden bg-black">
-                        {issue.imageUrl ? (
-                          <img src={issue.imageUrl} alt="Issue" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-700"><FaTools size={30} /></div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] to-transparent opacity-60"></div>
-
-                        {/* Floating ID */}
-                        <div className="absolute top-2 right-2 bg-black/60 backdrop-blur text-[10px] text-[#FF671F] font-mono px-2 py-1 rounded border border-[#FF671F]/20">
-                          #{issue.id.substring(0, 6)}
-                        </div>
-                      </div>
-
-                      {/* Card Body */}
-                      <div className="p-5">
-                        <p className="text-gray-300 text-sm mb-4 line-clamp-2 h-10 leading-relaxed">
-                          {issue.desc || "No description provided."}
-                        </p>
-
-                        <div className="flex items-center gap-4 text-xs text-[var(--muni-text-muted)] mb-4">
-                          <div className="flex items-center gap-1.5">
-                            <FaMapMarkerAlt className="text-[#FF671F]/50" />
-                            <span>{issue.lat?.toFixed(4)}, {issue.lng?.toFixed(4)}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <FaCalendarAlt className="text-[#FF671F]/50" />
-                            <span>{dateStr}</span>
-                          </div>
-                        </div>
-
-                        {/* Footer Actions */}
-                        <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                          <button
-                            onClick={(e) => handleUpvote(e, issue.id)}
-                            className={`flex items-center gap-1.5 text-xs font-bold transition-colors ${isLiked ? 'text-pink-500' : 'text-gray-500 hover:text-pink-400'}`}
-                          >
-                            {isLiked ? <FaHeart /> : <FaRegHeart />}
-                            <span>Support</span>
-                          </button>
-
-                          <button
-                            onClick={(e) => handleShare(e, issue)}
-                            className="text-gray-500 hover:text-[#FF671F] transition-colors"
-                          >
-                            <FaShareAlt size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </Link>
+                      <Link
+                        to={`/report/${issue.id}`}
+                        className="flex items-center gap-2 text-xs font-bold text-white bg-white/5 hover:bg-[#FF671F] px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        View Details <FaChevronRight />
+                      </Link>
+                    </div>
+                  </div>
                 </motion.div>
               );
             })}
-          </div>
-        )}
+          </AnimatePresence>
+        </div>
 
         {/* --- Pagination --- */}
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-4 mt-12">
+          <div className="flex justify-center mt-12 gap-2">
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-3 rounded-full bg-black/40 border border-white/10 text-gray-400 hover:text-white hover:border-[#FF671F] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              className="p-3 rounded-xl bg-[var(--muni-surface)] border border-white/10 text-white disabled:opacity-50 hover:border-[#FF671F] transition-colors"
             >
               <FaChevronLeft />
             </button>
-            <span className="text-sm font-mono text-[#FF671F] font-bold">
-              Page {currentPage} / {totalPages}
-            </span>
+            <div className="flex items-center px-4 font-bold text-[var(--muni-text-muted)]">
+              Page {currentPage} of {totalPages}
+            </div>
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-3 rounded-full bg-black/40 border border-white/10 text-gray-400 hover:text-white hover:border-[#FF671F] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              className="p-3 rounded-xl bg-[var(--muni-surface)] border border-white/10 text-white disabled:opacity-50 hover:border-[#FF671F] transition-colors"
             >
               <FaChevronRight />
             </button>
           </div>
         )}
+
       </div>
     </div>
   );

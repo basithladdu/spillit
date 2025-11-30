@@ -105,7 +105,20 @@ const ReportCard = ({ summaryData, setShowSummary }) => {
                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
                   <FaIdCard /> Tracking ID
                 </div>
-                <div className="font-mono text-cyan-400 text-sm mt-1">#{summaryData.id ? summaryData.id.substring(0, 8) : 'PENDING'}...</div>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="font-mono text-cyan-400 text-sm" title={summaryData.id}>
+                    #{summaryData.id || 'PENDING'}
+                  </div>
+                  {summaryData.id && (
+                    <button
+                      onClick={() => navigator.clipboard.writeText(summaryData.id)}
+                      className="text-gray-500 hover:text-white transition-colors p-1"
+                      title="Copy ID"
+                    >
+                      <FaClipboardList size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="text-right">
                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center justify-end gap-1.5">
