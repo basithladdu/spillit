@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  collection, onSnapshot, addDoc, serverTimestamp,
+  collection, onSnapshot,
   orderBy, query, limit
 } from 'firebase/firestore';
 import { db } from '../utils/firebase';
@@ -9,19 +9,19 @@ import { useAuth } from '../hooks/useAuth';
 import { AnimatePresence, motion } from 'framer-motion';
 import L from 'leaflet';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
-import imageCompression from 'browser-image-compression';
 
 // --- Icons ---
 import {
   FaMap, FaChartBar, FaUsers, FaSignInAlt, FaSignOutAlt, FaTools,
-  FaSearch, FaLayerGroup, FaTimes, FaPaperPlane, FaCamera, FaCrosshairs,
+  FaSearch, FaLayerGroup, FaTimes,
   FaStar, FaBars, FaArrowRight
 } from 'react-icons/fa';
 import { SiGoogledocs } from 'react-icons/si';
-import { MdGpsFixed, MdCheckCircle } from 'react-icons/md';
+import { MdGpsFixed } from 'react-icons/md';
 
 import ReportCard from './ReportCard';
 import Navbar from '../components/Navbar';
+import ReportIssueModal from '../components/ReportIssueModal';
 import '../styles/municipal.css';
 
 // --- Leaflet Assets Fix ---
@@ -34,7 +34,6 @@ L.Icon.Default.mergeOptions({
 
 // --- Configuration ---
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiYXdhaXpzaGFpazI1IiwiYSI6ImNtY3J5MHQzMTEwZjcyanMzYWJuMnMxcTUifQ.bLPhS0-UAAouYlHOK396XQ';
-const CLOUDINARY_CREDENTIALS = [{ cloudName: 'fixit', uploadPreset: 'fixit_unsigned' }];
 
 const MAP_STYLES = [
   { name: 'Midnight', id: 'mapbox/navigation-night-v1', color: 'bg-blue-900' },
@@ -233,12 +232,10 @@ function Home() {
   const [allIssues, setAllIssues] = useState({});
 
   // UI State
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [isStyleOpen, setIsStyleOpen] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
-  const [formData, setFormData] = useState({ type: 'Pothole', severity: 'Low', desc: '', image: null, status: 'new' });
   const [searchId, setSearchId] = useState('');
   const [mapStyle, setMapStyle] = useState('mapbox/outdoors-v12');
 
@@ -362,66 +359,9 @@ function Home() {
     }
   };
 
-  const uploadToCloudinary = async (file) => {
-    const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CREDENTIALS[0].cloudName}/upload`;
-    const form = new FormData();
-    form.append('file', file);
-    form.append('upload_preset', CLOUDINARY_CREDENTIALS[0].uploadPreset);
-    const res = await fetch(url, { method: 'POST', body: form });
-    const data = await res.json();
-    return data.secure_url;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.image) return alert("Please attach a photo.");
-
-    setIsSubmitting(true);
-
-    let imageFile = formData.image;
-    try {
-      const options = {
-        maxSizeMB: 0.15,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true,
-      };
-      imageFile = await imageCompression(formData.image, options);
-    } catch (error) {
-      console.error("Image compression failed:", error);
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const imgUrl = await uploadToCloudinary(imageFile);
-          const { image: _unused, ...cleanData } = formData;
-
-          const newDoc = await addDoc(collection(db, "issues"), {
-            ...cleanData,
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            imageUrl: imgUrl,
-            ts: serverTimestamp(),
-            userId: currentUser ? currentUser.uid : "guest",
-            upvotes: 0,
-          });
-
-          setSummaryData({ ...cleanData, imageUrl: imgUrl, id: newDoc.id });
-          setShowForm(false);
-          setShowSummary(true);
-          setFormData({ type: "Pothole", severity: "Low", desc: "", image: null, status: "new" });
-        } catch (err) {
-          console.error(err);
-          alert("Upload Failed");
-        } finally {
-          setIsSubmitting(false);
-        }
-      },
-      () => {
-        alert("Location access denied. Cannot report without location.");
-        setIsSubmitting(false);
-      }
-    );
+  const handleReportSuccess = (data) => {
+    setSummaryData(data);
+    setShowSummary(true);
   };
 
   return (
@@ -439,7 +379,7 @@ function Home() {
       </AnimatePresence>
 
       {/* --- HUD: Floating Controls --- */}
-      <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.5rem)] right-4 md:bottom-24 md:right-6 z-[900] flex flex-col gap-4 items-end pointer-events-auto">
+      <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+3rem)] right-4 md:bottom-24 md:right-6 z-[900] flex flex-col gap-4 items-end pointer-events-auto">
 
         {/* Style Switcher (Desktop Only) */}
         <div className="relative">
@@ -505,90 +445,16 @@ function Home() {
           </div>
         </div>
       </div>
+
       {/* --- Modal: New Report Form --- */}
-      <AnimatePresence>
-        {showForm && (
-          <div className="fixed inset-0 z-[2000] flex items-end md:items-center justify-center md:p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowForm(false)} />
-
-            <motion.div
-              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full h-[85vh] md:h-auto md:max-w-lg bg-[var(--muni-surface)] border-t md:border border-[var(--muni-border)] rounded-t-3xl md:rounded-2xl shadow-2xl overflow-hidden flex flex-col"
-            >
-              {/* Modal Header */}
-              <div className="px-6 py-4 border-b border-[var(--muni-border)] flex justify-between items-center bg-white/5 shrink-0">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <FaCrosshairs className="text-[var(--muni-accent)]" /> New Incident Report
-                </h2>
-                <button onClick={() => setShowForm(false)} className="text-[var(--muni-text-muted)] hover:text-white transition"><FaTimes /></button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-[var(--muni-text-muted)] uppercase tracking-wider">Issue Type</label>
-                    <select
-                      value={formData.type}
-                      onChange={e => setFormData({ ...formData, type: e.target.value })}
-                      className="w-full bg-black/50 border border-[var(--muni-border)] rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-[var(--muni-accent)] transition appearance-none"
-                    >
-                      <option>Pothole</option><option>Garbage</option><option>Water Leak</option><option>Other</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-[var(--muni-text-muted)] uppercase tracking-wider">Severity</label>
-                    <select
-                      value={formData.severity}
-                      onChange={e => setFormData({ ...formData, severity: e.target.value })}
-                      className="w-full bg-black/50 border border-[var(--muni-border)] rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-[var(--muni-accent)] transition appearance-none"
-                    >
-                      <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-[var(--muni-text-muted)] uppercase tracking-wider">Description</label>
-                  <textarea
-                    value={formData.desc}
-                    onChange={e => setFormData({ ...formData, desc: e.target.value })}
-                    className="w-full h-24 bg-black/50 border border-[var(--muni-border)] rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-[var(--muni-accent)] transition resize-none"
-                    placeholder="Describe the issue..."
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-[var(--muni-text-muted)] uppercase tracking-wider">Evidence</label>
-                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-[var(--muni-border)] rounded-xl cursor-pointer hover:border-[var(--muni-accent)]/50 hover:bg-[var(--muni-accent)]/5 transition group">
-                    <div className="flex flex-col items-center gap-2 text-[var(--muni-text-muted)] group-hover:text-[var(--muni-accent)]">
-                      {formData.image ? <MdCheckCircle size={24} className="text-emerald-500" /> : <FaCamera size={24} />}
-                      <span className="text-xs font-bold">{formData.image ? 'Photo Attached' : 'Upload Photo'}</span>
-                    </div>
-                    <input type="file" accept="image/*" className="hidden" onChange={e => setFormData({ ...formData, image: e.target.files[0] })} />
-                  </label>
-                </div>
-
-                <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-[#FF671F] via-white to-[#046A38] rounded-xl text-black font-bold shadow-lg shadow-[var(--muni-accent)]/20 hover:shadow-[var(--muni-accent)]/40 transition-all flex items-center justify-center gap-2 mt-4">
-                  <FaPaperPlane /> SUBMIT REPORT
-                </button>
-                <div className="h-8 md:hidden"></div> {/* Safe area spacer */}
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <ReportIssueModal
+        show={showForm}
+        onClose={() => setShowForm(false)}
+        onSuccess={handleReportSuccess}
+      />
 
       {/* --- Success Modal --- */}
       {showSummary && <ReportCard summaryData={summaryData} setShowSummary={setShowSummary} />}
-
-      {isSubmitting && (
-        <div className="fixed inset-0 z-[5000] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center gap-4">
-          <div className="w-12 h-12 border-4 border-[var(--muni-accent)] border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-[var(--muni-accent)] font-bold tracking-widest text-xs uppercase">
-            Submitting report...
-          </p>
-        </div>
-      )}
 
       {/* --- CSS Overrides for Leaflet --- */}
       <style jsx global>{`

@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  FaIdCard, FaMapMarkerAlt, FaCalendarAlt, FaClipboardList,
-  FaTimes, FaCheckCircle, FaExclamationTriangle, FaLayerGroup, FaTwitter
+  FaIdCard, FaMapMarkerAlt, FaLayerGroup, FaTwitter, FaCheck, FaCopy
 } from 'react-icons/fa';
 import { MdError, MdWarning, MdCheckCircle } from 'react-icons/md';
+import { CheckCircle2 } from 'lucide-react';
 
-// --- Helper: Severity Styles (Neon Theme) ---
+// --- Helper: Severity Styles (Municipal Theme) ---
 const getSeverityConfig = (severity) => {
   switch (severity) {
     case 'Critical':
@@ -14,15 +14,13 @@ const getSeverityConfig = (severity) => {
         color: 'text-red-500',
         border: 'border-red-500/50',
         bg: 'bg-red-500/10',
-        shadow: 'shadow-[0_0_20px_rgba(239,68,68,0.3)]',
         icon: <MdError />
       };
     case 'High':
       return {
-        color: 'text-orange-500',
-        border: 'border-orange-500/50',
-        bg: 'bg-orange-500/10',
-        shadow: 'shadow-[0_0_20px_rgba(249,115,22,0.3)]',
+        color: 'text-[#FF671F]', // Orange
+        border: 'border-[#FF671F]/50',
+        bg: 'bg-[#FF671F]/10',
         icon: <MdWarning />
       };
     case 'Medium':
@@ -30,32 +28,39 @@ const getSeverityConfig = (severity) => {
         color: 'text-yellow-400',
         border: 'border-yellow-400/50',
         bg: 'bg-yellow-400/10',
-        shadow: 'shadow-[0_0_20px_rgba(250,204,21,0.3)]',
-        icon: <FaExclamationTriangle />
+        icon: <MdWarning />
       };
     case 'Low':
       return {
-        color: 'text-emerald-400',
-        border: 'border-emerald-400/50',
-        bg: 'bg-emerald-400/10',
-        shadow: 'shadow-[0_0_20px_rgba(52,211,153,0.3)]',
+        color: 'text-[#046A38]', // Green
+        border: 'border-[#046A38]/50',
+        bg: 'bg-[#046A38]/10',
         icon: <MdCheckCircle />
       };
     default:
       return {
-        color: 'text-cyan-400',
-        border: 'border-cyan-400/50',
-        bg: 'bg-cyan-400/10',
-        shadow: 'shadow-[0_0_20px_rgba(34,211,238,0.3)]',
-        icon: <FaCheckCircle />
+        color: 'text-gray-400',
+        border: 'border-gray-400/50',
+        bg: 'bg-gray-400/10',
+        icon: <CheckCircle2 />
       };
   }
 };
 
 const ReportCard = ({ summaryData, setShowSummary }) => {
+  const [copied, setCopied] = useState(false);
+
   if (!summaryData) return null;
 
   const theme = getSeverityConfig(summaryData.severity);
+
+  const handleCopy = () => {
+    if (summaryData.id) {
+      navigator.clipboard.writeText(summaryData.id);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 font-sans">
@@ -72,28 +77,20 @@ const ReportCard = ({ summaryData, setShowSummary }) => {
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: 'spring', duration: 0.5 }}
-        className="relative w-full max-w-md bg-[#0F172A] border border-cyan-500/30 rounded-2xl shadow-[0_0_50px_rgba(0,255,204,0.2)] overflow-hidden"
+        className="relative w-full max-w-md bg-[#18181b] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
       >
-        {/* Top Neon Line */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500"></div>
-
-        {/* Close Button */}
-        <button
-          onClick={() => setShowSummary(false)}
-          className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors z-10"
-        >
-          <FaTimes size={20} />
-        </button>
+        {/* Top Accent Line */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FF671F] via-white to-[#046A38]"></div>
 
         <div className="p-8 text-center">
           {/* Success Icon */}
-          <div className="mx-auto w-20 h-20 bg-cyan-500/10 rounded-full flex items-center justify-center mb-6 border border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.2)]">
-            <FaCheckCircle className="text-4xl text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]" />
+          <div className="mx-auto w-16 h-16 bg-[#046A38]/10 rounded-full flex items-center justify-center mb-6 border border-[#046A38]/30 shadow-[0_0_30px_rgba(4,106,56,0.2)]">
+            <CheckCircle2 className="text-3xl text-[#046A38]" />
           </div>
 
-          <h2 className="text-2xl font-bold text-white mb-2">Report Submitted!</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Report Submitted</h2>
           <p className="text-gray-400 text-sm mb-8">
-            Your issue has been logged in the system and dispatched to the relevant department.
+            Your issue has been logged. Thank you for being a responsible citizen.
           </p>
 
           {/* Data Grid */}
@@ -106,16 +103,20 @@ const ReportCard = ({ summaryData, setShowSummary }) => {
                   <FaIdCard /> Tracking ID
                 </div>
                 <div className="flex items-center gap-2 mt-1">
-                  <div className="font-mono text-cyan-400 text-sm" title={summaryData.id}>
-                    #{summaryData.id || 'PENDING'}
+                  <div className="font-mono text-white text-sm tracking-wider" title={summaryData.id}>
+                    #{summaryData.id ? summaryData.id.slice(0, 8).toUpperCase() : 'PENDING'}...
                   </div>
                   {summaryData.id && (
                     <button
-                      onClick={() => navigator.clipboard.writeText(summaryData.id)}
-                      className="text-gray-500 hover:text-white transition-colors p-1"
+                      onClick={handleCopy}
+                      className="text-gray-500 hover:text-white transition-colors p-1 relative group"
                       title="Copy ID"
                     >
-                      <FaClipboardList size={14} />
+                      {copied ? <FaCheck size={12} className="text-[#046A38]" /> : <FaCopy size={12} />}
+                      {/* Tooltip */}
+                      <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                        {copied ? 'Copied!' : 'Copy ID'}
+                      </span>
                     </button>
                   )}
                 </div>
@@ -131,7 +132,7 @@ const ReportCard = ({ summaryData, setShowSummary }) => {
             {/* Row 2: Severity Badge */}
             <div className="flex justify-between items-center pb-3 border-b border-white/5">
               <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Severity Level</div>
-              <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-bold uppercase ${theme.bg} ${theme.color} ${theme.border} ${theme.shadow}`}>
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-bold uppercase ${theme.bg} ${theme.color} ${theme.border}`}>
                 {theme.icon} {summaryData.severity}
               </div>
             </div>
@@ -151,7 +152,7 @@ const ReportCard = ({ summaryData, setShowSummary }) => {
           {summaryData.imageUrl && (
             <div className="mt-6 relative group rounded-xl overflow-hidden border border-white/10 h-32">
               <img src={summaryData.imageUrl} alt="Preview" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-              <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur px-2 py-1 rounded text-[10px] text-white font-bold">
+              <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur px-2 py-1 rounded text-[10px] text-white font-bold border border-white/10">
                 EVIDENCE ATTACHED
               </div>
             </div>
@@ -165,14 +166,14 @@ const ReportCard = ({ summaryData, setShowSummary }) => {
                 const url = encodeURIComponent(window.location.origin + '/report/' + summaryData.id);
                 window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
               }}
-              className="w-full bg-[#1DA1F2] hover:bg-[#1DA1F2]/90 text-white font-bold py-3 rounded-xl shadow-lg shadow-[#1DA1F2]/20 transition-all flex items-center justify-center gap-2"
+              className="w-full bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 text-[#1DA1F2] border border-[#1DA1F2]/50 font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
             >
               <FaTwitter /> Tweet Report
             </button>
 
             <button
               onClick={() => setShowSummary(false)}
-              className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-cyan-500/20 transition-all transform hover:scale-[1.02]"
+              className="w-full bg-white hover:bg-gray-100 text-black font-bold py-3 rounded-xl shadow-lg transition-all transform hover:scale-[1.02] text-sm"
             >
               Return to Map
             </button>
