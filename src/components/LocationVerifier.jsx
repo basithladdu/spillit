@@ -107,22 +107,7 @@ const LocationVerifier = ({ file, onLocationVerified, className }) => {
         <div className={`w-full h-full ${className || ''} relative bg-gray-900 overflow-hidden rounded-xl`}>
 
             {/* Compact Address Pill (Overlay) */}
-            {marker && (
-                <div className="absolute top-4 left-4 right-16 z-[10] bg-white/90 backdrop-blur-md border border-gray-200 shadow-sm rounded-lg px-3 py-2 flex items-center gap-2 pointer-events-none">
-                    <div className="bg-orange-100 p-1 rounded-full text-orange-600 shrink-0">
-                        <MapPin size={14} />
-                    </div>
-                    <div className="flex-1 min-w-0 pointer-events-auto">
-                        {loadingAddress ? (
-                            <div className="h-3 bg-gray-200 rounded w-24 animate-pulse"></div>
-                        ) : (
-                            <p className="text-xs font-medium text-gray-900 truncate" title={address}>
-                                {address || "Pin location"}
-                            </p>
-                        )}
-                    </div>
-                </div>
-            )}
+
 
             {/* Pulse Animation (while locating) */}
             {isLocating && (
