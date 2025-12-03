@@ -207,7 +207,7 @@ const BecomeDonor = () => {
                                     >
                                         <div className="text-center p-6 bg-white rounded-xl">
                                             <h3 className="text-black font-bold mb-4 uppercase tracking-wider">Scan to Pay</h3>
-                                            <div className="w-96 h-96 bg-gray-200 mx-auto mb-4 flex items-center justify-center ">
+                                            <div className="w-full max-w-[300px] aspect-square bg-gray-200 mx-auto mb-4 flex items-center justify-center rounded-lg overflow-hidden">
                                                 {/* <FaQrcode size={64} className="text-gray-400" /> */}
                                                 {/* Replace with actual QR Code Image */}
                                                 <img src="qrcode.jpeg" alt="UPI QR" className="w-full h-full " /> </div>
