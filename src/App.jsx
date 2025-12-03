@@ -19,7 +19,9 @@ const Help = lazy(() => import("./pages/Help"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const SIH2025 = lazy(() => import("./pages/SIH2025"));
 const Partner = lazy(() => import("./pages/Partner"));
-
+const AdminDonors = lazy(() => import("./pages/AdminDonors"));
+const Donors = lazy(() => import("./pages/Donors"));
+const BecomeDonor = lazy(() => import("./pages/BecomeDonor"));
 // Municipal Pages
 const MunicipalRegistration = lazy(() => import("./pages/MunicipalRegistration"));
 const MunicipalDashboard = lazy(() => import("./pages/MunicipalDashboard"));
@@ -58,6 +60,9 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/sih2025" element={<SIH2025 />} />
             <Route path="/partner" element={<Partner />} />
+            <Route path="/admin/donors" element={<AdminDonors />} />
+            <Route path="/donors" element={<Donors />} />
+            <Route path="/become-donor" element={<BecomeDonor />} />
 
             {/* Municipal Routes */}
             <Route path="/municipal-register" element={<MunicipalRegistration />} />

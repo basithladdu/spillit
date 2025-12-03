@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'framer-motion';
 import { FaHandshake, FaMoneyBillWave, FaBuilding, FaGavel, FaLightbulb, FaUsers, FaEnvelope, FaPhone } from 'react-icons/fa';
 import '../styles/municipal.css';
@@ -18,6 +19,17 @@ const Partner = () => {
                     </motion.h1>
                     <p className="text-[var(--muni-text-muted)] text-lg max-w-2xl mx-auto">
                         Join us in transforming civic infrastructure through technology and collaboration.
+                    </p>
+
+                    <p className="text-[var(--muni-text-muted)] text-base md:text-lg max-w-2xl mx-auto mt-6 leading-relaxed font-medium opacity-90">
+                        <span className="text-white font-semibold">
+                            “We’re not trying to build a fancy app
+                        </span>{" "}
+                        we’re building something India has needed for decades.
+                        We’ve seen how civic issues get ignored, buried, or passed
+                        around without accountability. LetsFixIndia is our attempt to finally
+                        bring transparency, public proof, and real responsibility to a
+                        system that affects all 1.4 billion of us. We think it's worth giving it a shot.”
                     </p>
                 </div>
 

@@ -41,6 +41,21 @@ const About = () => {
                     </div>
                 </motion.section>
 
+                {/* Inspirational Quote */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    className="max-w-3xl mx-auto mb-16 text-center"
+                >
+                    <div className="relative p-8 bg-[#18181b] border border-[#27272a] rounded-2xl overflow-hidden">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-[#FF671F]"></div>
+                        <p className="text-lg text-gray-300 italic font-serif leading-relaxed">
+                            "According to all aerodynamic laws, the bumblebee cannot fly because its body weight is not in the right proportion to its wingspan... but ignoring these laws, the bee flies anyway."
+                        </p>
+                    </div>
+                </motion.div>
+
                 {/* How It Works Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                     <motion.div

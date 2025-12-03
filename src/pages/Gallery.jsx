@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../utils/firebase';
-import { motion, AnimatePresence } from 'framer-motion';
+import {  AnimatePresence } from 'framer-motion';
 import {
   FaSearch, FaFilter, FaShareAlt, FaHeart, FaRegHeart,
   FaChevronLeft, FaChevronRight, FaMapMarkerAlt, FaCalendarAlt,

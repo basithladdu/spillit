@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { getFirestore, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { useAuth } from '../hooks/useAuth';
+import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+// import { useAuth } from '../hooks/useAuth';
 import { Loader2, Phone, Check, X, FileText, RefreshCw } from 'lucide-react';
 import app from '../utils/firebase';
 import '../styles/municipal.css';
 
 export default function OpsDashboard() {
-    const { currentUser } = useAuth();
+    // const { currentUser } = useAuth();
     const [registrations, setRegistrations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState(null);
@@ -19,11 +19,16 @@ export default function OpsDashboard() {
             const db = getFirestore(app);
             const q = query(
                 collection(db, 'municipal_registrations'),
-                where('status', '==', 'PENDING'),
-                orderBy('submitted_at', 'desc')
+                where('status', '==', 'PENDING')
             );
             const snapshot = await getDocs(q);
             const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Client-side sort to avoid composite index requirement
+            data.sort((a, b) => {
+                const dateA = a.submitted_at?.toDate ? a.submitted_at.toDate() : new Date(a.submitted_at);
+                const dateB = b.submitted_at?.toDate ? b.submitted_at.toDate() : new Date(b.submitted_at);
+                return dateB - dateA;
+            });
             setRegistrations(data);
         } catch (error) {
             console.error("Error fetching registrations:", error);

@@ -92,14 +92,14 @@ const TrackerView = ({ issues, onSelectIssue, onDelete, onExport, searchQuery, s
 
                 <div className="flex gap-3 flex-wrap md:flex-nowrap items-center">
                     <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="muni-input text-sm w-full md:w-40">
-                        <option>All Status</option>
+                        <option value="All">All Status</option>
                         <option value="new">New</option>
                         <option value="in-progress">In Progress</option>
                         <option value="resolved">Resolved</option>
                     </select>
 
                     <select value={filterSeverity} onChange={e => setFilterSeverity(e.target.value)} className="muni-input text-sm w-full md:w-40">
-                        <option>All Severity</option>
+                        <option value="All">All Severity</option>
                         <option value="critical">Critical</option>
                         <option value="high">High</option>
                         <option value="medium">Medium</option>
@@ -501,7 +501,7 @@ export default function MunicipalDashboard() {
                 className={`fixed inset-y-0 left-0 z-50 w-64 bg-black border-r border-[var(--muni-border)] flex flex-col transition-transform duration-300 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:w-0 md:border-none md:overflow-hidden'
                     }`}
             >
-                <div className="p-6 border-b border-[var(--muni-border)] flex items-center justify-between h-16 flex-none">
+                <div className="p-6 items-center justify-between h-16 flex-none">
                     <div className="font-bold tracking-wider text-xl flex items-center gap-1">
                         <span className="text-[#FF671F]">Lets</span>
                         <span className="text-white">Fix</span>
@@ -516,8 +516,8 @@ export default function MunicipalDashboard() {
                     <NavItem id="leaderboard" icon={Trophy} label="Leaderboard" />
                     <NavItem id="about" icon={Info} label="About devit." />
                     <NavItem id="settings" icon={Settings} label="Settings" />
-                                  <NavItem id="register" icon={FileText} label="Municipal Register" external="/municipal-register" />
-  </nav>
+                    <NavItem id="register" icon={FileText} label="Municipal Register" external="/municipal-register" />
+                </nav>
 
                 <div className="p-4 border-t border-[var(--muni-border)] flex-none">
                     <div className="flex items-center gap-3 mb-4 px-2">

@@ -4,7 +4,7 @@ import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import {
   Map, BarChart3, Users, LogIn, LogOut,
   Search, HelpCircle, Star, UserCircle, Menu, X,
-  User as UserIcon, Handshake
+  User as UserIcon, Handshake, Heart
 } from 'lucide-react';
 
 import { useAuth } from '../hooks/useAuth';
@@ -89,6 +89,7 @@ function Navbar() {
             <NavItem to="/help" icon={HelpCircle} label="Help" />
             <NavItem to="/about" icon={UserIcon} label="About" />
             <NavItem to="/partner" icon={Handshake} label="Partner/Fund Us" />
+            <NavItem to="/donors" icon={Heart} label="Donors" />
 
             {currentUser && userRole === 'municipal_admin' && (
               <>
@@ -203,6 +204,7 @@ function Navbar() {
 
               <NavItem to="/about" icon={UserIcon} label="About" onClick={() => setIsMenuOpen(false)} />
               <NavItem to="/partner" icon={Handshake} label="Partner/Fund Us" onClick={() => setIsMenuOpen(false)} />
+              <NavItem to="/donors" icon={Heart} label="Donors" onClick={() => setIsMenuOpen(false)} />
               {currentUser && userRole === 'municipal_admin' && (
                 <NavItem
                   to="/municipal-dashboard"
