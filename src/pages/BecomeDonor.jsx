@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { useNavigate } from 'react-router-dom';
-import { FaHeart, FaShieldAlt, FaQrcode, FaArrowRight, FaCheckCircle, FaLock } from 'react-icons/fa';
+import { uploadToSupabase } from '../utils/supabaseStorage';
+import { FaHeart, FaShieldAlt, FaQrcode, FaArrowRight, FaCheckCircle, FaLock, FaUpload } from 'react-icons/fa';
 import '../styles/municipal.css';
 
 const BecomeDonor = () => {
@@ -11,6 +12,7 @@ const BecomeDonor = () => {
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState('details'); // details, payment, success
     const [skipDetails, setSkipDetails] = useState(false);
+    const [proofFile, setProofFile] = useState(null);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -46,6 +48,13 @@ const BecomeDonor = () => {
                 return;
             }
 
+            let proofUrl = '';
+            if (proofFile) {
+                const timestampStr = Date.now();
+                const path = `donors/proof_${timestampStr}_${proofFile.name}`;
+                proofUrl = await uploadToSupabase(proofFile, path);
+            }
+
             const donorData = {
                 name: formData.isAnonymous ? "Anonymous Hero" : (formData.name || "Anonymous"),
                 email: formData.email,
@@ -53,6 +62,7 @@ const BecomeDonor = () => {
                 message: formData.message,
                 isAnonymous: formData.isAnonymous,
                 transactionId: formData.transactionId,
+                proof: proofUrl,
                 verified: false, // Needs admin approval
                 timestamp: serverTimestamp(),
                 hideAmount: false // Default to showing amount, can be toggled later by admin or user preference if added
@@ -62,7 +72,7 @@ const BecomeDonor = () => {
             setStep('success');
         } catch (error) {
             console.error("Error submitting donation:", error);
-            alert("Something went wrong. Please try again.");
+            alert(`Something went wrong: ${error.message}`);
         } finally {
             setLoading(false);
         }
@@ -247,11 +257,24 @@ const BecomeDonor = () => {
                                             />
                                         </div>
 
-                                        {/* File Upload Placeholder - Implementing full file upload requires storage setup, keeping it visual for now as per "upload transaction id which is optional or screenshot jpg" */}
+                                        {/* File Upload */}
                                         <div>
                                             <label className="block text-xs font-bold text-[var(--muni-text-muted)] uppercase tracking-wider mb-2">Upload Screenshot (Optional)</label>
-                                            <div className="border-2 border-dashed border-[var(--muni-border)] rounded-lg p-6 text-center hover:border-[#FF671F] transition-colors cursor-pointer">
-                                                <p className="text-sm text-[var(--muni-text-muted)]">Click to upload JPG/PNG</p>
+                                            <div className="relative">
+                                                <input
+                                                    type="file"
+                                                    onChange={(e) => setProofFile(e.target.files[0])}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                    accept=".jpg,.jpeg,.png,.pdf"
+                                                />
+                                                <div className={`border-2 border-dashed border-[var(--muni-border)] rounded-lg p-6 text-center transition-colors ${proofFile ? 'border-[#FF671F] bg-[#FF671F]/10' : 'hover:border-[#FF671F]'}`}>
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <FaUpload className={`text-xl ${proofFile ? 'text-[#FF671F]' : 'text-[var(--muni-text-muted)]'}`} />
+                                                        <p className={`text-sm ${proofFile ? 'text-[#FF671F] font-bold' : 'text-[var(--muni-text-muted)]'}`}>
+                                                            {proofFile ? proofFile.name : "Click to upload JPG/PNG"}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 

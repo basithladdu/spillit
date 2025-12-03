@@ -31,5 +31,12 @@ service cloud.firestore {
     match /issues/{issueId} {
       allow read, write: if true;
     }
+
+    // Donors
+    match /fixit_donors/{donorId} {
+      allow create: if true;
+      allow read: if true;
+      allow update, delete: if isOpsAdmin();
+    }
   }
 }

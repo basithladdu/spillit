@@ -21,8 +21,7 @@ export const uploadToSupabase = async (file, path) => {
             Bucket: "municipal-uploads",
             Key: path,
             Body: buffer,
-            ContentType: file.type,
-            ACL: 'public-read'
+            ContentType: file.type
         });
 
         await s3Client.send(command);
