@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, orderBy, query, deleteDoc, doc, updateDoc, limit } from 'firebase/firestore';
 import { db } from '../utils/firebase';
-import {  AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import {
   FaSearch, FaFilter, FaTrashAlt, FaLayerGroup,
