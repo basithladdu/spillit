@@ -4,7 +4,7 @@ import { db } from '../utils/firebase';
 import { useAuth } from '../hooks/useAuth';
 import { uploadToSupabase } from '../utils/supabaseStorage';
 import { CheckCircle, XCircle, Loader2, ShieldAlert, Upload, FileText, Calendar, DollarSign, User, MessageSquare, Link } from 'lucide-react';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import '../styles/municipal.css';
 
 const AdminDonors = () => {

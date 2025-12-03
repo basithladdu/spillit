@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../utils/firebase";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
     FaHeart,
