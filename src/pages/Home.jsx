@@ -46,8 +46,8 @@ const MAP_STYLES = [
 // --- Onboarding Tour Data ---
 const TOUR_STEPS = [
   {
-    title: "Welcome to FixIt! 👋",
-    content: "Join the movement to build better cities. FixIt empowers you to report civic issues.",
+    title: "Welcome to LetsFixIndia! 👋",
+    content: "Join the movement to build better cities. LetsFixIndia empowers you to report civic issues.",
     action: "Start",
     placement: 'center'
   },

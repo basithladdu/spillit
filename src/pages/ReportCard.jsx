@@ -162,7 +162,7 @@ const ReportCard = ({ summaryData, setShowSummary }) => {
           <div className="mt-8 space-y-3">
             <button
               onClick={() => {
-                const text = encodeURIComponent(`I just reported a ${summaryData.type} issue on FixIt! @letsfixindia`);
+                const text = encodeURIComponent(`I just reported a ${summaryData.type} issue on LetsFixIndia! @letsfixindia`);
                 const url = encodeURIComponent(window.location.origin + '/report/' + summaryData.id);
                 window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
               }}

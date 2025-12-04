@@ -274,7 +274,7 @@ function Report() {
 
                 <button
                   onClick={() => {
-                    const text = encodeURIComponent(`Check out this issue on FixIt! @letsfixindia`);
+                    const text = encodeURIComponent(`Check out this issue on LetsFixIndia! @letsfixindia`);
                     const url = encodeURIComponent(window.location.href);
                     window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
                   }}

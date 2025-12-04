@@ -83,7 +83,7 @@ function Help() {
             Help Center & <span className="text-[#FF671F]">FAQs</span>
           </h1>
           <p className="text-[var(--muni-text-muted)] text-lg max-w-2xl mx-auto">
-            Everything you need to know about using Fixit to improve your community.
+            Everything you need to know about using LetsFixIndia to improve your community.
           </p>
         </div>
 

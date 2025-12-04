@@ -94,7 +94,7 @@ export default function MunicipalRegistration() {
                     </div>
                     <h2 className="text-2xl font-bold mb-4 text-white">Registration Received</h2>
                     <p className="text-[var(--muni-text-muted)] mb-6">
-                        Your application for the Fixit Municipal Dashboard is under review.
+                        Your application for the LetsFixIndia Municipal Dashboard is under review.
                     </p>
                     <div className="bg-[var(--muni-bg)] p-4 rounded border border-[var(--muni-border)] mb-6">
                         <p className="font-mono text-sm text-[#046A38]">Expected SLA: 48–72 Hours</p>
@@ -271,7 +271,7 @@ export default function MunicipalRegistration() {
                                 <textarea
                                     name="brief_purpose"
                                     className="muni-input h-24 resize-none focus:border-[#046A38]"
-                                    placeholder="Describe your department's role in using Fixit..."
+                                    placeholder="Describe your department's role in using LetsFixIndia..."
                                     onChange={handleInputChange}
                                 ></textarea>
                             </div>

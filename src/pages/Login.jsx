@@ -74,7 +74,7 @@ function Login() {
             <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
               Welcome <span className="text-[#FF671F]">Back</span>
             </h1>
-            <p className="text-[var(--muni-text-muted)] text-sm">Access your Fixit command center.</p>
+            <p className="text-[var(--muni-text-muted)] text-sm">Access your LetsFixIndia command center.</p>
           </div>
 
           {/* Error Banner */}
