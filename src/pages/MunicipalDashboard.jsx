@@ -113,10 +113,19 @@ const TrackerView = ({ issues, onSelectIssue, onDelete, onExport, onExportPDF, s
                     </select>
 
                     <div className="flex items-center gap-2 w-full md:w-auto">
-                        <button onClick={() => onExport(filteredIssues)} title="Export to Excel (Data Intensive)" className="muni-btn-ghost flex items-center justify-center gap-2 flex-1 md:flex-none px-4 py-2 text-xs">
+                        <button
+                            onClick={() => onExport(filteredIssues)}
+                            title="Export to Excel (Data Intensive)"
+                            className="muni-btn-ghost flex items-center justify-center gap-2 flex-1 md:flex-none px-4 h-[42px] text-[10px] font-bold uppercase tracking-wider"
+                        >
                             <Download size={14} /> EXCEL
                         </button>
-                        <button onClick={() => onExportPDF(filteredIssues)} title="Generate Formal PDF Civic Report" className="muni-btn-primary flex items-center justify-center gap-2 flex-1 md:flex-none px-4 py-2 text-xs">
+                        <button
+                            onClick={() => onExportPDF(filteredIssues)}
+                            title="Generate Formal PDF Civic Report"
+                            className="muni-btn-primary flex items-center justify-center gap-2 flex-1 md:flex-none px-4 h-[42px] text-[10px] font-bold uppercase tracking-wider"
+                            style={{ background: 'linear-gradient(to right, #22c55e, #10b981)', color: 'black' }}
+                        >
                             <FileText size={14} /> PDF REPORT
                         </button>
                     </div>
@@ -297,9 +306,9 @@ const LeaderboardView = ({ issues }) => {
                                 <tr key={dept.code} className={`hover:bg-white/5 transition-colors ${i === 0 ? 'bg-yellow-500/5' : ''}`}>
                                     <td className="text-center">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${i === 0 ? 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20' :
-                                                i === 1 ? 'bg-gray-300 text-black' :
-                                                    i === 2 ? 'bg-orange-400 text-black' :
-                                                        'bg-white/5 text-[var(--muni-text-muted)]'
+                                            i === 1 ? 'bg-gray-300 text-black' :
+                                                i === 2 ? 'bg-orange-400 text-black' :
+                                                    'bg-white/5 text-[var(--muni-text-muted)]'
                                             }`}>
                                             {i + 1}
                                         </div>

@@ -9,6 +9,37 @@ import {
 
 import { useAuth } from '../hooks/useAuth';
 
+// Helper Component for Navigation Links
+const NavItem = ({ to, icon: IconComponent, label, colorClass = "text-[var(--muni-text-muted)]", onClick }) => {
+  const location = useLocation();
+  const isActive = to === '/'
+    ? location.pathname === '/'
+    : location.pathname.startsWith(to);
+
+  return (
+    <Link to={to} onClick={onClick} className="relative group w-full md:w-auto">
+      <div className={`flex items-center gap-3 md:gap-2 px-4 py-3 md:py-2 rounded-xl md:rounded-full transition-all duration-300 ${isActive ? 'text-[var(--muni-accent)] bg-white/10' : `${colorClass} hover:text-[var(--muni-accent)] hover:bg-white/5`}`}>
+        <span className="relative z-10"><IconComponent size={20} className="md:w-[18px] md:h-[18px]" /></span>
+        <span className="font-medium text-base md:text-sm relative z-10">{label}</span>
+
+        {/* Active/Hover Glow Effect (Desktop) */}
+        {isActive && (
+          <motion.div
+            layoutId="nav-pill"
+            className="absolute inset-0 rounded-xl md:rounded-full bg-[var(--muni-accent)]/10 border border-[var(--muni-accent)]/30 shadow-[0_0_10px_rgba(34,197,94,0.2)] hidden md:block"
+            transition={{
+              type: "spring",
+              stiffness: 350,
+              damping: 35,
+              mass: 1
+            }}
+          />
+        )}
+      </div>
+    </Link>
+  );
+};
+
 function Navbar() {
   const [searchId, setSearchId] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,36 +68,6 @@ function Navbar() {
       setSearchId('');
       setIsMenuOpen(false);
     }
-  };
-
-  // Helper Component for Navigation Links
-  const NavItem = ({ to, icon: IconComponent, label, colorClass = "text-[var(--muni-text-muted)]", onClick }) => {
-    const isActive = to === '/'
-      ? location.pathname === '/'
-      : location.pathname.startsWith(to);
-
-    return (
-      <Link to={to} onClick={onClick} className="relative group w-full md:w-auto">
-        <div className={`flex items-center gap-3 md:gap-2 px-4 py-3 md:py-2 rounded-xl md:rounded-full transition-all duration-300 ${isActive ? 'text-[var(--muni-accent)] bg-white/10' : `${colorClass} hover:text-[var(--muni-accent)] hover:bg-white/5`}`}>
-          <span className="relative z-10"><IconComponent size={20} className="md:w-[18px] md:h-[18px]" /></span>
-          <span className="font-medium text-base md:text-sm relative z-10">{label}</span>
-
-          {/* Active/Hover Glow Effect (Desktop) */}
-          {isActive && (
-            <motion.div
-              layoutId="nav-pill"
-              className="absolute inset-0 rounded-xl md:rounded-full bg-[var(--muni-accent)]/10 border border-[var(--muni-accent)]/30 shadow-[0_0_10px_rgba(34,197,94,0.2)] hidden md:block"
-              transition={{
-                type: "spring",
-                stiffness: 350,
-                damping: 35,
-                mass: 1
-              }}
-            />
-          )}
-        </div>
-      </Link>
-    );
   };
 
   return (

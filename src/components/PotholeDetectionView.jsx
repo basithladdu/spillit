@@ -597,11 +597,12 @@ const PotholeDetectionView = () => {
             <div className="muni-card p-4">
                 <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
                     <div className="relative flex-1 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muni-text-muted)] group-focus-within:text-[#FF671F] transition-all duration-300" size={18} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muni-text-muted)] group-focus-within:text-[#FF671F] transition-all duration-300" size={18} />
                         <input
                             type="text"
                             placeholder="Find records by ID, Road Name or Local Area..."
-                            className="muni-input pl-12 w-full !bg-white/5 border border-white/10 focus:border-[#FF671F]/50 hover:bg-white/10 transition-all text-sm h-11"
+                            className="muni-input w-full !bg-white/5 border border-white/10 focus:border-[#FF671F]/50 hover:bg-white/10 transition-all text-sm h-11"
+                            style={{ paddingLeft: '3.5rem' }}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
