@@ -32,6 +32,20 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Pothole Detections
+    match /pothole_detections/{detectionId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if true;
+    }
+
+    // Pothole Reports (parent documents grouping multiple detections)
+    match /pothole_reports/{reportId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if true;
+    }
+
     // Donors
     match /fixit_donors/{donorId} {
       allow create: if true;

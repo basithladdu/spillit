@@ -98,7 +98,7 @@ const ReportCard = ({ summaryData, setShowSummary }) => {
 
             {/* Row 1: ID & Type */}
             <div className="flex justify-between items-center pb-3 border-b border-white/5">
-              <div>
+              <div className="flex-1">
                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
                   <FaIdCard /> Tracking ID
                 </div>
@@ -109,14 +109,10 @@ const ReportCard = ({ summaryData, setShowSummary }) => {
                   {summaryData.id && (
                     <button
                       onClick={handleCopy}
-                      className="text-gray-500 hover:text-white transition-colors p-1 relative group"
-                      title="Copy ID"
+                      className="flex items-center gap-1.5 px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all text-xs font-bold text-gray-400 hover:text-white"
                     >
-                      {copied ? <FaCheck size={12} className="text-[#046A38]" /> : <FaCopy size={12} />}
-                      {/* Tooltip */}
-                      <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                        {copied ? 'Copied!' : 'Copy ID'}
-                      </span>
+                      {copied ? <FaCheck size={10} className="text-[#046A38]" /> : <FaCopy size={10} />}
+                      <span>{copied ? 'Copied!' : 'Copy ID'}</span>
                     </button>
                   )}
                 </div>

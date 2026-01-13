@@ -75,6 +75,54 @@ function App() {
               }
             />
             <Route
+              path="/municipal-dashboard/tracker"
+              element={
+                <ProtectedRoute role="municipal_admin">
+                  <MunicipalDashboard initialView="tracker" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/municipal-dashboard/pothole-detection"
+              element={
+                <ProtectedRoute role="municipal_admin">
+                  <MunicipalDashboard initialView="pothole-detection" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/municipal-dashboard/grouped-reports"
+              element={
+                <ProtectedRoute role="municipal_admin">
+                  <MunicipalDashboard initialView="grouped-reports" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/municipal-dashboard/leaderboard"
+              element={
+                <ProtectedRoute role="municipal_admin">
+                  <MunicipalDashboard initialView="leaderboard" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/municipal-dashboard/about"
+              element={
+                <ProtectedRoute role="municipal_admin">
+                  <MunicipalDashboard initialView="about" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/municipal-dashboard/settings"
+              element={
+                <ProtectedRoute role="municipal_admin">
+                  <MunicipalDashboard initialView="settings" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/ops-dashboard"
               element={
                 <ProtectedRoute>

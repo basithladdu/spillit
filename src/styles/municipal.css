@@ -71,6 +71,20 @@
   border-color: var(--muni-accent);
 }
 
+/* Select/Dropdown Styling - Only for Municipal Dashboard */
+.municipal-theme .muni-input select,
+.municipal-theme select.muni-input {
+  background-color: var(--muni-surface);
+  color: var(--muni-text-main);
+  cursor: pointer;
+}
+
+.municipal-theme .muni-input option,
+.municipal-theme select.muni-input option {
+  background-color: var(--muni-surface);
+  color: var(--muni-text-main);
+}
+
 /* Buttons */
 .muni-btn-primary {
   background-color: var(--muni-accent);
@@ -108,6 +122,7 @@
 .muni-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
 }
 
 .muni-table th {
@@ -118,12 +133,21 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--muni-border);
+  white-space: nowrap;
 }
 
 .muni-table td {
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--muni-border);
   font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+/* Specific column widths for better layout */
+.muni-table td:nth-child(5),
+/* Status column */
+.muni-table th:nth-child(5) {
+  min-width: 140px;
 }
 
 .muni-badge {
@@ -145,16 +169,22 @@
   background-color: rgba(234, 179, 8, 0.1);
   color: #eab308;
   border: 1px solid rgba(234, 179, 8, 0.2);
-}/* --- FIXES FOR NAVBAR LINES --- */
+}
+
+/* --- FIXES FOR NAVBAR LINES --- */
 
 /* 1. Kills the Orange Line on the active sidebar tab */
-.active, .nav-item.active, a[aria-current="page"] {
+.active,
+.nav-item.active,
+a[aria-current="page"] {
   border-right: none !important;
   border: none !important;
 }
 
 /* 2. Kills the Grey Box/Outline around the top Gallery/Map menu */
-header, nav, .navbar-container {
+header,
+nav,
+.navbar-container {
   border: none !important;
   box-shadow: none !important;
   outline: none !important;

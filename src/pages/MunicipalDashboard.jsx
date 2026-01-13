@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getFirestore, collection, query, limit, orderBy, deleteDoc, doc, updateDoc, onSnapshot } from 'firebase/firestore';
 import {
     LayoutDashboard, MapPin, ClipboardList,
-    Trophy, Info, LogOut, Menu, X, Bell, Settings, FileText, Eye, Trash2, Download, AlertCircle, CheckCircle, Clock
+    Trophy, Info, LogOut, Menu, X, Bell, Settings, FileText, Eye, Trash2, Download, AlertCircle, CheckCircle, Clock, Scan
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import app from '../utils/firebase';
+import PotholeDetectionView from '../components/PotholeDetectionView';
+import GroupedPotholeView from '../components/GroupedPotholeView';
+import AboutView from '../components/AboutView';
 import '../styles/municipal.css';
+import DashboardMap from '../components/DashboardMap';
 
 // --- Helper Functions ---
 const getSeverityConfig = (severity) => {
@@ -53,15 +57,14 @@ const DashboardView = ({ issues, stats }) => (
         </div>
 
         {/* Map Placeholder */}
-        <div className="muni-card h-[300px] md:h-[400px] flex items-center justify-center bg-[#050505] relative overflow-hidden group border border-[#046A38]/30">
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_#FF671F_0%,_transparent_70%)] group-hover:opacity-30 transition-opacity" />
-            <div className="text-center z-10">
-                <MapPin size={48} className="mx-auto mb-4 text-[var(--muni-text-muted)]" />
-                <h3 className="text-lg font-semibold text-white">Interactive Jurisdiction Map</h3>
-                <p className="text-[var(--muni-text-muted)] text-sm mt-2">
-                    {issues.length > 0 ? `${issues.length} active hotspots loaded` : "No active hotspots"}
-                </p>
+
+
+        {/* Map View */}
+        <div className="muni-card h-[300px] md:h-[400px] relative overflow-hidden border border-[#046A38]/30 p-0 bg-[#050505]">
+            <div className="absolute top-4 right-4 z-[400] bg-black/80 backdrop-blur px-3 py-1 rounded border border-[#FF671F]/30 text-xs font-mono text-[#FF671F]">
+                {issues.length > 0 ? `${issues.length} Hotspots Live` : "System Online"}
             </div>
+            <DashboardMap issues={issues} />
         </div>
     </div>
 );
@@ -215,43 +218,6 @@ const LeaderboardView = () => (
     </div>
 );
 
-const AboutView = () => (
-    <div className="max-w-2xl mx-auto text-center space-y-8 py-12 pb-24">
-        <div>
-            <h2 className="text-3xl font-bold mb-4 flex items-center justify-center gap-2">
-                <span className="text-[#FF671F]">Lets</span><span className="text-white">Fix</span><span className="text-[#046A38]">India</span>
-            </h2>
-            <p className="text-[var(--muni-text-muted)] leading-relaxed">
-                We are a team of passionate engineers building the digital infrastructure for a better <span className="text-[#FF671F] font-bold">India</span>.
-                Our mission is to bridge the gap between citizens and administration through transparency and technology.
-            </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-            <div className="muni-card p-6 border-t-4 border-[#FF671F]">
-                <h3 className="text-[#FF671F] font-mono mb-2">The Team</h3>
-                <ul className="space-y-2 text-sm">
-                    <li>Shaik Abdul Basith</li>
-                    <li>Shaik Abdul Muqeeth</li>
-                    <li>Shaik Awaiz</li>
-                </ul>
-            </div>
-            <div className="muni-card p-6 border-t-4 border-[#046A38]">
-                <h3 className="text-[#046A38] font-mono mb-2">Contact & DevIt</h3>
-                <p className="text-sm text-[var(--muni-text-muted)] mb-3">
-                    For technical support or feature requests:
-                    <br />
-                    <a href="mailto:workwithdevit@gmail.com" className="text-white hover:underline">workwithdevit@gmail.com</a>
-                </p>
-                <p className="text-xs text-[var(--muni-text-muted)]">
-                    <span className="text-[#FF671F] font-bold">devit</span> — "you dream it, we devit."
-                    <br />
-                    Building exceptional software for India.
-                </p>
-            </div>
-        </div>
-    </div>
-);
 
 const SettingsView = () => (
     <div className="muni-card p-8 text-center border-t-4 border-[#06038D]">
@@ -367,10 +333,11 @@ const DeleteConfirmModal = ({ deleteId, onConfirm, onCancel }) => {
 
 // --- Main Dashboard Component ---
 
-export default function MunicipalDashboard() {
+export default function MunicipalDashboard({ initialView = 'dashboard' }) {
     const { currentUser, logout } = useAuth();
     const navigate = useNavigate();
-    const [activeView, setActiveView] = useState('dashboard');
+    const location = useLocation();
+    const [activeView, setActiveView] = useState(initialView);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
     const [issues, setIssues] = useState([]);
@@ -380,6 +347,18 @@ export default function MunicipalDashboard() {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('All');
     const [filterSeverity, setFilterSeverity] = useState('All');
+
+    // Sync activeView with URL changes
+    useEffect(() => {
+        const path = location.pathname;
+        if (path.includes('/tracker')) setActiveView('tracker');
+        else if (path.includes('/pothole-detection')) setActiveView('pothole-detection');
+        else if (path.includes('/grouped-reports')) setActiveView('grouped-reports');
+        else if (path.includes('/leaderboard')) setActiveView('leaderboard');
+        else if (path.includes('/about')) setActiveView('about');
+        else if (path.includes('/settings')) setActiveView('settings');
+        else setActiveView('dashboard');
+    }, [location.pathname]);
 
     // Responsive Sidebar Check
     useEffect(() => {
@@ -476,22 +455,31 @@ export default function MunicipalDashboard() {
         XLSX.writeFile(workbook, `Issues_Report_${new Date().toLocaleDateString()}.xlsx`);
     };
 
-    const NavItem = ({ id, icon: IconComponent, label, external }) => (
-        <button
-            onClick={() => {
-                if (external) navigate(external);
-                else setActiveView(id);
-                if (isMobile) setIsSidebarOpen(false);
-            }}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${activeView === id
-                ? 'bg-[var(--muni-surface)] text-[#FF671F] border-r-2 border-[#FF671F]'
-                : 'text-[var(--muni-text-muted)] hover:text-white hover:bg-white/5'
-                }`}
-        >
-            <IconComponent size={18} className={activeView === id ? "text-[#FF671F]" : ""} />
-            {label}
-        </button>
-    );
+    const NavItem = ({ id, icon: IconComponent, label, external }) => {
+        const handleClick = () => {
+            if (external) {
+                navigate(external);
+            } else {
+                // Navigate to the specific route
+                const route = id === 'dashboard' ? '/municipal-dashboard' : `/municipal-dashboard/${id}`;
+                navigate(route);
+            }
+            if (isMobile) setIsSidebarOpen(false);
+        };
+
+        return (
+            <button
+                onClick={handleClick}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${activeView === id
+                    ? 'bg-[var(--muni-surface)] text-[#FF671F] border-r-2 border-[#FF671F]'
+                    : 'text-[var(--muni-text-muted)] hover:text-white hover:bg-white/5'
+                    }`}
+            >
+                <IconComponent size={18} className={activeView === id ? "text-[#FF671F]" : ""} />
+                {label}
+            </button>
+        );
+    };
 
     return (
         <div className="municipal-theme flex h-screen h-[100dvh] overflow-hidden bg-[var(--muni-bg)] font-sans pt-[80px]">
@@ -513,6 +501,8 @@ export default function MunicipalDashboard() {
                 <nav className="flex-1 py-6 space-y-1 overflow-y-auto">
                     <NavItem id="dashboard" icon={LayoutDashboard} label="Dashboard" />
                     <NavItem id="tracker" icon={ClipboardList} label="Issue Tracker" />
+                    <NavItem id="pothole-detection" icon={Scan} label="Pothole Detection" />
+                    <NavItem id="grouped-reports" icon={MapPin} label="Grouped Reports" />
                     <NavItem id="leaderboard" icon={Trophy} label="Leaderboard" />
                     <NavItem id="about" icon={Info} label="About devit." />
                     <NavItem id="settings" icon={Settings} label="Settings" />
@@ -575,15 +565,90 @@ export default function MunicipalDashboard() {
                                 setFilterSeverity={setFilterSeverity}
                             />
                         )}
+                        {activeView === 'pothole-detection' && <PotholeDetectionView />}
+                        {activeView === 'grouped-reports' && <GroupedPotholeView />}
                         {activeView === 'leaderboard' && <LeaderboardView />}
                         {activeView === 'about' && <AboutView />}
                         {activeView === 'settings' && <SettingsView />}
                     </div>
 
-                    {/* Watermark inside scroll area */}
-                    <div className="text-center py-4 text-[var(--muni-text-muted)] text-xs border-t border-[var(--muni-border)] mt-auto">
-                        made by <span className="text-[#FF671F] font-bold">wedevit.in</span>
-                    </div>
+                    {/* devit Footer */}
+                    <footer className="border-t border-[var(--muni-border)] bg-[var(--muni-surface)] mt-12">
+                        <div className="max-w-7xl mx-auto px-6 py-8">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
+                                <div>
+                                    <h3 className="text-lg font-bold text-white mb-3">
+                                        Powered by <span className="text-[#FF671F]">devit.</span>
+                                    </h3>
+                                    <p className="text-sm text-[var(--muni-text-muted)] mb-3">
+                                        We design, build, and scale exceptional software for startups and businesses.
+                                    </p>
+                                    <a
+                                        href="https://www.wedevit.in/"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[#FF671F] hover:underline text-sm font-semibold"
+                                    >
+                                        Visit wedevit.in →
+                                    </a>
+                                </div>
+
+                                <div>
+                                    <h4 className="text-sm font-bold text-white mb-3 uppercase">Contact</h4>
+                                    <div className="space-y-2 text-sm">
+                                        <div>
+                                            <a href="mailto:workwithdevit@gmail.com" className="text-[var(--muni-text-muted)] hover:text-[#FF671F]">
+                                                workwithdevit@gmail.com
+                                            </a>
+                                        </div>
+                                        <div>
+                                            <a href="tel:+919553321211" className="text-[var(--muni-text-muted)] hover:text-[#FF671F]">
+                                                +91 95533 21211
+                                            </a>
+                                        </div>
+                                        <div>
+                                            <a
+                                                href="https://wa.me/919553321211"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[var(--muni-text-muted)] hover:text-[#25D366]"
+                                            >
+                                                WhatsApp
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 className="text-sm font-bold text-white mb-3 uppercase">Connect</h4>
+                                    <div className="space-y-2 text-sm">
+                                        <div>
+                                            <a
+                                                href="https://www.linkedin.com/in/basithladoo/"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[var(--muni-text-muted)] hover:text-[#0A66C2]"
+                                            >
+                                                LinkedIn - Basith
+                                            </a>
+                                        </div>
+                                        <div>
+                                            <a href="mailto:basithladoo@gmail.com" className="text-[var(--muni-text-muted)] hover:text-[#FF671F]">
+                                                basithladoo@gmail.com
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-[var(--muni-border)] pt-6 text-center">
+                                <p className="text-xs text-[var(--muni-text-muted)]">
+                                    © {new Date().getFullYear()} <span className="text-[#FF671F] font-semibold">devit</span>.
+                                    All rights reserved. | Built with ❤️ for better governance
+                                </p>
+                            </div>
+                        </div>
+                    </footer>
                 </div>
             </main>
 

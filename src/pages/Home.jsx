@@ -245,6 +245,7 @@ function Home() {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser, logout } = useAuth();
+  const [loading, setLoading] = useState(true);
 
   // Check for first visit
   useEffect(() => {
@@ -414,9 +415,10 @@ function Home() {
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={() => navigator.geolocation.getCurrentPosition(pos => map.setView([pos.coords.latitude, pos.coords.longitude], 16))}
-          className="w-12 h-12 rounded-full bg-black/80 text-white border border-[var(--muni-border)] flex items-center justify-center shadow-lg backdrop-blur-xl hover:bg-white/10 hover:text-[var(--muni-accent)] transition-colors"
+          className="flex items-center gap-2 px-4 py-3 rounded-full bg-black/80 text-white border border-[var(--muni-border)] shadow-lg backdrop-blur-xl hover:bg-white/10 hover:text-[var(--muni-accent)] transition-colors"
         >
-          <MdGpsFixed size={20} />
+          <MdGpsFixed size={18} />
+          <span className="font-bold text-sm hidden md:inline">Locate Me</span>
         </motion.button>
 
         {/* BIG REPORT BUTTON */}

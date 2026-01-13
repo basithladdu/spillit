@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
 import 'mapbox-gl/dist/mapbox-gl.css';
+import 'leaflet/dist/leaflet.css';
 import "./index.css";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -20,7 +21,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <App />
-        <Analytics />
+      <Analytics />
     </BrowserRouter>
   </React.StrictMode>
 );
