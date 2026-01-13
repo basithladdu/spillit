@@ -12,12 +12,12 @@ const About = () => {
                     <motion.h1
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-white"
+                        className="text-4xl md:text-6xl font-bold mb-4 tracking-tight"
                     >
-                        Smart Pothole Detection for <span className="text-[#FF671F]">Safer Roads</span>
+                        About <span className="text-[#FF671F]">LetsFixIndia</span><span className="text-white"></span>
                     </motion.h1>
                     <p className="text-[var(--muni-text-muted)] text-lg max-w-2xl mx-auto">
-                        Transforming road safety with AI-driven detection and accelerated repair workflows for Andhra Pradesh infrastructure.
+                        Empowering citizens to build better communities through technology and transparency.
                     </p>
                 </div>
 
@@ -33,12 +33,9 @@ const About = () => {
                             <FaLightbulb size={24} />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-white mb-4">Challenge & Vision</h2>
-                            <p className="text-[var(--muni-text-muted)] leading-relaxed mb-4">
-                                Manual road inspection is slow and inconsistent. Our vision is an <strong>AI-Enabled Road Defect Management Platform</strong> that uses vehicle-mounted cameras, municipal CCTV feeds, and citizen images to automatically detect potholes and assess severity in real-time.
-                            </p>
+                            <h2 className="text-2xl font-bold text-white mb-4">Our Mission</h2>
                             <p className="text-[var(--muni-text-muted)] leading-relaxed">
-                                Partnering with the <strong>Roads & Buildings (R&B) Department</strong>, we aim to reduce repair delays, enhance road safety, and ensure high-quality maintenance across urban and rural networks.
+                                LetsFixIndia is a mobile-first crowdsourced platform designed to bridge the gap between citizens and municipal authorities. We believe that active citizenship, coupled with responsive governance, is the key to solving civic issues like potholes, garbage dumps, and water leaks. Our goal is to make reporting issues as easy as taking a photo.
                             </p>
                         </div>
                     </div>
@@ -59,52 +56,35 @@ const About = () => {
                     </div>
                 </motion.div>
 
-                {/* Impact Section - Tender Specific */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                {/* How It Works Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                         className="muni-card p-6 border-l-4 border-[#046A38]"
                     >
                         <div className="flex items-center gap-3 mb-4">
                             <FaUsers className="text-[#046A38] text-xl" />
-                            <h3 className="text-lg font-bold text-white">Impact: Citizens</h3>
+                            <h3 className="text-xl font-bold text-white">For Citizens</h3>
                         </div>
-                        <p className="text-[var(--muni-text-muted)] text-sm leading-relaxed">
-                            Safer roads, fewer accidents, and quicker response to reported defects. Transparent visibility into repair status and civic accountability.
+                        <p className="text-[var(--muni-text-muted)] text-sm">
+                            Simply spot an issue, snap a picture, and upload it. LetsFixIndia automatically captures the location and routes the report to the relevant department. Track the status in real-time.
                         </p>
                     </motion.div>
 
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
-                        transition={{ delay: 0.1 }}
-                        className="muni-card p-6 border-l-4 border-[#FF671F]"
+                        className="muni-card p-6 border-l-4 border-[#22c55e]"
                     >
                         <div className="flex items-center gap-3 mb-4">
-                            <FaHandshake className="text-[#FF671F] text-xl" />
-                            <h3 className="text-lg font-bold text-white">Impact: Department</h3>
+                            <FaHandshake className="text-[#22c55e] text-xl" />
+                            <h3 className="text-xl font-bold text-white">For Authorities</h3>
                         </div>
-                        <p className="text-[var(--muni-text-muted)] text-sm leading-relaxed">
-                            Reduced manual inspections, better maintenance scheduling, and significantly improved field crew productivity through AI-prioritized routing.
-                        </p>
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.2 }}
-                        className="muni-card p-6 border-l-4 border-[#06038D]"
-                    >
-                        <div className="flex items-center gap-3 mb-4">
-                            <FaGlobe className="text-[#06038D] text-xl" />
-                            <h3 className="text-lg font-bold text-white">Impact: Government</h3>
-                        </div>
-                        <p className="text-[var(--muni-text-muted)] text-sm leading-relaxed">
-                            Strengthened smart city initiatives with transparent, data-driven road maintenance audits and improved digital public infrastructure.
+                        <p className="text-[var(--muni-text-muted)] text-sm">
+                            Access a comprehensive dashboard to view, prioritize, and resolve issues. Gain insights into hotspots and performance metrics to optimize resource allocation.
                         </p>
                     </motion.div>
                 </div>
