@@ -1,10 +1,13 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Suspense, lazy } from "react";
 import { Analytics } from "@vercel/analytics/react"
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
@@ -39,13 +42,11 @@ const PageLoader = () => (
 );
 
 function App() {
-  const location = useLocation();
 
   return (
     <AuthProvider>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-950 dark:via-black dark:to-gray-800 text-black dark:text-white transition-colors duration-300">
-        {/* Conditionally render the Navbar */}
-        {location.pathname !== '/' && <Navbar />}
+        <Navbar />
 
         <Suspense fallback={<PageLoader />}>
           <Routes>
@@ -144,6 +145,13 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        <Analytics />
+        <ToastContainer
+          position="bottom-right"
+          theme="dark"
+          pauseOnHover
+          closeOnClick
+        />
       </div>
     </AuthProvider>
   );

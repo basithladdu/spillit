@@ -372,7 +372,7 @@ function Home() {
       <div id="map-root" ref={mapRef} className="w-full h-full z-0" />
 
       {/* --- HUD: Navbar (Global) --- */}
-      <Navbar />
+      {/* Handled by App.jsx */}
 
       {/* --- Onboarding Tour --- */}
       <AnimatePresence>

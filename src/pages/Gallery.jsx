@@ -35,7 +35,7 @@ const getSeverityStyles = (severity) => {
 
 const getStatusStyles = (status) => {
   const s = (status || 'new').toLowerCase();
-  if (s === 'resolved') return { bg: 'bg-[#046A38]/30', text: 'text-[#046A38]', label: 'Resolved' };
+  if (s === 'resolved') return { bg: 'bg-[#10b981]/30', text: 'text-[#10b981]', label: 'Resolved' };
   if (s === 'in_progress') return { bg: 'bg-[#06038D]/30', text: 'text-[#06038D]', label: 'In Progress' };
   return { bg: 'bg-[#FF671F]/30', text: 'text-[#FF671F]', label: 'Open' };
 };
@@ -163,7 +163,7 @@ function Gallery() {
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
           <div>
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-2 tracking-tight">
-              Community <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF671F] via-white to-[#046A38]">Gallery</span>
+              Community <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF671F] via-white to-[#10b981]">Gallery</span>
             </h1>
             <p className="text-[var(--muni-text-muted)] text-lg max-w-xl">
               Track real-time infrastructure reports. visualize data, and support your local community improvements.
@@ -189,7 +189,7 @@ function Gallery() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatBox label="Total Reports" value={issues.length} icon={<FaLayerGroup />} colorClass="text-[#FF671F]" />
           <StatBox label="In Progress" value={issues.filter(i => i.status === 'in-progress').length} icon={<FaTools />} colorClass="text-[#06038D]" onClick={() => setFilters({ ...filters, status: 'in-progress' })} />
-          <StatBox label="Resolved" value={issues.filter(i => i.status === 'resolved').length} icon={<MdCheckCircle />} colorClass="text-[#046A38]" onClick={() => setFilters({ ...filters, status: 'resolved' })} />
+          <StatBox label="Resolved" value={issues.filter(i => i.status === 'resolved').length} icon={<MdCheckCircle />} colorClass="text-[#10b981]" onClick={() => setFilters({ ...filters, status: 'resolved' })} />
           <StatBox label="Critical Issues" value={issues.filter(i => i.severity === 'Critical').length} icon={<MdWarning />} colorClass="text-red-400" onClick={() => setFilters({ ...filters, severity: 'Critical' })} />
         </div>
 

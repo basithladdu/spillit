@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -47,16 +47,17 @@ const HeatmapLayer = ({ issues }) => {
 
         if (heatData.length > 0) {
             const heatLayer = L.heatLayer(heatData, {
-                radius: 25,
-                blur: 15,
+                radius: 35,
+                blur: 20,
                 maxZoom: 17,
-                max: 1.0,
+                max: 0.8,
+                minOpacity: 0.5,
                 gradient: {
-                    0.0: '#22c55e',
-                    0.3: '#eab308',
-                    0.5: '#f97316',
-                    0.7: '#FF671F',
-                    1.0: '#ef4444'
+                    0.2: '#00ffff', // Cyan/Electric Blue for low density
+                    0.4: '#00ff00', // Neon Green
+                    0.6: '#ffff00', // Bright Yellow
+                    0.8: '#FF671F', // Brand Orange
+                    1.0: '#ff0000'  // Pure Red for critical
                 }
             });
             heatLayer.addTo(map);
@@ -221,8 +222,8 @@ const DashboardMap = ({ issues }) => {
                 <button
                     onClick={() => setShowHeatmap(!showHeatmap)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-xl border shadow-lg font-bold text-xs uppercase tracking-wider transition-all ${showHeatmap
-                            ? 'bg-[#FF671F] text-black border-[#FF671F]'
-                            : 'bg-black/80 text-[var(--muni-text-muted)] border-[var(--muni-border)] hover:text-white hover:border-[#FF671F]/50'
+                        ? 'bg-[#FF671F] text-black border-[#FF671F]'
+                        : 'bg-black/80 text-[var(--muni-text-muted)] border-[var(--muni-border)] hover:text-white hover:border-[#FF671F]/50'
                         }`}
                 >
                     <Layers size={14} />

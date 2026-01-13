@@ -41,7 +41,9 @@ function Navbar() {
 
   // Helper Component for Navigation Links
   const NavItem = ({ to, icon: IconComponent, label, colorClass = "text-[var(--muni-text-muted)]", onClick }) => {
-    const isActive = location.pathname === to;
+    const isActive = to === '/'
+      ? location.pathname === '/'
+      : location.pathname.startsWith(to);
 
     return (
       <Link to={to} onClick={onClick} className="relative group w-full md:w-auto">
@@ -54,7 +56,12 @@ function Navbar() {
             <motion.div
               layoutId="nav-pill"
               className="absolute inset-0 rounded-xl md:rounded-full bg-[var(--muni-accent)]/10 border border-[var(--muni-accent)]/30 shadow-[0_0_10px_rgba(34,197,94,0.2)] hidden md:block"
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              transition={{
+                type: "spring",
+                stiffness: 350,
+                damping: 35,
+                mass: 1
+              }}
             />
           )}
         </div>
@@ -82,7 +89,7 @@ function Navbar() {
 
         {/* --- Desktop Menu Pill --- */}
         <div className="hidden md:flex pointer-events-auto bg-black/80 backdrop-blur-xl border border-[var(--muni-border)] rounded-full p-1 shadow-2xl items-center gap-1">
-          <LayoutGroup>
+          <LayoutGroup id="nav-pill-group">
             <NavItem to="/" icon={Map} label="Map" />
             <NavItem to="/gallery" icon={Users} label="Gallery" />
             <NavItem to="/leaderboard" icon={Star} label="Leaderboard" />
