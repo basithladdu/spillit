@@ -17,7 +17,7 @@ export const VIDEO_PROCESSOR_CONFIG = {
     // Railway Backend Configuration
     // Get this after deploying to Railway
     backend: {
-        baseUrl: 'YOUR_RAILWAY_BACKEND_URL', // e.g., 'https://your-app.up.railway.app'
+        baseUrl: 'https://fixit-4d9o.onrender.com', // Your live Render backend
         apiKey: '4b8afa69-5426-44dd-b2af-3977e26d6b5f',
     },
 

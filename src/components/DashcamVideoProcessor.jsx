@@ -6,7 +6,7 @@ import { VIDEO_PROCESSOR_CONFIG } from '../config/videoProcessorConfig';
 
 // Toggle between demo mode and production mode
 // Set to false when Railway backend is deployed
-const USE_DEMO_MODE = true;  // Change to false for production
+const USE_DEMO_MODE = false;  // Disabled for production - using live Render backend
 
 export default function DashcamVideoProcessor() {
     const [isProcessing, setIsProcessing] = useState(false);
