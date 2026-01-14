@@ -79,90 +79,86 @@ export default function DashcamVideoProcessor() {
         setDetectionResults(null);
 
         try {
-            // DEMO MODE: Simulate backend processing with mock data
-            // TODO: Replace with real Railway backend when deployed
+            if (USE_DEMO_MODE) {
+                // DEMO MODE: Mock data
+                await new Promise(resolve => setTimeout(resolve, 3000));
 
-            // Simulate processing time
-            await new Promise(resolve => setTimeout(resolve, 3000));
+                const mockDetections = [
+                    {
+                        timestamp: '00:15',
+                        confidence: 0.87,
+                        severity: 'Critical',
+                        bbox_area: 15000,
+                        bbox: { x: 120, y: 200, width: 150, height: 100 },
+                        frame_number: 450
+                    },
+                    {
+                        timestamp: '00:32',
+                        confidence: 0.72,
+                        severity: 'High',
+                        bbox_area: 8500,
+                        bbox: { x: 200, y: 180, width: 120, height: 70 },
+                        frame_number: 960
+                    },
+                    {
+                        timestamp: '00:48',
+                        confidence: 0.65,
+                        severity: 'Medium',
+                        bbox_area: 4200,
+                        bbox: { x: 180, y: 220, width: 80, height: 52 },
+                        frame_number: 1440
+                    },
+                    {
+                        timestamp: '01:05',
+                        confidence: 0.91,
+                        severity: 'Critical',
+                        bbox_area: 18000,
+                        bbox: { x: 150, y: 190, width: 180, height: 100 },
+                        frame_number: 1950
+                    },
+                    {
+                        timestamp: '01:22',
+                        confidence: 0.58,
+                        severity: 'Low',
+                        bbox_area: 2800,
+                        bbox: { x: 220, y: 240, width: 60, height: 46 },
+                        frame_number: 2460
+                    }
+                ];
 
-            // Generate mock detection results
-            const mockDetections = [
-                {
-                    timestamp: '00:15',
-                    confidence: 0.87,
-                    severity: 'Critical',
-                    bbox_area: 15000,
-                    bbox: { x: 120, y: 200, width: 150, height: 100 },
-                    frame_number: 450
-                },
-                {
-                    timestamp: '00:32',
-                    confidence: 0.72,
-                    severity: 'High',
-                    bbox_area: 8500,
-                    bbox: { x: 200, y: 180, width: 120, height: 70 },
-                    frame_number: 960
-                },
-                {
-                    timestamp: '00:48',
-                    confidence: 0.65,
-                    severity: 'Medium',
-                    bbox_area: 4200,
-                    bbox: { x: 180, y: 220, width: 80, height: 52 },
-                    frame_number: 1440
-                },
-                {
-                    timestamp: '01:05',
-                    confidence: 0.91,
-                    severity: 'Critical',
-                    bbox_area: 18000,
-                    bbox: { x: 150, y: 190, width: 180, height: 100 },
-                    frame_number: 1950
-                },
-                {
-                    timestamp: '01:22',
-                    confidence: 0.58,
-                    severity: 'Low',
-                    bbox_area: 2800,
-                    bbox: { x: 220, y: 240, width: 60, height: 46 },
-                    frame_number: 2460
+                const mockResponse = {
+                    detections: mockDetections,
+                    total_frames_processed: 82,
+                    processing_time_seconds: 3.2,
+                    video_duration_seconds: 82.0,
+                    mode: 'DEMO_MODE'
+                };
+
+                setDetectionResults(mockResponse);
+                setProcessingStatus('Processing Complete! (Demo Mode)');
+                await saveDetectionsToFirestore(mockDetections, videoUrl);
+            } else {
+                // PRODUCTION MODE: Real AI Backend Call
+                const response = await fetch(`${VIDEO_PROCESSOR_CONFIG.backend.baseUrl}/api/process-video`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ video_url: videoUrl })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`AI Backend Error: ${response.status}. Please check Render logs.`);
                 }
-            ];
 
-            const mockResponse = {
-                detections: mockDetections,
-                total_frames_processed: 82,
-                processing_time_seconds: 3.2,
-                video_duration_seconds: 82.0,
-                mode: 'DEMO_MODE'
-            };
+                const result = await response.json();
+                setDetectionResults(result);
+                setProcessingStatus('AI Analysis Complete!');
 
-            setDetectionResults(mockResponse);
-            setProcessingStatus('Processing Complete! (Demo Mode)');
-
-            // Save results to Firestore and update map
-            await saveDetectionsToFirestore(mockDetections, videoUrl);
-
-            /* PRODUCTION CODE - Uncomment when Railway backend is deployed:
-            
-            const response = await fetch(`${VIDEO_PROCESSOR_CONFIG.backend.baseUrl}/api/process-video`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${VIDEO_PROCESSOR_CONFIG.backend.apiKey}`
-                },
-                body: JSON.stringify({ video_url: videoUrl })
-            });
-
-            if (!response.ok) {
-                throw new Error(`Backend error: ${response.status}`);
+                if (result.detections && result.detections.length > 0) {
+                    await saveDetectionsToFirestore(result.detections, videoUrl);
+                }
             }
-
-            const data = await response.json();
-            setDetectionResults(data);
-            setProcessingStatus('Processing Complete!');
-            await saveDetectionsToFirestore(data.detections, videoUrl);
-            */
 
         } catch (err) {
             console.error('Processing error:', err);
