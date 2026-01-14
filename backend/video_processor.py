@@ -25,8 +25,8 @@ ROBOFLOW_MODEL_ENDPOINT = os.getenv('ROBOFLOW_MODEL_ENDPOINT', 'https://detect.r
 
 # Cloudinary Configuration for saving frames
 CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME', 'fixit')
-CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY', '')  # Set this in Railway
-CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET', '')  # Set this in Railway
+CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY', '435969829275136')
+CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET', 'hcqg6yQ4TUjuVGW-eWvE7Nngw2w')
 
 # Configure Cloudinary
 cloudinary.config(
