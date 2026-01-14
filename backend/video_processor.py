@@ -21,7 +21,7 @@ CORS(app)
 
 # Configuration
 ROBOFLOW_API_KEY = os.getenv('ROBOFLOW_API_KEY', '4b8afa69-5426-44dd-b2af-3977e26d6b5f')
-ROBOFLOW_MODEL_ENDPOINT = os.getenv('ROBOFLOW_MODEL_ENDPOINT', 'https://detect.roboflow.com/pothole-669/1')
+ROBOFLOW_MODEL_ENDPOINT = os.getenv('ROBOFLOW_MODEL_ENDPOINT', 'https://detect.roboflow.com/pothole-j7m70/1')
 
 # Cloudinary Configuration for saving frames
 CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME', 'fixit')
