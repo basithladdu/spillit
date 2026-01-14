@@ -221,12 +221,12 @@ const DashboardMap = ({ issues }) => {
             <div className="absolute top-4 left-4 z-[400] flex gap-2">
                 <button
                     onClick={() => setShowHeatmap(!showHeatmap)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-xl border shadow-lg font-bold text-xs uppercase tracking-wider transition-all ${showHeatmap
-                        ? 'bg-[#FF671F] text-black border-[#FF671F]'
-                        : 'bg-black/80 text-[var(--muni-text-muted)] border-[var(--muni-border)] hover:text-white hover:border-[#FF671F]/50'
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg backdrop-blur-xl border-2 shadow-lg font-bold text-xs uppercase tracking-wider transition-all ${showHeatmap
+                        ? 'bg-[#10b981] text-white border-[#10b981] shadow-[#10b981]/50 hover:bg-[#059669]'
+                        : 'bg-black/80 text-[var(--muni-text-muted)] border-[var(--muni-border)] hover:text-white hover:border-[#10b981]/50 hover:bg-[#10b981]/10'
                         }`}
                 >
-                    <Layers size={14} />
+                    <Layers size={16} className={showHeatmap ? 'animate-pulse' : ''} />
                     {showHeatmap ? 'Heatmap ON' : 'Heatmap OFF'}
                 </button>
             </div>

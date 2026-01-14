@@ -25,11 +25,11 @@ const getSeverityIcon = (severity) => {
 
 const getSeverityStyles = (severity) => {
   switch (severity) {
-    case 'Critical': return { bg: 'bg-red-500/20', border: 'border-red-500/40', text: 'text-red-300', glow: 'shadow-red-500/30' };
-    case 'High': return { bg: 'bg-orange-500/20', border: 'border-orange-500/40', text: 'text-orange-300', glow: 'shadow-orange-500/30' };
-    case 'Medium': return { bg: 'bg-yellow-500/20', border: 'border-yellow-500/40', text: 'text-yellow-300', glow: 'shadow-yellow-500/30' };
-    case 'Low': return { bg: 'bg-emerald-500/20', border: 'border-emerald-500/40', text: 'text-emerald-300', glow: 'shadow-emerald-500/30' };
-    default: return { bg: 'bg-gray-500/20', border: 'border-gray-500/40', text: 'text-gray-300', glow: 'shadow-gray-500/30' };
+    case 'Critical': return { bg: 'bg-red-500/30', border: 'border-red-400/60', text: 'text-red-400', glow: 'shadow-red-400/40' };
+    case 'High': return { bg: 'bg-orange-500/30', border: 'border-orange-400/60', text: 'text-orange-400', glow: 'shadow-orange-400/40' };
+    case 'Medium': return { bg: 'bg-yellow-500/30', border: 'border-yellow-400/60', text: 'text-yellow-400', glow: 'shadow-yellow-400/40' };
+    case 'Low': return { bg: 'bg-emerald-500/30', border: 'border-emerald-400/60', text: 'text-emerald-400', glow: 'shadow-emerald-400/40' };
+    default: return { bg: 'bg-gray-500/30', border: 'border-gray-400/60', text: 'text-gray-400', glow: 'shadow-gray-400/40' };
   }
 };
 

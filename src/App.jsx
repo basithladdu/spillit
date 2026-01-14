@@ -100,6 +100,14 @@ function App() {
               }
             />
             <Route
+              path="/municipal-dashboard/video-processor"
+              element={
+                <ProtectedRoute role="municipal_admin">
+                  <MunicipalDashboard initialView="video-processor" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/municipal-dashboard/leaderboard"
               element={
                 <ProtectedRoute role="municipal_admin">
@@ -148,9 +156,15 @@ function App() {
         <Analytics />
         <ToastContainer
           position="bottom-right"
-          theme="dark"
-          pauseOnHover
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
           closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
         />
       </div>
     </AuthProvider>

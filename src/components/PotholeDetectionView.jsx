@@ -498,7 +498,7 @@ const PotholeDetectionView = () => {
                                 <Video size={20} className="text-purple-500" />
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-[var(--muni-text-muted)] uppercase">Video Nodes</p>
+                                <p className="text-xs font-bold text-[var(--muni-text-muted)] uppercase">VIDEO/IMAGE FRAMES</p>
                                 <p className="text-2xl font-bold text-white">{stats.videoNodes}</p>
                             </div>
                         </div>
@@ -509,7 +509,7 @@ const PotholeDetectionView = () => {
                                 <Activity size={20} className="text-[#06038D]" />
                             </div>
                             <div>
-                                <p className="text-xs font-bold text-[var(--muni-text-muted)] uppercase">Asset Health</p>
+                                <p className="text-xs font-bold text-[var(--muni-text-muted)] uppercase">ROAD Health</p>
                                 <p className="text-2xl font-bold text-white">{stats.assetHealth}%</p>
                             </div>
                         </div>

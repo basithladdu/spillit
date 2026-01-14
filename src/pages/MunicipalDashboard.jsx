@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { getFirestore, collection, query, limit, orderBy, deleteDoc, doc, updateDoc, onSnapshot, where, getDocs } from 'firebase/firestore';
 import {
     LayoutDashboard, MapPin, ClipboardList,
-    Trophy, Info, LogOut, Menu, X, Bell, Settings, FileText, Eye, Trash2, Download, AlertCircle, CheckCircle, Clock, Scan, Loader2
+    Trophy, Info, LogOut, Menu, X, Bell, Settings, FileText, Eye, Trash2, Download, AlertCircle, CheckCircle, Clock, Scan, Loader2, Video
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -13,6 +13,7 @@ import app from '../utils/firebase';
 import PotholeDetectionView from '../components/PotholeDetectionView';
 import GroupedPotholeView from '../components/GroupedPotholeView';
 import AboutView from '../components/AboutView';
+import DashcamVideoProcessor from '../components/DashcamVideoProcessor';
 import '../styles/municipal.css';
 import DashboardMap from '../components/DashboardMap';
 import { AP_DEPARTMENTS, classifyRoadDepartment } from '../utils/apRoads';
@@ -781,6 +782,7 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
         if (path.includes('/tracker')) setActiveView('tracker');
         else if (path.includes('/pothole-detection')) setActiveView('pothole-detection');
         else if (path.includes('/grouped-reports')) setActiveView('grouped-reports');
+        else if (path.includes('/video-processor')) setActiveView('video-processor');
         else if (path.includes('/leaderboard')) setActiveView('leaderboard');
         else if (path.includes('/about')) setActiveView('about');
         else if (path.includes('/settings')) setActiveView('settings');
@@ -1020,6 +1022,7 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
                     <NavItem id="tracker" icon={ClipboardList} label="Issue Tracker" />
                     <NavItem id="pothole-detection" icon={Scan} label="Pothole Detection" />
                     <NavItem id="grouped-reports" icon={MapPin} label="Grouped Reports" />
+                    <NavItem id="video-processor" icon={Video} label="Video Processor" />
                     <NavItem id="leaderboard" icon={Trophy} label="Leaderboard" />
                     <NavItem id="about" icon={Info} label="About devit." />
                     <NavItem id="settings" icon={Settings} label="Settings" />
@@ -1085,6 +1088,7 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
                         )}
                         {activeView === 'pothole-detection' && <PotholeDetectionView />}
                         {activeView === 'grouped-reports' && <GroupedPotholeView />}
+                        {activeView === 'video-processor' && <DashcamVideoProcessor />}
                         {activeView === 'leaderboard' && <LeaderboardView issues={issues} />}
                         {activeView === 'about' && <AboutView />}
                         {activeView === 'settings' && <SettingsView />}

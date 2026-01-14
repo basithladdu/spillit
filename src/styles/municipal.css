@@ -2,13 +2,13 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --muni-bg: #000000;
-  --muni-surface: #09090b;
-  --muni-border: #27272a;
-  --muni-text-main: #ffffff;
-  --muni-text-muted: #a1a1aa;
-  --muni-accent: #22c55e;
-  --muni-error: #ef4444;
+  --muni-bg: #0a0a0f;           /* Slightly lighter black */
+  --muni-surface: #18181b;      /* Brighter surface (was #09090b) */
+  --muni-border: #3f3f46;       /* Much brighter border (was #27272a) */
+  --muni-text-main: #ffffff;    /* Pure white */
+  --muni-text-muted: #d4d4d8;   /* Brighter muted text (was #a1a1aa) */
+  --muni-accent: #34d399;       /* Brighter green (was #22c55e) */
+  --muni-error: #f87171;        /* Brighter red (was #ef4444) */
   --navbar-height: 72px;
 }
 
