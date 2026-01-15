@@ -76,7 +76,7 @@ const HeatmapLayer = ({ issues }) => {
 };
 
 // Custom Marker Component
-const CustomMarker = ({ issue }) => {
+const CustomMarker = ({ issue, isLightMode = false }) => {
     const { markerColor } = getSeverityColors(issue.severity);
 
     const customIcon = L.icon({
@@ -91,15 +91,15 @@ const CustomMarker = ({ issue }) => {
     const getSeverityStyle = (severity) => {
         switch (severity) {
             case 'Critical':
-                return { bg: 'rgba(239, 68, 68, 0.1)', border: '#EF4444', text: '#FCA5A5' };
+                return { bg: 'rgba(239, 68, 68, 0.1)', border: '#EF4444', text: isLightMode ? '#B91C1C' : '#FCA5A5' };
             case 'High':
-                return { bg: 'rgba(255, 103, 31, 0.1)', border: '#FF671F', text: '#FF8F50' };
+                return { bg: 'rgba(255, 103, 31, 0.1)', border: '#FF671F', text: isLightMode ? '#C2410C' : '#FF8F50' };
             case 'Medium':
-                return { bg: 'rgba(234, 179, 8, 0.1)', border: '#EAB308', text: '#FDE047' };
+                return { bg: 'rgba(234, 179, 8, 0.1)', border: '#EAB308', text: isLightMode ? '#A16207' : '#FDE047' };
             case 'Low':
-                return { bg: 'rgba(4, 106, 56, 0.1)', border: '#046A38', text: '#86efac' };
+                return { bg: 'rgba(4, 106, 56, 0.1)', border: '#046A38', text: isLightMode ? '#15803D' : '#86efac' };
             default:
-                return { bg: 'rgba(161, 161, 170, 0.1)', border: '#a1a1aa', text: '#d4d4d8' };
+                return { bg: 'rgba(161, 161, 170, 0.1)', border: '#a1a1aa', text: isLightMode ? '#3f3f46' : '#d4d4d8' };
         }
     };
 
@@ -107,15 +107,16 @@ const CustomMarker = ({ issue }) => {
 
     return (
         <Marker position={[issue.lat, issue.lng]} icon={customIcon}>
-            <Popup className="custom-popup-dark" maxWidth={280}>
+            <Popup className={isLightMode ? "custom-popup-light" : "custom-popup-dark"} maxWidth={280}>
                 <div style={{
                     fontFamily: "'Inter', sans-serif",
                     minWidth: '240px',
-                    background: '#09090b',
-                    border: '1px solid #27272a',
+                    background: isLightMode ? '#ffffff' : '#09090b',
+                    border: isLightMode ? '1px solid #e2e8f0' : '1px solid #27272a',
                     borderRadius: '0.5rem',
                     overflow: 'hidden',
-                    color: 'white'
+                    color: isLightMode ? '#0f172a' : 'white',
+                    boxShadow: isLightMode ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : 'none'
                 }}>
                     {/* Header */}
                     <div style={{
@@ -137,7 +138,7 @@ const CustomMarker = ({ issue }) => {
                         </strong>
                         <span style={{
                             fontSize: '10px',
-                            background: '#000',
+                            background: isLightMode ? 'rgba(0,0,0,0.05)' : '#000',
                             color: sevStyle.text,
                             padding: '4px 8px',
                             borderRadius: '9999px',
@@ -159,14 +160,14 @@ const CustomMarker = ({ issue }) => {
                                 backgroundPosition: 'center',
                                 borderRadius: '0.375rem',
                                 marginBottom: '12px',
-                                border: '1px solid #27272a'
+                                border: isLightMode ? '1px solid #e2e8f0' : '1px solid #27272a'
                             }} />
                         )}
 
                         <p style={{
                             margin: '0 0 12px',
                             fontSize: '13px',
-                            color: '#a1a1aa',
+                            color: isLightMode ? '#475569' : '#a1a1aa',
                             lineHeight: '1.5'
                         }}>
                             {issue.desc || 'No description provided.'}
@@ -181,7 +182,7 @@ const CustomMarker = ({ issue }) => {
                             fontSize: '10px',
                             fontWeight: '600',
                             background: issue.status === 'resolved' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                            color: issue.status === 'resolved' ? '#22c55e' : '#eab308',
+                            color: issue.status === 'resolved' ? '#10b981' : '#eab308',
                             border: issue.status === 'resolved' ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid rgba(234, 179, 8, 0.2)',
                             textTransform: 'capitalize'
                         }}>
@@ -192,9 +193,9 @@ const CustomMarker = ({ issue }) => {
                         <div style={{
                             marginTop: '12px',
                             paddingTop: '12px',
-                            borderTop: '1px solid #27272a',
+                            borderTop: isLightMode ? '1px solid #e2e8f0' : '1px solid #27272a',
                             fontSize: '10px',
-                            color: '#71717a',
+                            color: isLightMode ? '#64748b' : '#71717a',
                             fontFamily: "'JetBrains Mono', monospace"
                         }}>
                             ID: {issue.id.slice(0, 8)}...
@@ -211,19 +212,21 @@ const CustomMarker = ({ issue }) => {
     );
 };
 
-const DashboardMap = ({ issues }) => {
+const DashboardMap = ({ issues, isLightMode = false }) => {
     const [showHeatmap, setShowHeatmap] = useState(false);
     const validIssues = issues?.filter(i => i.lat && i.lng) || [];
 
     return (
-        <div className="h-full w-full relative z-0">
+        <div className={`h-full w-full relative z-0 ${isLightMode ? 'light-map' : ''}`}>
             {/* Heatmap Toggle Button */}
             <div className="absolute top-4 left-4 z-[400] flex gap-2">
                 <button
                     onClick={() => setShowHeatmap(!showHeatmap)}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg backdrop-blur-xl border-2 shadow-lg font-bold text-xs uppercase tracking-wider transition-all ${showHeatmap
                         ? 'bg-[#10b981] text-white border-[#10b981] shadow-[#10b981]/50 hover:bg-[#059669]'
-                        : 'bg-black/80 text-[var(--muni-text-muted)] border-[var(--muni-border)] hover:text-white hover:border-[#10b981]/50 hover:bg-[#10b981]/10'
+                        : isLightMode
+                            ? 'bg-white/80 text-slate-600 border-slate-200 hover:text-slate-900 hover:border-[#10b981]/50 hover:bg-[#10b981]/10'
+                            : 'bg-black/80 text-[var(--muni-text-muted)] border-[var(--muni-border)] hover:text-white hover:border-[#10b981]/50 hover:bg-[#10b981]/10'
                         }`}
                 >
                     <Layers size={16} className={showHeatmap ? 'animate-pulse' : ''} />
@@ -235,12 +238,15 @@ const DashboardMap = ({ issues }) => {
                 center={DEFAULT_CENTER}
                 zoom={DEFAULT_ZOOM}
                 className="h-full w-full z-0"
-                style={{ background: '#050505', height: '100%', width: '100%' }}
+                style={{ background: isLightMode ? '#f8fafc' : '#050505', height: '100%', width: '100%' }}
                 zoomControl={false}
             >
-                {/* Dark Matter Tiles */}
+                {/* Conditionally Render Tiles */}
                 <TileLayer
-                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                    url={isLightMode
+                        ? "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_all/{z}/{x}/{y}{r}.png"
+                        : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                    }
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 />
 
@@ -249,7 +255,7 @@ const DashboardMap = ({ issues }) => {
                     <HeatmapLayer issues={validIssues} />
                 ) : (
                     validIssues.map((issue) => (
-                        <CustomMarker key={issue.id} issue={issue} />
+                        <CustomMarker key={issue.id} issue={issue} isLightMode={isLightMode} />
                     ))
                 )}
             </MapContainer>

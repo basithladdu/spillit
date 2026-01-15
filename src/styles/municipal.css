@@ -2,14 +2,104 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --muni-bg: #0a0a0f;           /* Slightly lighter black */
-  --muni-surface: #18181b;      /* Brighter surface (was #09090b) */
-  --muni-border: #3f3f46;       /* Much brighter border (was #27272a) */
-  --muni-text-main: #ffffff;    /* Pure white */
-  --muni-text-muted: #d4d4d8;   /* Brighter muted text (was #a1a1aa) */
-  --muni-accent: #34d399;       /* Brighter green (was #22c55e) */
-  --muni-error: #f87171;        /* Brighter red (was #ef4444) */
+  --muni-bg: #0a0a0f;
+  /* Slightly lighter black */
+  --muni-surface: #18181b;
+  /* Brighter surface (was #09090b) */
+  --muni-border: #3f3f46;
+  /* Much brighter border (was #27272a) */
+  --muni-text-main: #ffffff;
+  /* Pure white */
+  --muni-text-muted: #d4d4d8;
+  /* Brighter muted text (was #a1a1aa) */
+  --muni-accent: #34d399;
+  /* Brighter green (was #22c55e) */
+  --muni-error: #f87171;
+  /* Brighter red (was #ef4444) */
   --navbar-height: 72px;
+}
+
+.municipal-theme.light-mode {
+  --muni-bg: #f8fafc;
+  /* Light gray background */
+  --muni-surface: #ffffff;
+  /* Pure white card surface */
+  --muni-border: #e2e8f0;
+  /* Soft light border */
+  --muni-text-main: #0f172a;
+  /* Dark slate text */
+  --muni-text-muted: #64748b;
+  /* Slate muted text */
+  --muni-accent: #10b981;
+  /* Solid emerald green */
+  --muni-error: #ef4444;
+  /* Solid red */
+}
+
+.municipal-theme.light-mode aside,
+.municipal-theme.light-mode header,
+.municipal-theme.light-mode main {
+  background-color: var(--muni-bg) !important;
+}
+
+.municipal-theme.light-mode .text-white {
+  color: var(--muni-text-main) !important;
+}
+
+.municipal-theme.light-mode .bg-black {
+  background-color: var(--muni-surface) !important;
+}
+
+/* Light Mode Hover Fixes */
+.municipal-theme.light-mode button:hover,
+.municipal-theme.light-mode .hover\:text-white:hover,
+.municipal-theme.light-mode [class*="hover\:text-white"]:hover {
+  color: var(--muni-text-main) !important;
+}
+
+.municipal-theme.light-mode .hover\:bg-white\/5:hover,
+.municipal-theme.light-mode tr:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.municipal-theme.light-mode .muni-btn-ghost:hover {
+  color: var(--muni-accent) !important;
+  border-color: var(--muni-accent) !important;
+  background-color: rgba(16, 185, 129, 0.05) !important;
+}
+
+.municipal-theme.light-mode .text-red-400 {
+  color: #ef4444 !important;
+}
+
+.municipal-theme.light-mode .hover\:bg-red-500\/10:hover {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+.municipal-theme.light-mode .text-white.font-bold,
+.municipal-theme.light-mode .font-bold.text-white,
+.municipal-theme.light-mode .text-white,
+.municipal-theme.light-mode h1,
+.municipal-theme.light-mode h2,
+.municipal-theme.light-mode h3,
+.municipal-theme.light-mode h4,
+.municipal-theme.light-mode strong {
+  color: var(--muni-text-main) !important;
+}
+
+.municipal-theme.light-mode .active .text-white,
+.municipal-theme.light-mode .nav-item.active .text-white {
+  color: var(--muni-accent) !important;
+}
+
+.municipal-theme.light-mode .muni-card {
+  border-color: var(--muni-border) !important;
+  background-color: var(--muni-surface) !important;
+}
+
+.municipal-theme.light-mode .bg-gradient-to-r {
+  background-image: none !important;
+  background-color: var(--muni-surface) !important;
 }
 
 .municipal-theme {

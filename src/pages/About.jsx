@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { FaUsers, FaLightbulb, FaHandshake, FaCode, FaInstagram, FaTwitter, FaEnvelope, FaGlobe, FaLinkedin } from 'react-icons/fa';
 import '../styles/municipal.css';
+import Footer from '../components/Footer';
 
 const About = () => {
     return (
@@ -139,6 +140,7 @@ const About = () => {
                     </div>
                 </motion.section>
 
+                <Footer />
             </main>
         </div>
     );

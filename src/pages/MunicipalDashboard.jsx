@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { getFirestore, collection, query, limit, orderBy, deleteDoc, doc, updateDoc, onSnapshot, where, getDocs } from 'firebase/firestore';
 import {
     LayoutDashboard, MapPin, ClipboardList,
-    Trophy, Info, LogOut, Menu, X, Bell, Settings, FileText, Eye, Trash2, Download, AlertCircle, CheckCircle, Clock, Scan, Loader2, Video
+    Trophy, Info, LogOut, Menu, X, Bell, Settings, FileText, Eye, Trash2, Download, AlertCircle, CheckCircle, Clock, Scan, Loader2, Video, Sun, Moon
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -38,17 +38,20 @@ const getStatusConfig = (status) => {
 
 // --- Sub-Components ---
 
-const DashboardView = ({ issues, stats }) => (
+const DashboardView = ({ issues, stats, isLightMode }) => (
     <div className="space-y-6 pb-20 md:pb-0"> {/* Added padding bottom for mobile scroll */}
         {/* KPIs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {[
                 { label: "Total Issues", value: stats.total, change: "Live", color: "text-[#FF671F]" },
                 { label: "Resolved", value: stats.resolved, change: `${stats.resolutionRate}%`, color: "text-[#046A38]" },
-                { label: "Pending", value: stats.pending, change: "Active", color: "text-white" },
+                { label: "Pending", value: stats.pending, change: "Active", color: "text-[var(--muni-text-main)]" },
                 { label: "Avg Resolution", value: "48h", change: "Target", color: "text-[#06038D]" }
             ].map((kpi, i) => (
-                <div key={i} className="muni-card p-4 border-l-4" style={{ borderLeftColor: i === 0 ? '#FF671F' : i === 1 ? '#046A38' : i === 2 ? '#ffffff' : '#06038D' }}>
+                <div key={i} className="muni-card p-4 border-l-4" style={{
+                    borderLeftColor: i === 0 ? '#FF671F' : i === 1 ? '#046A38' : i === 2 ? (isLightMode ? '#0f172a' : '#ffffff') : '#06038D',
+                    backgroundColor: 'var(--muni-surface)'
+                }}>
                     <p className="text-[var(--muni-text-muted)] text-xs uppercase tracking-wider">{kpi.label}</p>
                     <div className="flex items-end justify-between mt-2">
                         <h3 className={`text-2xl font-bold font-mono ${kpi.color}`}>{kpi.value}</h3>
@@ -60,15 +63,14 @@ const DashboardView = ({ issues, stats }) => (
             ))}
         </div>
 
-        {/* Map Placeholder */}
-
 
         {/* Map View */}
-        <div className="muni-card h-[300px] md:h-[400px] relative overflow-hidden border border-[#046A38]/30 p-0 bg-[#050505]">
-            <div className="absolute top-4 right-4 z-[400] bg-black/80 backdrop-blur px-3 py-1 rounded border border-[#FF671F]/30 text-xs font-mono text-[#FF671F]">
+        <div className="muni-card h-[300px] md:h-[400px] relative overflow-hidden border border-[#046A38]/30 p-0" style={{ backgroundColor: 'var(--muni-bg)' }}>
+            <div className={`absolute top-4 right-4 z-[400] backdrop-blur px-3 py-1 rounded border text-xs font-mono ${isLightMode ? 'bg-white/80 border-slate-200 text-slate-600' : 'bg-black/80 border-[#FF671F]/30 text-[#FF671F]'
+                }`}>
                 {issues.length > 0 ? `${issues.length} Hotspots Live` : "System Online"}
             </div>
-            <DashboardMap issues={issues} />
+            <DashboardMap issues={issues} isLightMode={isLightMode} />
         </div>
     </div>
 );
@@ -767,6 +769,7 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
     const location = useLocation();
     const [activeView, setActiveView] = useState(initialView);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isLightMode, setIsLightMode] = useState(localStorage.getItem('muni-theme') === 'light');
     const [isMobile, setIsMobile] = useState(false);
     const [issues, setIssues] = useState([]);
     const [stats, setStats] = useState({ total: 0, resolved: 0, pending: 0, resolutionRate: 0 });
@@ -1001,20 +1004,20 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
     };
 
     return (
-        <div className="municipal-theme flex h-screen h-[100dvh] overflow-hidden bg-[var(--muni-bg)] font-sans pt-[80px]">
+        <div className={`municipal-theme flex h-screen h-[100dvh] overflow-hidden bg-[var(--muni-bg)] font-sans pt-[80px] ${isLightMode ? 'light-mode' : ''}`}>
 
             {/* Sidebar */}
             <aside
-                className={`fixed inset-y-0 left-0 z-50 w-64 bg-black border-r border-[var(--muni-border)] flex flex-col transition-transform duration-300 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:w-0 md:border-none md:overflow-hidden'
+                className={`fixed inset-y-0 left-0 z-50 w-64 bg-[var(--muni-bg)] border-r border-[var(--muni-border)] flex flex-col transition-transform duration-300 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:w-0 md:border-none md:overflow-hidden'
                     }`}
             >
                 <div className="p-6 items-center justify-between h-16 flex-none">
                     <div className="font-bold tracking-wider text-xl flex items-center gap-1">
                         <span className="text-[#FF671F]">Lets</span>
-                        <span className="text-white">Fix</span>
+                        <span className="text-[var(--muni-text-main)]">Fix</span>
                         <span className="text-[#046A38]">India</span>
                     </div>
-                    {isMobile && <button onClick={() => setIsSidebarOpen(false)} aria-label="Close Sidebar"><X size={20} className="text-white" /></button>}
+                    {isMobile && <button onClick={() => setIsSidebarOpen(false)} aria-label="Close Sidebar"><X size={20} className="text-[var(--muni-text-main)]" /></button>}
                 </div>
 
                 <nav className="flex-1 py-6 space-y-1 overflow-y-auto">
@@ -1035,7 +1038,7 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
                             {currentUser?.email?.[0]?.toUpperCase() || 'A'}
                         </div>
                         <div className="overflow-hidden">
-                            <p className="text-sm font-medium truncate text-white">{currentUser?.email || 'Admin'}</p>
+                            <p className="text-sm font-medium truncate text-[var(--muni-text-main)]">{currentUser?.email || 'Admin'}</p>
                             <p className="text-xs text-[var(--muni-text-muted)]">Municipal Admin</p>
                         </div>
                     </div>
@@ -1057,9 +1060,22 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
                         >
                             <Menu size={20} />
                         </button>
-                        <h2 className="font-semibold capitalize text-white">{activeView.replace('-', ' ')}</h2>
+                        <h2 className="font-semibold capitalize text-[var(--muni-text-main)]">{activeView.replace('-', ' ')}</h2>
                     </div>
                     <div className="flex items-center gap-4">
+                        {/* Theme Toggle Button */}
+                        <button
+                            onClick={() => {
+                                const newMode = !isLightMode;
+                                setIsLightMode(newMode);
+                                localStorage.setItem('muni-theme', newMode ? 'light' : 'dark');
+                            }}
+                            className="p-2 text-[var(--muni-text-muted)] hover:text-white transition-colors light-mode-toggle"
+                            title={isLightMode ? "Switch to Dark Mode" : "Switch to Light Mode"}
+                        >
+                            {isLightMode ? <Moon size={20} /> : <Sun size={20} />}
+                        </button>
+
                         <button className="relative p-2 text-[var(--muni-text-muted)] hover:text-white">
                             <Bell size={20} />
                             <span className="absolute top-2 right-2 w-2 h-2 bg-[#FF671F] rounded-full"></span>
@@ -1070,7 +1086,7 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
                 {/* Scrollable Content Area */}
                 <div className="flex-1 overflow-y-auto p-4 md:p-6 scroll-smooth">
                     <div className="max-w-7xl mx-auto pb-6">
-                        {activeView === 'dashboard' && <DashboardView issues={issues} stats={stats} />}
+                        {activeView === 'dashboard' && <DashboardView issues={issues} stats={stats} isLightMode={isLightMode} />}
                         {activeView === 'tracker' && (
                             <TrackerView
                                 issues={issues}

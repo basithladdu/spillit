@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FaHandshake, FaMoneyBillWave, FaBuilding, FaGavel, FaLightbulb, FaUsers, FaEnvelope, FaPhone } from 'react-icons/fa';
 import '../styles/municipal.css';
+import Footer from '../components/Footer';
 
 const Partner = () => {
     return (
@@ -138,6 +139,7 @@ const Partner = () => {
                     </div>
                 </motion.section>
 
+                <Footer />
             </main>
         </div>
     );
