@@ -1,93 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet.heat';
-import { Layers, MapPin } from 'lucide-react';
+import Map, { Marker, Popup, Source, Layer } from 'react-map-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { Layers } from 'lucide-react';
 
-// Default center (Hyderabad)
-const DEFAULT_CENTER = [17.3850, 78.4867];
-const DEFAULT_ZOOM = 12;
+// Mapbox Access Token - Using the same token as Home.jsx and LocationVerifier.jsx
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiYXdhaXpzaGFpazI1IiwiYSI6ImNtY3J5MHQzMTEwZjcyanMzYWJuMnMxcTUifQ.bLPhS0-UAAouYlHOK396XQ';
+
+// Default center (Andhra Pradesh - Vijayawada region)
+const DEFAULT_CENTER = { lng: 80.6480, lat: 16.5062 };
+const DEFAULT_ZOOM = 7; // Zoom out to show more of AP state
 
 // Severity color mapping (matching Home.jsx)
 const getSeverityColors = (severity) => {
     switch (severity) {
-        case 'Critical': return { markerColor: 'red', heatIntensity: 1.0 };
-        case 'High': return { markerColor: 'orange', heatIntensity: 0.7 };
-        case 'Medium': return { markerColor: 'yellow', heatIntensity: 0.5 };
-        case 'Low': return { markerColor: 'green', heatIntensity: 0.3 };
-        default: return { markerColor: 'blue', heatIntensity: 0.2 };
+        case 'Critical': return { markerColor: '#EF4444', heatIntensity: 1.0 };
+        case 'High': return { markerColor: '#FF671F', heatIntensity: 0.7 };
+        case 'Medium': return { markerColor: '#EAB308', heatIntensity: 0.5 };
+        case 'Low': return { markerColor: '#10b981', heatIntensity: 0.3 };
+        default: return { markerColor: '#3b82f6', heatIntensity: 0.2 };
     }
 };
 
-const getIconUrl = (color) =>
-    `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`;
+// Custom Marker Pin Component
+const MarkerPin = ({ color, size = 40 }) => (
+    <svg
+        height={size}
+        viewBox="0 0 24 24"
+        style={{
+            cursor: 'pointer',
+            fill: color,
+            stroke: 'white',
+            strokeWidth: 2,
+            transform: `translate(${-size / 2}px,${-size}px)`
+        }}
+    >
+        <path d="M20.2,15.7L20.2,15.7c1.1-1.6,1.8-3.6,1.8-5.7c0-5.6-4.5-10-10-10S2,4.5,2,10c0,2,0.6,3.9,1.6,5.4c0,0.1,0.1,0.2,0.2,0.3
+  c0,0,0.1,0.1,0.1,0.2c0.2,0.3,0.4,0.6,0.7,0.9c2.6,3.1,7.4,7.6,7.4,7.6s4.8-4.5,7.4-7.5c0.2-0.3,0.5-0.6,0.7-0.9
+  C20.1,15.8,20.2,15.8,20.2,15.7z"/>
+        <circle cx="12" cy="10" r="3" fill="white" />
+    </svg>
+);
 
-// Heatmap Layer Component
-const HeatmapLayer = ({ issues }) => {
-    const map = useMap();
-
-    useEffect(() => {
-        if (!issues || issues.length === 0) return;
-
-        // Remove existing heatmap layers
-        map.eachLayer((layer) => {
-            if (layer._heat) {
-                map.removeLayer(layer);
-            }
-        });
-
-        // Create heatmap data points
-        const heatData = issues
-            .filter(i => i.lat && i.lng)
-            .map(issue => {
-                const { heatIntensity } = getSeverityColors(issue.severity);
-                return [issue.lat, issue.lng, heatIntensity];
-            });
-
-        if (heatData.length > 0) {
-            const heatLayer = L.heatLayer(heatData, {
-                radius: 35,
-                blur: 20,
-                maxZoom: 17,
-                max: 0.8,
-                minOpacity: 0.5,
-                gradient: {
-                    0.2: '#00ffff', // Cyan/Electric Blue for low density
-                    0.4: '#00ff00', // Neon Green
-                    0.6: '#ffff00', // Bright Yellow
-                    0.8: '#FF671F', // Brand Orange
-                    1.0: '#ff0000'  // Pure Red for critical
-                }
-            });
-            heatLayer.addTo(map);
-        }
-
-        return () => {
-            map.eachLayer((layer) => {
-                if (layer._heat) {
-                    map.removeLayer(layer);
-                }
-            });
-        };
-    }, [map, issues]);
-
-    return null;
-};
-
-// Custom Marker Component
-const CustomMarker = ({ issue, isLightMode = false }) => {
-    const { markerColor } = getSeverityColors(issue.severity);
-
-    const customIcon = L.icon({
-        iconUrl: getIconUrl(markerColor),
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34]
-    });
-
-    // Severity styling (matching ReportCard.jsx)
+// Popup Content Component
+const PopupContent = ({ issue, isLightMode }) => {
     const getSeverityStyle = (severity) => {
         switch (severity) {
             case 'Critical':
@@ -106,115 +61,195 @@ const CustomMarker = ({ issue, isLightMode = false }) => {
     const sevStyle = getSeverityStyle(issue.severity);
 
     return (
-        <Marker position={[issue.lat, issue.lng]} icon={customIcon}>
-            <Popup className={isLightMode ? "custom-popup-light" : "custom-popup-dark"} maxWidth={280}>
-                <div style={{
-                    fontFamily: "'Inter', sans-serif",
-                    minWidth: '240px',
-                    background: isLightMode ? '#ffffff' : '#09090b',
-                    border: isLightMode ? '1px solid #e2e8f0' : '1px solid #27272a',
-                    borderRadius: '0.5rem',
-                    overflow: 'hidden',
-                    color: isLightMode ? '#0f172a' : 'white',
-                    boxShadow: isLightMode ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : 'none'
+        <div style={{
+            fontFamily: "'Inter', sans-serif",
+            minWidth: '240px',
+            background: isLightMode ? '#ffffff' : '#09090b',
+            border: isLightMode ? '1px solid #e2e8f0' : '1px solid #27272a',
+            borderRadius: '0.5rem',
+            overflow: 'hidden',
+            color: isLightMode ? '#0f172a' : 'white',
+            boxShadow: isLightMode ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+        }}>
+            {/* Header */}
+            <div style={{
+                background: sevStyle.bg,
+                padding: '12px 16px',
+                borderBottom: `1px solid ${sevStyle.border}`,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+            }}>
+                <strong style={{
+                    textTransform: 'uppercase',
+                    color: sevStyle.text,
+                    fontSize: '12px',
+                    letterSpacing: '0.05em',
+                    fontWeight: '700'
                 }}>
-                    {/* Header */}
+                    {issue.type || 'Issue'}
+                </strong>
+                <span style={{
+                    fontSize: '10px',
+                    background: isLightMode ? 'rgba(0,0,0,0.05)' : '#000',
+                    color: sevStyle.text,
+                    padding: '4px 8px',
+                    borderRadius: '9999px',
+                    border: `1px solid ${sevStyle.border}`,
+                    fontWeight: '600'
+                }}>
+                    {issue.severity || 'Normal'}
+                </span>
+            </div>
+
+            {/* Content */}
+            <div style={{ padding: '16px' }}>
+                {issue.imageUrl && (
                     <div style={{
-                        background: sevStyle.bg,
-                        padding: '12px 16px',
-                        borderBottom: `1px solid ${sevStyle.border}`,
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                    }}>
-                        <strong style={{
-                            textTransform: 'uppercase',
-                            color: sevStyle.text,
-                            fontSize: '12px',
-                            letterSpacing: '0.05em',
-                            fontWeight: '700'
-                        }}>
-                            {issue.type || 'Issue'}
-                        </strong>
-                        <span style={{
-                            fontSize: '10px',
-                            background: isLightMode ? 'rgba(0,0,0,0.05)' : '#000',
-                            color: sevStyle.text,
-                            padding: '4px 8px',
-                            borderRadius: '9999px',
-                            border: `1px solid ${sevStyle.border}`,
-                            fontWeight: '600'
-                        }}>
-                            {issue.severity || 'Normal'}
-                        </span>
-                    </div>
+                        width: '100%',
+                        height: '120px',
+                        backgroundImage: `url('${issue.imageUrl}')`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        borderRadius: '0.375rem',
+                        marginBottom: '12px',
+                        border: isLightMode ? '1px solid #e2e8f0' : '1px solid #27272a'
+                    }} />
+                )}
 
-                    {/* Content */}
-                    <div style={{ padding: '16px' }}>
-                        {issue.imageUrl && (
-                            <div style={{
-                                width: '100%',
-                                height: '120px',
-                                backgroundImage: `url('${issue.imageUrl}')`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                                borderRadius: '0.375rem',
-                                marginBottom: '12px',
-                                border: isLightMode ? '1px solid #e2e8f0' : '1px solid #27272a'
-                            }} />
-                        )}
+                <p style={{
+                    margin: '0 0 12px',
+                    fontSize: '13px',
+                    color: isLightMode ? '#475569' : '#a1a1aa',
+                    lineHeight: '1.5'
+                }}>
+                    {issue.desc || 'No description provided.'}
+                </p>
 
-                        <p style={{
-                            margin: '0 0 12px',
-                            fontSize: '13px',
-                            color: isLightMode ? '#475569' : '#a1a1aa',
-                            lineHeight: '1.5'
-                        }}>
-                            {issue.desc || 'No description provided.'}
-                        </p>
-
-                        {/* Status Badge */}
-                        <div style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            padding: '4px 8px',
-                            borderRadius: '9999px',
-                            fontSize: '10px',
-                            fontWeight: '600',
-                            background: issue.status === 'resolved' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)',
-                            color: issue.status === 'resolved' ? '#10b981' : '#eab308',
-                            border: issue.status === 'resolved' ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid rgba(234, 179, 8, 0.2)',
-                            textTransform: 'capitalize'
-                        }}>
-                            {issue.status || 'new'}
-                        </div>
-
-                        {/* Footer Info */}
-                        <div style={{
-                            marginTop: '12px',
-                            paddingTop: '12px',
-                            borderTop: isLightMode ? '1px solid #e2e8f0' : '1px solid #27272a',
-                            fontSize: '10px',
-                            color: isLightMode ? '#64748b' : '#71717a',
-                            fontFamily: "'JetBrains Mono', monospace"
-                        }}>
-                            ID: {issue.id.slice(0, 8)}...
-                            {issue.ts && (
-                                <span style={{ marginLeft: '8px' }}>
-                                    • {new Date(issue.ts.toDate?.() || issue.ts).toLocaleDateString()}
-                                </span>
-                            )}
-                        </div>
-                    </div>
+                {/* Status Badge */}
+                <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '4px 8px',
+                    borderRadius: '9999px',
+                    fontSize: '10px',
+                    fontWeight: '600',
+                    background: issue.status === 'resolved' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                    color: issue.status === 'resolved' ? '#10b981' : '#eab308',
+                    border: issue.status === 'resolved' ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid rgba(234, 179, 8, 0.2)',
+                    textTransform: 'capitalize'
+                }}>
+                    {issue.status || 'new'}
                 </div>
-            </Popup>
-        </Marker>
+
+                {/* Footer Info */}
+                <div style={{
+                    marginTop: '12px',
+                    paddingTop: '12px',
+                    borderTop: isLightMode ? '1px solid #e2e8f0' : '1px solid #27272a',
+                    fontSize: '10px',
+                    color: isLightMode ? '#64748b' : '#71717a',
+                    fontFamily: "'JetBrains Mono', monospace"
+                }}>
+                    ID: {issue.id.slice(0, 8)}...
+                    {issue.ts && (
+                        <span style={{ marginLeft: '8px' }}>
+                            • {new Date(issue.ts.toDate?.() || issue.ts).toLocaleDateString()}
+                        </span>
+                    )}
+                </div>
+            </div>
+        </div>
     );
 };
 
 const DashboardMap = ({ issues, isLightMode = false }) => {
     const [showHeatmap, setShowHeatmap] = useState(false);
+    const [selectedIssue, setSelectedIssue] = useState(null);
+    const [viewState, setViewState] = useState({
+        ...DEFAULT_CENTER,
+        zoom: DEFAULT_ZOOM
+    });
+
     const validIssues = issues?.filter(i => i.lat && i.lng) || [];
+
+    // Auto-center map on issues when they load
+    useEffect(() => {
+        if (validIssues.length > 0) {
+            // Calculate bounds of all issues
+            const lats = validIssues.map(i => i.lat);
+            const lngs = validIssues.map(i => i.lng);
+
+            const centerLat = (Math.max(...lats) + Math.min(...lats)) / 2;
+            const centerLng = (Math.max(...lngs) + Math.min(...lngs)) / 2;
+
+            // Calculate appropriate zoom level based on spread
+            const latSpread = Math.max(...lats) - Math.min(...lats);
+            const lngSpread = Math.max(...lngs) - Math.min(...lngs);
+            const maxSpread = Math.max(latSpread, lngSpread);
+
+            let zoom = DEFAULT_ZOOM;
+            if (maxSpread < 0.01) zoom = 14;
+            else if (maxSpread < 0.05) zoom = 12;
+            else if (maxSpread < 0.1) zoom = 11;
+            else if (maxSpread < 0.5) zoom = 9;
+            else if (maxSpread < 1) zoom = 8;
+
+            setViewState({
+                latitude: centerLat,
+                longitude: centerLng,
+                zoom: zoom
+            });
+        }
+    }, [validIssues.length]); // Only re-run when number of issues changes
+
+    // Create heatmap data for Mapbox
+    const heatmapData = {
+        type: 'FeatureCollection',
+        features: validIssues.map(issue => {
+            const { heatIntensity } = getSeverityColors(issue.severity);
+            return {
+                type: 'Feature',
+                properties: {
+                    intensity: heatIntensity
+                },
+                geometry: {
+                    type: 'Point',
+                    coordinates: [issue.lng, issue.lat]
+                }
+            };
+        })
+    };
+
+    // Heatmap layer style
+    const heatmapLayer = {
+        id: 'heatmap',
+        type: 'heatmap',
+        source: 'issues',
+        maxzoom: 17,
+        paint: {
+            // Increase weight as diameter increases
+            'heatmap-weight': ['get', 'intensity'],
+            // Increase intensity as zoom level increases
+            'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 17, 3],
+            // Color ramp for heatmap
+            'heatmap-color': [
+                'interpolate',
+                ['linear'],
+                ['heatmap-density'],
+                0, 'rgba(0, 255, 255, 0)',
+                0.2, 'rgba(0, 255, 255, 0.5)',
+                0.4, 'rgba(0, 255, 0, 0.6)',
+                0.6, 'rgba(255, 255, 0, 0.7)',
+                0.8, 'rgba(255, 103, 31, 0.8)',
+                1, 'rgba(255, 0, 0, 0.9)'
+            ],
+            // Adjust the heatmap radius by zoom level
+            'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 2, 17, 35],
+            // Transition from heatmap to circle layer by zoom level
+            'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 7, 0.8, 17, 0.5]
+        }
+    };
 
     return (
         <div className={`h-full w-full relative z-0 ${isLightMode ? 'light-map' : ''}`}>
@@ -234,48 +269,89 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
                 </button>
             </div>
 
-            <MapContainer
-                center={DEFAULT_CENTER}
-                zoom={DEFAULT_ZOOM}
-                className="h-full w-full z-0"
-                style={{ background: isLightMode ? '#f8fafc' : '#050505', height: '100%', width: '100%' }}
-                zoomControl={false}
+            <Map
+                {...viewState}
+                onMove={evt => setViewState(evt.viewState)}
+                mapboxAccessToken={MAPBOX_TOKEN}
+                style={{ width: '100%', height: '100%' }}
+                mapStyle="mapbox://styles/mapbox/streets-v12"  // Google Maps-like style for both light and dark modes
+                attributionControl={true}
             >
-                {/* Conditionally Render Tiles */}
-                <TileLayer
-                    url={isLightMode
-                        ? "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_all/{z}/{x}/{y}{r}.png"
-                        : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                    }
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                />
-
-                {/* Conditional Rendering: Heatmap OR Markers */}
-                {showHeatmap ? (
-                    <HeatmapLayer issues={validIssues} />
-                ) : (
-                    validIssues.map((issue) => (
-                        <CustomMarker key={issue.id} issue={issue} isLightMode={isLightMode} />
-                    ))
+                {/* Heatmap Layer */}
+                {showHeatmap && (
+                    <Source type="geojson" data={heatmapData}>
+                        <Layer {...heatmapLayer} />
+                    </Source>
                 )}
-            </MapContainer>
 
-            {/* Custom Leaflet Styles */}
+                {/* Markers */}
+                {!showHeatmap && validIssues.map((issue) => {
+                    const { markerColor } = getSeverityColors(issue.severity);
+                    return (
+                        <Marker
+                            key={issue.id}
+                            longitude={issue.lng}
+                            latitude={issue.lat}
+                            anchor="bottom"
+                            onClick={e => {
+                                e.originalEvent.stopPropagation();
+                                setSelectedIssue(issue);
+                            }}
+                        >
+                            <MarkerPin color={markerColor} />
+                        </Marker>
+                    );
+                })}
+
+                {/* Popup */}
+                {selectedIssue && (
+                    <Popup
+                        longitude={selectedIssue.lng}
+                        latitude={selectedIssue.lat}
+                        anchor="bottom"
+                        onClose={() => setSelectedIssue(null)}
+                        closeButton={true}
+                        closeOnClick={false}
+                        maxWidth="280px"
+                        className={isLightMode ? "custom-popup-light" : "custom-popup-dark"}
+                    >
+                        <PopupContent issue={selectedIssue} isLightMode={isLightMode} />
+                    </Popup>
+                )}
+            </Map>
+
+            {/* Custom Mapbox Popup Styles */}
             <style jsx global>{`
-                .leaflet-popup-content-wrapper {
+                .mapboxgl-popup-content {
                     background: transparent !important;
                     box-shadow: none !important;
                     padding: 0 !important;
-                    border: none !important;
                 }
-                .leaflet-popup-tip {
-                    display: none !important;
+                .mapboxgl-popup-close-button {
+                    font-size: 20px;
+                    padding: 4px 8px;
+                    color: ${isLightMode ? '#64748b' : '#a1a1aa'};
+                    background: ${isLightMode ? '#ffffff' : '#09090b'};
+                    border-radius: 0 0.5rem 0 0;
                 }
-                .leaflet-popup {
-                    margin-bottom: 20px !important;
+                .mapboxgl-popup-close-button:hover {
+                    background: ${isLightMode ? '#f1f5f9' : '#18181b'};
+                    color: ${isLightMode ? '#0f172a' : '#ffffff'};
                 }
-                .custom-popup-dark .leaflet-popup-content {
-                    margin: 0 !important;
+                .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+                    border-top-color: ${isLightMode ? '#ffffff' : '#09090b'};
+                }
+                .mapboxgl-popup-anchor-top .mapboxgl-popup-tip {
+                    border-bottom-color: ${isLightMode ? '#ffffff' : '#09090b'};
+                }
+                .mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+                    border-right-color: ${isLightMode ? '#ffffff' : '#09090b'};
+                }
+                .mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+                    border-left-color: ${isLightMode ? '#ffffff' : '#09090b'};
+                }
+                .mapboxgl-ctrl-attrib {
+                    background-color: ${isLightMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)'} !important;
                 }
             `}</style>
         </div>
