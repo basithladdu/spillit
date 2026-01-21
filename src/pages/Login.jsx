@@ -92,10 +92,11 @@ function Login() {
 
             {/* Email Field */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-[var(--muni-text-muted)] uppercase tracking-wider ml-1">Email Address</label>
+              <label htmlFor="email" className="text-xs font-bold text-[var(--muni-text-muted)] uppercase tracking-wider ml-1">Email Address</label>
               <div className="relative group">
-                <FaEnvelope className="absolute left-4 top-3.5 text-[var(--muni-text-muted)] group-focus-within:text-[#FF671F] transition-colors" />
+                <FaEnvelope aria-hidden="true" className="absolute left-4 top-3.5 text-[var(--muni-text-muted)] group-focus-within:text-[#FF671F] transition-colors" />
                 <input
+                  id="email"
                   type="email"
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
@@ -109,10 +110,11 @@ function Login() {
 
             {/* Password Field */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-[var(--muni-text-muted)] uppercase tracking-wider ml-1">Password</label>
+              <label htmlFor="password" className="text-xs font-bold text-[var(--muni-text-muted)] uppercase tracking-wider ml-1">Password</label>
               <div className="relative group">
-                <FaLock className="absolute left-4 top-3.5 text-[var(--muni-text-muted)] group-focus-within:text-[#FF671F] transition-colors" />
+                <FaLock aria-hidden="true" className="absolute left-4 top-3.5 text-[var(--muni-text-muted)] group-focus-within:text-[#FF671F] transition-colors" />
                 <input
+                  id="password"
                   type="password"
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
