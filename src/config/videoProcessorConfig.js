@@ -17,7 +17,7 @@ export const VIDEO_PROCESSOR_CONFIG = {
     // Railway Backend Configuration
     // Get this after deploying to Railway
     backend: {
-        baseUrl: 'https://fixit-docker.onrender.com', // Your live Render backend
+        baseUrl: 'https://defenceable-vegetally-buena.ngrok-free.dev', // Your live Colab backend (via Ngrok)
         apiKey: '4b8afa69-5426-44dd-b2af-3977e26d6b5f',
     },
 
