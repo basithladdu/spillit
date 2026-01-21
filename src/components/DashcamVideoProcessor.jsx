@@ -249,7 +249,7 @@ export default function DashcamVideoProcessor() {
                 <button
                     onClick={openUploadWidget}
                     disabled={isProcessing}
-                    className="w-full muni-btn-primary py-4 text-lg font-bold flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full muni-btn-primary py-4 text-lg font-bold flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed mb-6"
                 >
                     {isProcessing ? (
                         <>
@@ -263,6 +263,50 @@ export default function DashcamVideoProcessor() {
                         </>
                     )}
                 </button>
+
+                {/* Video Library / Samples */}
+                <div className="border-t border-white/10 pt-6">
+                    <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-wider flex items-center gap-2">
+                        <Video size={16} className="text-[#FF671F]" />
+                        Video Library & Samples
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {[
+                            {
+                                id: 'sample1',
+                                name: 'Monsoon Road Test',
+                                url: 'https://res.cloudinary.com/fixit/video/upload/v1769007356/dashcam_videos/rcy1fztshdple3zmdky1.mp4',
+                                duration: '0:45'
+                            },
+                            {
+                                id: 'sample2',
+                                name: 'Highway Inspection',
+                                url: 'https://res.cloudinary.com/fixit/video/upload/v1737471356/samples/pothole_test_2.mp4',
+                                duration: '1:12'
+                            }
+                        ].map((video) => (
+                            <div
+                                key={video.id}
+                                className="group relative bg-white/5 border border-white/10 rounded-lg p-3 hover:border-[#FF671F]/50 transition-all cursor-pointer"
+                                onClick={() => !isProcessing && handleVideoUploadSuccess(video.url)}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-[#FF671F]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#FF671F]/20">
+                                        <TrendingUp size={20} className="text-[#FF671F]" />
+                                    </div>
+                                    <div className="flex-1 overflow-hidden">
+                                        <p className="text-sm font-semibold text-white truncate">{video.name}</p>
+                                        <p className="text-xs text-[var(--muni-text-muted)]">{video.duration} • Ready to Analyze</p>
+                                    </div>
+                                </div>
+                                <div className="absolute inset-0 bg-[#FF671F]/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg" />
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-[10px] text-[var(--muni-text-muted)] mt-4 italic">
+                        * Select a sample video or upload your own to start AI detection.
+                    </p>
+                </div>
             </div>
 
             {/* Error Display */}
