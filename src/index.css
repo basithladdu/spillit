@@ -48,9 +48,28 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
-/* Global Animation Disable (Tesla-Grade Performance) */
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% auto;
+  animation: gradient 5s linear infinite;
+}
+
+/* Global Transition Override - Removed to allow Framer Motion */
 * {
-  transition: none !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
 }
 
 /* Prevent iOS Zoom on inputs */

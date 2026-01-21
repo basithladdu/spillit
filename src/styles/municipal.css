@@ -109,11 +109,7 @@
   min-height: 100vh;
 }
 
-/* Global No-Animation Rule */
-* {
-  transition: none !important;
-  animation: none !important;
-}
+/* Global Animation Rule - Removed kill rule to allow Framer Motion */
 
 /* Page Content Offset */
 .content-container,

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../hooks/useAuth';
 import { getFirestore, collection, query, limit, orderBy, deleteDoc, doc, updateDoc, onSnapshot, where, getDocs } from 'firebase/firestore';
 import {
@@ -75,7 +76,10 @@ const DashboardView = ({ issues, stats, isLightMode }) => (
     </div>
 );
 
-const TrackerView = ({ issues, onSelectIssue, onDelete, onExport, onExportPDF, searchQuery, setSearchQuery, filterStatus, setFilterStatus, filterSeverity, setFilterSeverity }) => {
+const TrackerView = ({ issues, onSelectIssue, onDelete, onExport, onExportPDF, searchQuery, setSearchQuery, filterStatus, setFilterStatus, filterSeverity, setFilterSeverity, onBulkDelete }) => {
+    const [selectedIssues, setSelectedIssues] = useState(new Set());
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
     const filteredIssues = issues.filter(item => {
         const matchesSearch = item.desc?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             item.id.includes(searchQuery) ||
@@ -84,6 +88,29 @@ const TrackerView = ({ issues, onSelectIssue, onDelete, onExport, onExportPDF, s
         const matchesSeverity = filterSeverity === 'All' || item.severity === filterSeverity;
         return matchesSearch && matchesStatus && matchesSeverity;
     });
+
+    const handleSelectIssue = (id) => {
+        const next = new Set(selectedIssues);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        setSelectedIssues(next);
+    };
+
+    const handleSelectAll = () => {
+        if (selectedIssues.size === filteredIssues.length && filteredIssues.length > 0) {
+            setSelectedIssues(new Set());
+        } else {
+            setSelectedIssues(new Set(filteredIssues.map(i => i.id)));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIssues.size === 0) return;
+        setIsBulkDeleting(true);
+        await onBulkDelete(Array.from(selectedIssues));
+        setSelectedIssues(new Set());
+        setIsBulkDeleting(false);
+    };
 
     return (
         <div className="space-y-4 pb-20 md:pb-0">
@@ -144,6 +171,14 @@ const TrackerView = ({ issues, onSelectIssue, onDelete, onExport, onExportPDF, s
                     <table className="muni-table w-full min-w-[800px]">
                         <thead>
                             <tr>
+                                <th className="w-10">
+                                    <input
+                                        type="checkbox"
+                                        className="w-4 h-4 rounded border-white/20 bg-white/5 text-[#FF671F] focus:ring-[#FF671F]/50"
+                                        checked={filteredIssues.length > 0 && selectedIssues.size === filteredIssues.length}
+                                        onChange={handleSelectAll}
+                                    />
+                                </th>
                                 <th className="text-[#FF671F]">ID</th>
                                 <th>Type</th>
                                 <th>Description</th>
@@ -162,7 +197,15 @@ const TrackerView = ({ issues, onSelectIssue, onDelete, onExport, onExportPDF, s
                                     const sevConfig = getSeverityConfig(issue.severity);
                                     const statConfig = getStatusConfig(issue.status);
                                     return (
-                                        <tr key={issue.id} className="hover:bg-white/5 transition-colors">
+                                        <tr key={issue.id} className={`hover:bg-white/5 transition-colors ${selectedIssues.has(issue.id) ? 'bg-[#FF671F]/5' : ''}`}>
+                                            <td>
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-[#FF671F] focus:ring-[#FF671F]/50"
+                                                    checked={selectedIssues.has(issue.id)}
+                                                    onChange={() => handleSelectIssue(issue.id)}
+                                                />
+                                            </td>
                                             <td className="font-mono text-[#FF671F] text-xs">{issue.id.slice(0, 8)}</td>
                                             <td className="font-medium">{issue.type || "General"}</td>
                                             <td className="truncate max-w-[200px] text-[var(--muni-text-muted)]">{issue.desc || "No description"}</td>
@@ -198,6 +241,35 @@ const TrackerView = ({ issues, onSelectIssue, onDelete, onExport, onExportPDF, s
                     </table>
                 </div>
             </div>
+            {/* Bulk Actions Floating Button */}
+            {selectedIssues.size > 0 && (
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="bg-[#0a0a0b] border border-[#FF671F]/50 rounded-2xl shadow-2xl p-4 flex items-center gap-6 backdrop-blur-xl ring-1 ring-white/10">
+                        <div className="flex items-center gap-3 px-2 border-r border-white/10">
+                            <div className="w-8 h-8 rounded-lg bg-[#FF671F]/10 flex items-center justify-center font-bold text-[#FF671F]">
+                                {selectedIssues.size}
+                            </div>
+                            <span className="text-sm font-bold text-white uppercase tracking-tight">Issues Selected</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleBulkDelete}
+                                disabled={isBulkDeleting}
+                                className="px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-red-900/50 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                            >
+                                {isBulkDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                                {isBulkDeleting ? 'DELETING...' : 'DELETE SELECTED'}
+                            </button>
+                            <button
+                                onClick={() => setSelectedIssues(new Set())}
+                                className="px-4 py-2.5 text-[var(--muni-text-muted)] hover:text-white font-bold text-xs rounded-xl transition-all"
+                            >
+                                CANCEL
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -823,7 +895,7 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
     useEffect(() => {
         try {
             const db = getFirestore(app);
-            const q = query(collection(db, 'issues'), orderBy('ts', 'desc'), limit(100));
+            const q = query(collection(db, 'issues'), orderBy('ts', 'desc'));
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setIssues(data);
@@ -854,8 +926,24 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
             await deleteDoc(doc(getFirestore(app), 'issues', deleteId));
             setDeleteId(null);
             setSelectedIssue(null);
+            toast.success("Issue deleted successfully");
         } catch (error) {
             console.error('Delete error:', error);
+            toast.error("Failed to delete issue");
+        }
+    };
+
+    const handleBulkDelete = async (selectedIds) => {
+        if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} issues?`)) return;
+        try {
+            const db = getFirestore(app);
+            for (const id of selectedIds) {
+                await deleteDoc(doc(db, 'issues', id));
+            }
+            toast.success(`Successfully deleted ${selectedIds.length} records`);
+        } catch (error) {
+            console.error('Bulk delete error:', error);
+            toast.error('Bulk delete failed');
         }
     };
 
@@ -1100,6 +1188,7 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
                                 setFilterStatus={setFilterStatus}
                                 filterSeverity={filterSeverity}
                                 setFilterSeverity={setFilterSeverity}
+                                onBulkDelete={handleBulkDelete}
                             />
                         )}
                         {activeView === 'pothole-detection' && <PotholeDetectionView />}

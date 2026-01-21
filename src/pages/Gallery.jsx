@@ -4,24 +4,14 @@ import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FaSearch, FaFilter, FaShareAlt, FaHeart, FaRegHeart,
+  FaSearch, FaFilter, FaHeart, FaRegHeart,
   FaChevronLeft, FaChevronRight, FaMapMarkerAlt, FaCalendarAlt,
-  FaTools, FaInfoCircle, FaCheckCircle, FaExclamationTriangle,
-  FaLayerGroup, FaTimes
+  FaTools, FaLayerGroup
 } from 'react-icons/fa';
 import { MdError, MdWarning, MdCheckCircle, MdGpsFixed } from 'react-icons/md';
 
 // --- 1. Shared Style Helpers (Matched to Home.jsx) ---
 
-const getSeverityIcon = (severity) => {
-  switch (severity) {
-    case 'Critical': return <MdError className="text-red-500" />;
-    case 'High': return <MdWarning className="text-orange-500" />;
-    case 'Medium': return <FaExclamationTriangle className="text-yellow-500" />;
-    case 'Low': return <FaCheckCircle className="text-green-500" />;
-    default: return <FaInfoCircle className="text-gray-500" />;
-  }
-};
 
 const getSeverityStyles = (severity) => {
   switch (severity) {
@@ -42,24 +32,28 @@ const getStatusStyles = (status) => {
 
 // --- 2. Sub-Components ---
 
-const StatBox = ({ label, value, icon, colorClass, onClick }) => (
+const StatBox = ({ label, value, icon, colorClass, onClick, accentColor }) => (
   <motion.div
-    whileHover={{ y: -5, boxShadow: "0 0 20px rgba(255,103,31,0.15)" }}
+    whileHover={{ y: -2, backgroundColor: 'rgba(255,255,255,0.03)' }}
     onClick={onClick}
-    className={`
-      cursor-pointer relative overflow-hidden rounded-2xl p-5 border border-white/5 
-      bg-[var(--muni-surface)]/60 backdrop-blur-md flex items-center justify-between group
-    `}
+    className="muni-card p-5 border-l-4 cursor-pointer relative group transition-all"
+    style={{ borderLeftColor: accentColor, backgroundColor: 'var(--muni-surface)' }}
   >
-    <div className="z-10">
-      <p className="text-[var(--muni-text-muted)] text-xs uppercase tracking-wider font-bold mb-1">{label}</p>
-      <h3 className={`text-3xl font-bold ${colorClass} drop-shadow-lg`}>{value}</h3>
+    <div className="relative z-10 flex flex-col gap-1">
+      <p className="text-[var(--muni-text-muted)] text-[10px] uppercase tracking-[0.2em] font-bold opacity-60">
+        {label}
+      </p>
+      <div className="flex items-end justify-between">
+        <h3 className={`text-4xl font-black font-mono tracking-tighter ${colorClass}`}>
+          {value}
+        </h3>
+        <div className={`text-3xl opacity-30 group-hover:opacity-70 group-hover:scale-110 transition-all duration-300 ${colorClass}`}>
+          {icon}
+        </div>
+      </div>
     </div>
-    <div className={`text-3xl opacity-20 group-hover:opacity-50 group-hover:scale-110 transition-all duration-500 ${colorClass}`}>
-      {icon}
-    </div>
-    {/* Decorative glow */}
-    <div className={`absolute -right-4 -top-4 w-20 h-20 rounded-full blur-2xl opacity-10 ${colorClass.replace('text-', 'bg-')}`}></div>
+    {/* Subtle scanline effect */}
+    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.02] pointer-events-none"></div>
   </motion.div>
 );
 
@@ -117,16 +111,6 @@ function Gallery() {
     localStorage.setItem('galleryLikes', JSON.stringify([...newLiked]));
   };
 
-  const handleShare = async (e, issue) => {
-    e.preventDefault();
-    const url = `${window.location.origin}/report/${issue.id}`;
-    if (navigator.share) {
-      try { await navigator.share({ title: 'FixIt Report', text: issue.desc, url }); } catch (err) { console.log(err); }
-    } else {
-      navigator.clipboard.writeText(url);
-      alert('Link copied!');
-    }
-  };
 
   // --- Filtering Logic ---
   const filteredIssues = issues.filter(issue => {
@@ -156,17 +140,21 @@ function Gallery() {
     <div className="min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans selection:bg-[#FF671F]/30 selection:text-white pb-20">
 
       {/* --- Header Section --- */}
-      <div className="relative pt-24 pb-10 px-6 max-w-7xl mx-auto">
+      <div className="relative pt-20 pb-8 px-6 max-w-7xl mx-auto">
         {/* Background Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#FF671F]/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
-          <div>
-            <h1 className="text-5xl md:text-6xl font-bold text-white mb-2 tracking-tight">
-              Community <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF671F] via-white to-[#10b981]">Gallery</span>
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6 mb-8">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#FF671F] animate-pulse"></div>
+              <span className="text-[9px] font-mono text-[#FF671F] uppercase tracking-[0.2em]">System Live • Community Ops</span>
+            </div>
+            <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-none">
+              Community <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF671F] via-[#ffffff] to-[#10b981] animate-gradient">Gallery</span>
             </h1>
-            <p className="text-[var(--muni-text-muted)] text-lg max-w-xl">
-              Track real-time infrastructure reports. visualize data, and support your local community improvements.
+            <p className="text-[var(--muni-text-muted)] text-base max-w-xl font-medium leading-relaxed opacity-50 border-l border-white/10 pl-4">
+              Visualizing city-wide infrastructure reports and civic intelligence.
             </p>
           </div>
 
@@ -186,11 +174,11 @@ function Gallery() {
         </div>
 
         {/* --- Stats Grid --- */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatBox label="Total Reports" value={issues.length} icon={<FaLayerGroup />} colorClass="text-[#FF671F]" />
-          <StatBox label="In Progress" value={issues.filter(i => i.status === 'in-progress').length} icon={<FaTools />} colorClass="text-[#06038D]" onClick={() => setFilters({ ...filters, status: 'in-progress' })} />
-          <StatBox label="Resolved" value={issues.filter(i => i.status === 'resolved').length} icon={<MdCheckCircle />} colorClass="text-[#10b981]" onClick={() => setFilters({ ...filters, status: 'resolved' })} />
-          <StatBox label="Critical Issues" value={issues.filter(i => i.severity === 'Critical').length} icon={<MdWarning />} colorClass="text-red-400" onClick={() => setFilters({ ...filters, severity: 'Critical' })} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+          <StatBox label="Total Reports" value={issues.length} icon={<FaLayerGroup />} colorClass="text-[#FF671F]" accentColor="#FF671F" />
+          <StatBox label="Active Fixes" value={issues.filter(i => i.status === 'in-progress').length} icon={<FaTools />} colorClass="text-blue-400" accentColor="#3b82f6" onClick={() => setFilters({ ...filters, status: 'in-progress' })} />
+          <StatBox label="Success" value={issues.filter(i => i.status === 'resolved').length} icon={<MdCheckCircle />} colorClass="text-[#10b981]" accentColor="#10b981" onClick={() => setFilters({ ...filters, status: 'resolved' })} />
+          <StatBox label="Critical" value={issues.filter(i => i.severity === 'Critical').length} icon={<MdWarning />} colorClass="text-red-500" accentColor="#ef4444" onClick={() => setFilters({ ...filters, severity: 'Critical' })} />
         </div>
 
         {/* --- Controls Bar --- */}
@@ -260,16 +248,16 @@ function Gallery() {
                 <motion.div
                   key={issue.id}
                   layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  className="group relative bg-[var(--muni-surface)]/60 backdrop-blur-md border border-white/5 rounded-2xl overflow-hidden hover:border-[#FF671F]/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,103,31,0.1)]"
+                  initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  className="group relative bg-[var(--muni-surface)] border border-[var(--muni-border)] rounded-2xl overflow-hidden hover:border-[#FF671F]/40 transition-all duration-300 flex flex-col"
                 >
                   {/* Image Section */}
-                  <div className="relative h-48 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10"></div>
+                  <div className="relative h-56 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#121216] via-transparent to-transparent z-10"></div>
                     {issue.imageUrl ? (
-                      <img src={issue.imageUrl} alt={issue.type} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      <img src={issue.imageUrl} alt={issue.type} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out" />
                     ) : (
                       <div className="w-full h-full bg-white/5 flex items-center justify-center text-[var(--muni-text-muted)]">
                         <FaMapMarkerAlt className="text-3xl opacity-20" />
@@ -277,45 +265,52 @@ function Gallery() {
                     )}
 
                     {/* Floating Badges */}
-                    <div className="absolute top-3 left-3 z-20 flex gap-2">
-                      <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase border backdrop-blur-md ${sevStyles.bg} ${sevStyles.text} ${sevStyles.border}`}>
+                    <div className="absolute top-4 left-4 z-20 flex gap-2">
+                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border backdrop-blur-md tracking-widest ${sevStyles.bg} ${sevStyles.text} ${sevStyles.border}`}>
                         {issue.severity}
                       </span>
                     </div>
-                    <div className="absolute top-3 right-3 z-20">
-                      <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase border backdrop-blur-md ${statusStyles.bg} ${statusStyles.text} border-transparent`}>
+                    <div className="absolute top-4 right-4 z-20">
+                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border backdrop-blur-md tracking-widest ${statusStyles.bg} ${statusStyles.text} border-white/10`}>
                         {statusStyles.label}
                       </span>
                     </div>
                   </div>
 
                   {/* Content Section */}
-                  <div className="p-5">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-xl font-bold text-white group-hover:text-[#FF671F] transition-colors line-clamp-1">{issue.type}</h3>
+                  <div className="p-6 flex-1 flex flex-col">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-2xl font-black text-white group-hover:text-[#FF671F] transition-colors leading-tight mb-1">{issue.type}</h3>
+                        <div className="flex items-center gap-1.5 text-[10px] text-[var(--muni-text-muted)] font-mono uppercase tracking-widest">
+                          <MdGpsFixed size={10} className="text-[#FF671F]" />
+                          {issue.id.slice(0, 8)}
+                        </div>
+                      </div>
                       <button
                         onClick={(e) => handleUpvote(e, issue.id)}
-                        className={`p-2 rounded-full transition-all ${isLiked ? 'text-red-500 bg-red-500/10' : 'text-gray-500 hover:text-red-500 hover:bg-white/5'}`}
+                        className={`p-3 rounded-2xl transition-all ${isLiked ? 'text-red-500 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'text-gray-500 bg-white/5 hover:text-white hover:bg-white/10'}`}
                       >
-                        {isLiked ? <FaHeart /> : <FaRegHeart />}
+                        {isLiked ? <FaHeart size={18} /> : <FaRegHeart size={18} />}
                       </button>
                     </div>
 
-                    <p className="text-[var(--muni-text-muted)] text-sm line-clamp-2 mb-4 h-10">
-                      {issue.desc}
+                    <p className="text-[var(--muni-text-muted)] text-sm leading-relaxed line-clamp-2 mb-6 opacity-70 italic">
+                      "{issue.desc || 'No detailed description available.'}"
                     </p>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                      <div className="flex items-center gap-2 text-xs text-[var(--muni-text-muted)]">
-                        <FaCalendarAlt />
-                        <span>{issue.ts?.toDate().toLocaleDateString()}</span>
+                    <div className="mt-auto flex items-center justify-between pt-5 border-t border-white/5">
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--muni-text-muted)] uppercase tracking-tighter">
+                        <FaCalendarAlt className="text-[#FF671F]" />
+                        <span>{issue.ts?.toDate().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                       </div>
 
                       <Link
                         to={`/report/${issue.id}`}
-                        className="flex items-center gap-2 text-xs font-bold text-white bg-white/5 hover:bg-[#FF671F] px-3 py-1.5 rounded-lg transition-colors"
+                        className="group/btn flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white bg-white/5 hover:bg-[#FF671F] hover:text-black px-5 py-2.5 rounded-full transition-all duration-300"
                       >
-                        View Details <FaChevronRight />
+                        Details
+                        <FaChevronRight className="group-hover/btn:translate-x-1 transition-transform" />
                       </Link>
                     </div>
                   </div>
