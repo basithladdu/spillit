@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
     wget \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first (for better caching)
@@ -16,9 +17,6 @@ COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Install unzip
-RUN apt-get install -y unzip
 
 # Download weights from Google Drive using gdown
 # The ID 1vXTyWuvFCy7P0GEvQLYtpcxDi6yqZ9ce is from the user provided link
