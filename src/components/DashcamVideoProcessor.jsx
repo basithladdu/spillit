@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Video, Upload, Loader2, AlertCircle, CheckCircle, MapPin, Clock, TrendingUp } from 'lucide-react';
-import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import app from '../utils/firebase';
 import { VIDEO_PROCESSOR_CONFIG } from '../config/videoProcessorConfig';
 
@@ -14,6 +14,55 @@ export default function DashcamVideoProcessor() {
     const [detectionResults, setDetectionResults] = useState(null);
     const [error, setError] = useState(null);
     const [cloudinaryWidget, setCloudinaryWidget] = useState(null);
+    const [recentVideos, setRecentVideos] = useState([]);
+
+    // Fetch recent dashcam videos from Firestore
+    useEffect(() => {
+        const fetchRecentVideos = async () => {
+            try {
+                const db = getFirestore(app);
+                // Simple query to avoid index errors
+                const q = query(
+                    collection(db, 'issues'),
+                    orderBy('ts', 'desc'),
+                    limit(40)
+                );
+
+                const querySnapshot = await getDocs(q);
+                const videos = [];
+                const seenUrls = new Set();
+
+                // Add hardcoded sample first
+                const sampleUrl = 'https://res.cloudinary.com/fixit/video/upload/v1769007356/dashcam_videos/rcy1fztshdple3zmdky1.mp4';
+                videos.push({
+                    url: sampleUrl,
+                    name: 'Sample: Road Test',
+                    ts: new Date(),
+                    thumb: sampleUrl.replace('.mp4', '.jpg')
+                });
+                seenUrls.add(sampleUrl);
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.source === 'dashcam_ai' && data.videoUrl && !seenUrls.has(data.videoUrl)) {
+                        videos.push({
+                            url: data.videoUrl,
+                            name: `Upload: ${data.videoTimestamp || 'Recent'}`,
+                            ts: data.ts?.toDate() || new Date(),
+                            thumb: data.videoUrl.replace('.mp4', '.jpg')
+                        });
+                        seenUrls.add(data.videoUrl);
+                    }
+                });
+
+                setRecentVideos(videos.slice(0, 6)); // Show top 6
+            } catch (err) {
+                console.error('Error fetching recent videos:', err);
+            }
+        };
+
+        fetchRecentVideos();
+    }, []);
 
     useEffect(() => {
         // Load Cloudinary Upload Widget script
@@ -249,7 +298,7 @@ export default function DashcamVideoProcessor() {
                 <button
                     onClick={openUploadWidget}
                     disabled={isProcessing}
-                    className="w-full muni-btn-primary py-4 text-lg font-bold flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed mb-6"
+                    className="w-full muni-btn-primary py-4 text-lg font-bold flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed mb-8"
                 >
                     {isProcessing ? (
                         <>
@@ -264,48 +313,43 @@ export default function DashcamVideoProcessor() {
                     )}
                 </button>
 
-                {/* Video Library / Samples */}
+                {/* Video Library (Dynamic & Samples) */}
                 <div className="border-t border-white/10 pt-6">
                     <h3 className="text-sm font-bold text-white mb-4 uppercase tracking-wider flex items-center gap-2">
                         <Video size={16} className="text-[#FF671F]" />
-                        Video Library & Samples
+                        Dashcam Video Library
                     </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {[
-                            {
-                                id: 'sample1',
-                                name: 'Monsoon Road Test',
-                                url: 'https://res.cloudinary.com/fixit/video/upload/v1769007356/dashcam_videos/rcy1fztshdple3zmdky1.mp4',
-                                duration: '0:45'
-                            },
-                            {
-                                id: 'sample2',
-                                name: 'Highway Inspection',
-                                url: 'https://res.cloudinary.com/fixit/video/upload/v1737471356/samples/pothole_test_2.mp4',
-                                duration: '1:12'
-                            }
-                        ].map((video) => (
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {recentVideos.map((video, idx) => (
                             <div
-                                key={video.id}
-                                className="group relative bg-white/5 border border-white/10 rounded-lg p-3 hover:border-[#FF671F]/50 transition-all cursor-pointer"
+                                key={idx}
+                                className="group relative bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-[#FF671F]/50 transition-all cursor-pointer"
                                 onClick={() => !isProcessing && handleVideoUploadSuccess(video.url)}
                             >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-[#FF671F]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#FF671F]/20">
-                                        <TrendingUp size={20} className="text-[#FF671F]" />
+                                <div className="aspect-video relative overflow-hidden bg-black">
+                                    <img
+                                        src={video.thumb}
+                                        alt={video.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400'; }}
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <TrendingUp size={24} className="text-[#FF671F]" />
                                     </div>
-                                    <div className="flex-1 overflow-hidden">
-                                        <p className="text-sm font-semibold text-white truncate">{video.name}</p>
-                                        <p className="text-xs text-[var(--muni-text-muted)]">{video.duration} • Ready to Analyze</p>
+                                    <div className="absolute top-2 right-2 bg-black/80 text-[10px] text-white px-2 py-0.5 rounded font-bold">
+                                        READY
                                     </div>
                                 </div>
-                                <div className="absolute inset-0 bg-[#FF671F]/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg" />
+                                <div className="p-3">
+                                    <p className="text-xs font-bold text-white truncate group-hover:text-[#FF671F] transition-colors">{video.name}</p>
+                                    <p className="text-[10px] text-[var(--muni-text-muted)] mt-1">
+                                        {video.ts.toLocaleDateString()} • {video.ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                </div>
                             </div>
                         ))}
                     </div>
-                    <p className="text-[10px] text-[var(--muni-text-muted)] mt-4 italic">
-                        * Select a sample video or upload your own to start AI detection.
-                    </p>
                 </div>
             </div>
 
@@ -363,6 +407,30 @@ export default function DashcamVideoProcessor() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Download Processed Video */}
+                    {detectionResults.video_url && (
+                        <div className="muni-card p-6 bg-[#046A38]/10 border border-[#046A38]/30 flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-full bg-[#046A38]/20 flex items-center justify-center">
+                                    <CheckCircle size={24} className="text-[#046A38]" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-white">Processed Video Ready</h4>
+                                    <p className="text-xs text-[var(--muni-text-muted)]">Includes visual bounding boxes for all detected potholes</p>
+                                </div>
+                            </div>
+                            <a
+                                href={detectionResults.video_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="muni-btn-primary !bg-[#046A38] hover:!bg-[#058445] px-8 py-3 flex items-center gap-2 text-sm"
+                            >
+                                <TrendingUp size={18} />
+                                DOWNLOAD PROCESSED VIDEO
+                            </a>
+                        </div>
+                    )}
 
                     {/* Detection List */}
                     <div className="muni-card p-6">
