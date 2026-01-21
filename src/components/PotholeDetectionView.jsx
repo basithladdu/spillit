@@ -56,6 +56,8 @@ const PotholeDetectionView = () => {
         department: '',
         severity: ''
     });
+    const [selectedIssues, setSelectedIssues] = useState(new Set());
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
     const [showExportMenu, setShowExportMenu] = useState(false);
 
     // Fetch issues (pothole reports)
@@ -200,6 +202,48 @@ const PotholeDetectionView = () => {
                 }));
             } catch (error) {
                 console.error('Error deleting detection:', error);
+            }
+        }
+    };
+
+    const handleSelectIssue = (issueId) => {
+        const newSelected = new Set(selectedIssues);
+        if (newSelected.has(issueId)) {
+            newSelected.delete(issueId);
+        } else {
+            newSelected.add(issueId);
+        }
+        setSelectedIssues(newSelected);
+    };
+
+    const handleSelectAll = () => {
+        if (selectedIssues.size === processedIssues.length) {
+            setSelectedIssues(new Set());
+        } else {
+            setSelectedIssues(new Set(processedIssues.map(i => i.id)));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (window.confirm(`Are you sure you want to delete ${selectedIssues.size} issues and all their detections?`)) {
+            setIsBulkDeleting(true);
+            try {
+                for (const issueId of selectedIssues) {
+                    // Delete all detections for this issue first
+                    const detections = detectionsMap[issueId] || [];
+                    for (const d of detections) {
+                        await deleteDoc(doc(db, 'pothole_detections', d.id));
+                    }
+                    // Delete the issue
+                    await deleteDoc(doc(db, 'issues', issueId));
+                }
+                setSelectedIssues(new Set());
+                toast.success(`Successfully deleted ${selectedIssues.size} issues`);
+            } catch (error) {
+                console.error('Error in bulk delete:', error);
+                toast.error('Bulk deletion failed');
+            } finally {
+                setIsBulkDeleting(false);
             }
         }
     };
@@ -675,6 +719,14 @@ const PotholeDetectionView = () => {
                         <table className="muni-table w-full min-w-[1100px]">
                             <thead>
                                 <tr>
+                                    <th className="w-10">
+                                        <input
+                                            type="checkbox"
+                                            className="w-4 h-4 rounded border-white/20 bg-white/5 text-[#FF671F] focus:ring-[#FF671F]/50"
+                                            checked={processedIssues.length > 0 && selectedIssues.size === processedIssues.length}
+                                            onChange={handleSelectAll}
+                                        />
+                                    </th>
                                     <th className="w-10"></th>
                                     <th onClick={() => handleSort('id')} className="cursor-pointer hover:text-white transition-colors">
                                         <div className="flex items-center gap-2">
@@ -731,9 +783,17 @@ const PotholeDetectionView = () => {
                                             <React.Fragment key={issue.id}>
                                                 {/* Main Issue Row */}
                                                 <tr
-                                                    className={`hover:bg-[var(--muni-surface)] transition-colors cursor-pointer ${isExpanded ? 'bg-[var(--muni-surface)]/50' : ''}`}
+                                                    className={`hover:bg-[var(--muni-surface)] transition-colors cursor-pointer ${isExpanded ? 'bg-[var(--muni-surface)]/50' : ''} ${selectedIssues.has(issue.id) ? 'bg-[#FF671F]/5' : ''}`}
                                                     onClick={() => toggleIssue(issue.id)}
                                                 >
+                                                    <td onClick={(e) => e.stopPropagation()}>
+                                                        <input
+                                                            type="checkbox"
+                                                            className="w-4 h-4 rounded border-white/20 bg-white/5 text-[#FF671F] focus:ring-[#FF671F]/50"
+                                                            checked={selectedIssues.has(issue.id)}
+                                                            onChange={() => handleSelectIssue(issue.id)}
+                                                        />
+                                                    </td>
                                                     <td>
                                                         <button
                                                             onClick={(e) => {
@@ -815,7 +875,7 @@ const PotholeDetectionView = () => {
                                                 {/* Expanded Detections */}
                                                 {isExpanded && (
                                                     <tr>
-                                                        <td colSpan="8" className="bg-black/20 p-0 border-b border-[#FF671F]/10">
+                                                        <td colSpan="9" className="bg-black/20 p-0 border-b border-[#FF671F]/10">
                                                             <div className="p-6 space-y-4">
                                                                 <div className="flex items-center justify-between">
                                                                     <h4 className="text-sm font-bold text-white flex items-center gap-2">
@@ -983,7 +1043,34 @@ const PotholeDetectionView = () => {
                     </div>
                 </div>
             )}
-
+            {selectedIssues.size > 0 && (
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="bg-[#0a0a0b] border border-[#FF671F]/50 rounded-2xl shadow-2xl p-4 flex items-center gap-6 backdrop-blur-xl ring-1 ring-white/10">
+                        <div className="flex items-center gap-3 px-2 border-r border-white/10">
+                            <div className="w-8 h-8 rounded-lg bg-[#FF671F]/10 flex items-center justify-center font-bold text-[#FF671F]">
+                                {selectedIssues.size}
+                            </div>
+                            <span className="text-sm font-bold text-white uppercase tracking-tight">Records Selected</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleBulkDelete}
+                                disabled={isBulkDeleting}
+                                className="px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-red-900/50 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                            >
+                                {isBulkDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                                {isBulkDeleting ? 'SYNCING...' : 'DELETE SELECTED'}
+                            </button>
+                            <button
+                                onClick={() => setSelectedIssues(new Set())}
+                                className="px-4 py-2.5 text-[var(--muni-text-muted)] hover:text-white font-bold text-xs rounded-xl transition-all"
+                            >
+                                CANCEL
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
