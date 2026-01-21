@@ -50,4 +50,5 @@ EXPOSE 5000
 
 # Start command
 # We use the 'video_processor' module which you should have set up
-CMD gunicorn --bind 0.0.0.0:$PORT --timeout 600 --workers 2 video_processor:app
+# Start command with 1 worker to save RAM on Free Tier
+CMD gunicorn --bind 0.0.0.0:$PORT --timeout 600 --workers 1 video_processor:app
