@@ -19,7 +19,8 @@ import tempfile
 import urllib.request
 
 app = Flask(__name__)
-CORS(app)
+# Allow CORS for all domains (or specific ones)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Cloudinary Configuration for saving frames
 CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME', 'fixit')
