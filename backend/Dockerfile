@@ -17,11 +17,24 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create necessary directories for model files
-RUN mkdir -p models
+# Install unzip
+RUN apt-get install -y unzip
 
-# Models are copied from local directory via COPY . . below
-# We assume models/yolov4-fixed-pothole.weights exists locally
+# Download weights from Google Drive using gdown
+# The ID 1vXTyWuvFCy7P0GEvQLYtpcxDi6yqZ9ce is from the user provided link
+RUN pip install gdown && \
+    gdown --id 1vXTyWuvFCy7P0GEvQLYtpcxDi6yqZ9ce -O pothole_weights.zip && \
+    unzip pothole_weights.zip -d temp_weights && \
+    # Locate and move the correct files (adjust paths based on zip structure)
+    # We look for the known weights filename recursively
+    find temp_weights -name "yolov4-fixed-pothole_final.weights" -exec mv {} models/yolov4-fixed-pothole.weights \; && \
+    # Copy the local config file we have, OR find it in the zip if it exists there
+    rm -rf pothole_weights.zip temp_weights
+
+# Ensure config exists (copied from local source code keying off where we put it locally)
+# Since we are in /app/backend effectively during build
+RUN mkdir -p models
+COPY models/yolov4-fixed-pothole.cfg models/yolov4-fixed-pothole.cfg
 
 # Copy the rest of the application
 COPY . .
