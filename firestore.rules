@@ -29,21 +29,23 @@ service cloud.firestore {
 
     // Issues
     match /issues/{issueId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isOpsAdmin();
     }
 
     // Pothole Detections
     match /pothole_detections/{detectionId} {
       allow read: if true;
       allow create: if true;
-      allow update, delete: if true;
+      allow update, delete: if isOpsAdmin();
     }
 
     // Pothole Reports (parent documents grouping multiple detections)
     match /pothole_reports/{reportId} {
       allow read: if true;
       allow create: if true;
-      allow update, delete: if true;
+      allow update, delete: if isOpsAdmin();
     }
 
     // Donors
