@@ -18,6 +18,9 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Create models directory first
+RUN mkdir -p models
+
 # Download weights from Google Drive using gdown
 # The ID 1vXTyWuvFCy7P0GEvQLYtpcxDi6yqZ9ce is from the user provided link
 RUN pip install gdown && \
@@ -31,7 +34,6 @@ RUN pip install gdown && \
 
 # Ensure config exists (copied from local source code keying off where we put it locally)
 # Since we are in /app/backend effectively during build
-RUN mkdir -p models
 COPY models/yolov4-fixed-pothole.cfg models/yolov4-fixed-pothole.cfg
 
 # Copy the rest of the application
