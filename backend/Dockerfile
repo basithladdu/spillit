@@ -20,15 +20,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Create necessary directories for model files
 RUN mkdir -p models
 
-# Download YOLOv4-Tiny weights and config if they don't exist
-# This ensures they are available even on fresh deployments
-RUN if [ ! -f models/yolov4-tiny.weights ]; then \
-    wget -O models/yolov4-tiny.weights https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.weights; \
-    fi
-
-RUN if [ ! -f models/yolov4-tiny.cfg ]; then \
-    wget -O models/yolov4-tiny.cfg https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov4-tiny.cfg; \
-    fi
+# Models are copied from local directory via COPY . . below
+# We assume models/yolov4-fixed-pothole.weights exists locally
 
 # Copy the rest of the application
 COPY . .
