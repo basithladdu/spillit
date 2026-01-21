@@ -26,10 +26,10 @@ RUN mkdir -p models
 RUN pip install gdown && \
     gdown --id 1vXTyWuvFCy7P0GEvQLYtpcxDi6yqZ9ce -O pothole_weights.zip && \
     unzip pothole_weights.zip -d temp_weights && \
-    # Locate and move the correct files (adjust paths based on zip structure)
-    # We look for the known weights filename recursively
-    find temp_weights -name "yolov4-fixed-pothole_final.weights" -exec mv {} models/yolov4-fixed-pothole.weights \; && \
-    # Copy the local config file we have, OR find it in the zip if it exists there
+    # Extract the TINY weights specifically
+    find temp_weights -name "yolov4-tiny-pothole_final.weights" -exec mv {} models/yolov4-tiny-pothole.weights \; && \
+    # Download the standard tiny cfg suitable for this model (or use your custom one if in zip)
+    wget -O models/yolov4-tiny-pothole.cfg https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolov4-tiny.cfg && \
     rm -rf pothole_weights.zip temp_weights
 
 # Ensure config exists (copied from local source code keying off where we put it locally)

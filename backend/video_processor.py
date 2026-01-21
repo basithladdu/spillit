@@ -40,9 +40,9 @@ CONFIDENCE_THRESHOLD = 0.3
 NMS_THRESHOLD = 0.4
 
 # YOLOv4 Model paths
-# We copy these into the Docker image
-WEIGHTS_PATH = 'models/yolov4-fixed-pothole.weights'
-CFG_PATH = 'models/yolov4-fixed-pothole.cfg'
+# Using Tiny version to fit in Render's 512MB RAM
+WEIGHTS_PATH = 'models/yolov4-tiny-pothole.weights'
+CFG_PATH = 'models/yolov4-tiny-pothole.cfg'
 
 # Global variable for model (load once)
 net = None
