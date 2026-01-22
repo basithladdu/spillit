@@ -120,7 +120,7 @@ function Navbar() {
             onSubmit={handleSearch}
             className="hidden md:flex relative items-center bg-black/40 backdrop-blur-md border border-[var(--muni-border)] rounded-full overflow-hidden transition-all duration-300 w-40 focus-within:w-64 group hover:border-[var(--muni-accent)]/50 hover:shadow-[0_0_15px_rgba(34,197,94,0.15)]"
           >
-            <button type="submit" className="p-3 text-[var(--muni-accent)] hover:text-white transition-colors z-10">
+            <button type="submit" aria-label="Search" className="p-3 text-[var(--muni-accent)] hover:text-white transition-colors z-10">
               <Search size={18} />
             </button>
             <input
@@ -174,6 +174,7 @@ function Navbar() {
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             className="md:hidden pointer-events-auto w-10 h-10 flex items-center justify-center rounded-full bg-black/90 backdrop-blur-xl border border-[var(--muni-border)] text-white shadow-lg active:scale-95 transition-all"
           >
             {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
