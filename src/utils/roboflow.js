@@ -1,5 +1,5 @@
 // Roboflow Pothole Detection API Integration
-const ROBOFLOW_API_KEY = "peobcjxq03y2V330WICG";
+const ROBOFLOW_API_KEY = import.meta.env.VITE_ROBOFLOW_API_KEY;
 const ROBOFLOW_MODEL_ENDPOINT = "https://detect.roboflow.com/pothole-voxrl/1";
 
 /**
@@ -8,6 +8,10 @@ const ROBOFLOW_MODEL_ENDPOINT = "https://detect.roboflow.com/pothole-voxrl/1";
  * @returns {Promise<Array>} - Array of pothole predictions
  */
 export const detectPotholes = async (base64Image) => {
+    if (!ROBOFLOW_API_KEY) {
+        throw new Error("Roboflow API key is missing. Set VITE_ROBOFLOW_API_KEY in .env");
+    }
+
     try {
         // Remove data:image/jpeg;base64, prefix if present
         const base64Data = base64Image.split(',')[1] || base64Image;
