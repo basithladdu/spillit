@@ -140,11 +140,11 @@ function Gallery() {
     <div className="min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans selection:bg-[#FF671F]/30 selection:text-white pb-20">
 
       {/* --- Header Section --- */}
-      <div className="relative pt-20 pb-8 px-6 max-w-7xl mx-auto">
+      <div className="relative pt-12 md:pt-16 pb-8 px-6 max-w-7xl mx-auto">
         {/* Background Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#FF671F]/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6 mb-8">
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6 mb-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2 mb-1">
               <div className="w-1.5 h-1.5 rounded-full bg-[#FF671F] animate-pulse"></div>
@@ -153,7 +153,7 @@ function Gallery() {
             <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-none">
               Community <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF671F] via-[#ffffff] to-[#10b981] animate-gradient">Gallery</span>
             </h1>
-            <p className="text-[var(--muni-text-muted)] text-base max-w-xl font-medium leading-relaxed opacity-50 border-l border-white/10 pl-4">
+            <p className="text-[var(--muni-text-muted)] text-sm md:text-base max-w-xl font-medium leading-relaxed opacity-50 border-l border-white/10 pl-4">
               Visualizing city-wide infrastructure reports and civic intelligence.
             </p>
           </div>
@@ -174,7 +174,7 @@ function Gallery() {
         </div>
 
         {/* --- Stats Grid --- */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <StatBox label="Total Reports" value={issues.length} icon={<FaLayerGroup />} colorClass="text-[#FF671F]" accentColor="#FF671F" />
           <StatBox label="Active Fixes" value={issues.filter(i => i.status === 'in-progress').length} icon={<FaTools />} colorClass="text-blue-400" accentColor="#3b82f6" onClick={() => setFilters({ ...filters, status: 'in-progress' })} />
           <StatBox label="Success" value={issues.filter(i => i.status === 'resolved').length} icon={<MdCheckCircle />} colorClass="text-[#10b981]" accentColor="#10b981" onClick={() => setFilters({ ...filters, status: 'resolved' })} />

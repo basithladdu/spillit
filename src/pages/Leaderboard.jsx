@@ -182,23 +182,23 @@ function Leaderboard() {
 
   return (
     <div className="min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans selection:bg-[#FF671F]/30 pb-20">
-      <div className="h-20"></div> {/* Navbar Spacer */}
+      <div className="h-12 md:h-16"></div> {/* Navbar Spacer */}
 
-      <main className="max-w-5xl mx-auto px-6 pt-10">
+      <main className="max-w-5xl mx-auto px-6 pt-4">
 
         {/* --- Header --- */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-8">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="inline-block p-4 rounded-full bg-[#FF671F]/10 border border-[#FF671F]/30 mb-4"
+            className="inline-block p-3 rounded-full bg-[#FF671F]/10 border border-[#FF671F]/30 mb-2"
           >
-            <FaMedal className="text-4xl text-[#FF671F]" />
+            <FaMedal className="text-3xl text-[#FF671F]" />
           </motion.div>
-          <h1 className="text-5xl font-bold text-white mb-2 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
             Department <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF671F] via-white to-[#046A38]">Rankings</span>
           </h1>
-          <p className="text-[var(--muni-text-muted)] text-lg max-w-xl mx-auto">
+          <p className="text-[var(--muni-text-muted)] text-base md:text-lg max-w-xl mx-auto">
             Recognizing the most responsive and effective teams in our community.
           </p>
         </div>

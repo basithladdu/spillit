@@ -66,23 +66,23 @@ function Help() {
   ];
 
   return (
-    <div className="municipal-theme min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans pt-24 pb-20">
+    <div className="municipal-theme min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans pt-12 md:pt-16 pb-20">
 
       <main className="container mx-auto px-6 max-w-6xl">
 
         {/* --- Header --- */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-8">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="inline-flex items-center justify-center p-4 rounded-full bg-[#046A38]/10 border border-[#046A38]/30 mb-6"
+            className="inline-flex items-center justify-center p-3 rounded-full bg-[#046A38]/10 border border-[#046A38]/30 mb-4"
           >
-            <MdSupportAgent className="text-4xl text-[#046A38]" />
+            <MdSupportAgent className="text-3xl text-[#046A38]" />
           </motion.div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
             Help Center & <span className="text-[#FF671F]">FAQs</span>
           </h1>
-          <p className="text-[var(--muni-text-muted)] text-lg max-w-2xl mx-auto">
+          <p className="text-[var(--muni-text-muted)] text-base md:text-lg max-w-2xl mx-auto">
             Everything you need to know about using LetsFixIndia to improve your community.
           </p>
         </div>

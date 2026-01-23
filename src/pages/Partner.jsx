@@ -6,19 +6,19 @@ import Footer from '../components/Footer';
 
 const Partner = () => {
     return (
-        <div className="municipal-theme min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans pt-24 pb-20">
+        <div className="municipal-theme min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans pt-12 md:pt-16 pb-20">
             <main className="container mx-auto px-6 max-w-4xl">
 
                 {/* Header */}
-                <div className="text-center mb-16">
+                <div className="text-center mb-6">
                     <motion.h1
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-4xl md:text-6xl font-bold mb-4 tracking-tight"
+                        className="text-4xl md:text-6xl font-bold mb-2 tracking-tight"
                     >
                         Partner with <span className="text-[#FF671F]">Us</span>
                     </motion.h1>
-                    <p className="text-[var(--muni-text-muted)] text-lg max-w-2xl mx-auto">
+                    <p className="text-[var(--muni-text-muted)] text-base md:text-lg max-w-2xl mx-auto">
                         Join us in transforming civic infrastructure through technology and collaboration.
                     </p>
 

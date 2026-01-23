@@ -14,17 +14,17 @@ const DonorList = React.lazy(() => import("../components/DonorList"));
 
 const Donors = () => {
     return (
-        <div className="municipal-theme min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans pt-24 pb-20">
+        <div className="municipal-theme min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans pt-12 md:pt-16 pb-20">
             <main className="container mx-auto px-6 max-w-7xl">
 
                 {/* Hero Section */}
-                <div className="text-center mb-16 relative">
+                <div className="text-center mb-6 relative">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[#FF671F] opacity-10 blur-[100px] rounded-full pointer-events-none"></div>
 
                     <motion.h1
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-5xl md:text-7xl font-black mb-6 tracking-tight uppercase relative z-10"
+                        className="text-5xl md:text-7xl font-black mb-2 tracking-tight uppercase relative z-10"
                     >
                         Civic{" "}
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF671F] to-[#FF8F50]">
@@ -32,7 +32,7 @@ const Donors = () => {
                         </span>
                     </motion.h1>
 
-                    <p className="text-[var(--muni-text-muted)] text-lg md:text-xl max-w-3xl mx-auto font-light relative z-10">
+                    <p className="text-[var(--muni-text-muted)] text-base md:text-xl max-w-3xl mx-auto font-light relative z-10">
                         Honoring the people who choose impact over comfort.
                         Every contribution strengthens the system that we’re trying to build.
                     </p>
@@ -42,7 +42,7 @@ const Donors = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
-                        className="mt-10 relative z-10"
+                        className="mt-6 relative z-10"
                     >
                         <Link
                             to="/become-donor"
