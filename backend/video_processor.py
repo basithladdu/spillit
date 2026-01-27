@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 from datetime import datetime
 import os
+import sys
 from typing import List, Dict
 import base64
 import cloudinary
@@ -23,9 +24,15 @@ app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Cloudinary Configuration for saving frames
-CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME', 'fixit')
-CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY', '435969829275136')
-CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET', 'hcqg6yQ4TUjuVGW-eWvE7Nngw2w')
+CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
+
+# Validate Cloudinary credentials
+if not all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET]):
+    print("❌ Critical Error: Cloudinary credentials not found in environment variables.")
+    print("   Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.")
+    sys.exit(1)
 
 # Configure Cloudinary
 cloudinary.config(
