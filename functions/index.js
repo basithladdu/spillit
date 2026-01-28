@@ -4,8 +4,12 @@ const axios = require("axios");
 
 admin.initializeApp();
 
-const ROBOFLOW_API_KEY = "peobcjxq03y2V330WICG";
+const ROBOFLOW_API_KEY = process.env.ROBOFLOW_API_KEY;
 const ROBOFLOW_MODEL_ENDPOINT = "https://detect.roboflow.com/pothole-voxrl/1";
+
+if (!ROBOFLOW_API_KEY) {
+    console.error("Missing ROBOFLOW_API_KEY environment variable. Auto-detection will fail.");
+}
 
 /**
  * Auto-detect potholes when a new issue is reported with type "Pothole"

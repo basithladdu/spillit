@@ -1,6 +1,10 @@
 // Roboflow Pothole Detection API Integration
-const ROBOFLOW_API_KEY = "peobcjxq03y2V330WICG";
+const ROBOFLOW_API_KEY = import.meta.env.VITE_ROBOFLOW_API_KEY;
 const ROBOFLOW_MODEL_ENDPOINT = "https://detect.roboflow.com/pothole-voxrl/1";
+
+if (!ROBOFLOW_API_KEY) {
+    console.error("Missing VITE_ROBOFLOW_API_KEY environment variable. Pothole detection will fail.");
+}
 
 /**
  * Detect potholes in an image using Roboflow API
