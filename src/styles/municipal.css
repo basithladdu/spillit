@@ -97,11 +97,6 @@
   background-color: var(--muni-surface) !important;
 }
 
-.municipal-theme.light-mode .bg-gradient-to-r {
-  background-image: none !important;
-  background-color: var(--muni-surface) !important;
-}
-
 .municipal-theme {
   font-family: 'Inter', sans-serif;
   background-color: var(--muni-bg);

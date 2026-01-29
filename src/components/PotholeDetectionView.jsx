@@ -170,7 +170,7 @@ const PotholeDetectionView = () => {
             await updateDoc(doc(db, 'issues', issueId), {
                 department: newDept
             });
-            toast.success(`Rerouted to ${newDept}`, {
+            toast.success(`Assigned to Department: ${newDept}`, {
                 position: "bottom-right",
                 autoClose: 2000,
                 theme: "dark",
@@ -178,7 +178,7 @@ const PotholeDetectionView = () => {
             });
         } catch (error) {
             console.error('Error updating department:', error);
-            toast.error("Rerouting Failed", { theme: "dark" });
+            toast.error("Assignment Failed", { theme: "dark" });
         }
     };
 
@@ -428,7 +428,7 @@ const PotholeDetectionView = () => {
 
             doc.save(`POTHOLE_AUDIT_${Date.now()}.pdf`);
             setShowExportMenu(false);
-            toast.success("Formal PDF Report Generated");
+            toast.success("Assigned to Department");
         } catch (err) {
             console.error("PDF Export Error:", err);
             toast.error("Failed to generate PDF Report");

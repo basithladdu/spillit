@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { getFirestore, collection, query, limit, orderBy, deleteDoc, doc, updateDoc, onSnapshot, where, getDocs } from 'firebase/firestore';
 import {
     LayoutDashboard, MapPin, ClipboardList,
-    Trophy, Info, LogOut, Menu, X, Bell, Settings, FileText, Eye, Trash2, Download, AlertCircle, CheckCircle, Clock, Scan, Loader2, Video, Sun, Moon
+    Trophy, Info, LogOut, Menu, X, Bell, Settings, FileText, Eye, Trash2, Download, AlertCircle, CheckCircle, Clock, Scan, Loader2, Video, Sun, Moon, Search
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -78,7 +78,6 @@ const DashboardView = ({ issues, stats, isLightMode }) => (
 
 const TrackerView = ({ issues, onSelectIssue, onDelete, onExport, onExportPDF, searchQuery, setSearchQuery, filterStatus, setFilterStatus, filterSeverity, setFilterSeverity, onBulkDelete }) => {
     const [selectedIssues, setSelectedIssues] = useState(new Set());
-    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
     const filteredIssues = issues.filter(item => {
         const matchesSearch = item.desc?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -104,56 +103,54 @@ const TrackerView = ({ issues, onSelectIssue, onDelete, onExport, onExportPDF, s
         }
     };
 
-    const handleBulkDelete = async () => {
-        if (selectedIssues.size === 0) return;
-        setIsBulkDeleting(true);
-        await onBulkDelete(Array.from(selectedIssues));
-        setSelectedIssues(new Set());
-        setIsBulkDeleting(false);
-    };
-
     return (
         <div className="space-y-4 pb-20 md:pb-0">
             {/* Controls */}
             <div className="muni-card p-4 space-y-3 md:space-y-0 md:flex md:gap-3 md:items-center md:justify-between">
-                <div className="relative flex-1 md:flex-none md:w-96">
+                <div className="flex-1 relative group">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muni-text-muted)] group-focus-within:text-[#FF671F] transition-colors" size={18} />
                     <input
                         type="text"
                         placeholder="Search ID, description, type..."
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
                         className="muni-input w-full"
+                        style={{ paddingLeft: '2.75rem' }}
                     />
                 </div>
 
-                <div className="flex gap-3 flex-wrap md:flex-nowrap items-center">
-                    <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="muni-input text-sm w-full md:w-40">
-                        <option value="All">All Status</option>
-                        <option value="new">New</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="resolved">Resolved</option>
-                    </select>
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="w-full sm:w-40">
+                        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="muni-input text-sm">
+                            <option value="All">All Status</option>
+                            <option value="new">New</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
 
-                    <select value={filterSeverity} onChange={e => setFilterSeverity(e.target.value)} className="muni-input text-sm w-full md:w-40">
-                        <option value="All">All Severity</option>
-                        <option value="critical">Critical</option>
-                        <option value="high">High</option>
-                        <option value="medium">Medium</option>
-                        <option value="low">Low</option>
-                    </select>
+                    <div className="w-full sm:w-40">
+                        <select value={filterSeverity} onChange={e => setFilterSeverity(e.target.value)} className="muni-input text-sm">
+                            <option value="All">All Severity</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
 
-                    <div className="flex items-center gap-2 w-full md:w-auto">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
                         <button
+                            type="button"
                             onClick={() => onExport(filteredIssues)}
-                            title="Export to Excel (Data Intensive)"
-                            className="muni-btn-ghost flex items-center justify-center gap-2 flex-1 md:flex-none px-4 h-[42px] text-[10px] font-bold uppercase tracking-wider"
+                            className="muni-btn-ghost flex items-center justify-center gap-2 flex-1 sm:flex-none px-4 h-[42px] text-[10px] font-bold uppercase tracking-wider"
                         >
                             <Download size={14} /> EXCEL
                         </button>
                         <button
+                            type="button"
                             onClick={() => onExportPDF(filteredIssues)}
-                            title="Generate Formal PDF Civic Report"
-                            className="muni-btn-primary flex items-center justify-center gap-2 flex-1 md:flex-none px-4 h-[42px] text-[10px] font-bold uppercase tracking-wider"
+                            className="muni-btn-primary flex items-center justify-center gap-2 flex-1 sm:flex-none px-4 h-[42px] text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"
                             style={{ background: 'linear-gradient(to right, #22c55e, #10b981)', color: 'black' }}
                         >
                             <FileText size={14} /> PDF REPORT
@@ -243,28 +240,34 @@ const TrackerView = ({ issues, onSelectIssue, onDelete, onExport, onExportPDF, s
             </div>
             {/* Bulk Actions Floating Button */}
             {selectedIssues.size > 0 && (
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300">
-                    <div className="bg-[#0a0a0b] border border-[#FF671F]/50 rounded-2xl shadow-2xl p-4 flex items-center gap-6 backdrop-blur-xl ring-1 ring-white/10">
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[1000] animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="bg-[var(--muni-surface)] border border-[#FF671F]/50 rounded-2xl shadow-2xl p-4 flex items-center gap-6 backdrop-blur-xl ring-1 ring-white/10">
                         <div className="flex items-center gap-3 px-2 border-r border-white/10">
                             <div className="w-8 h-8 rounded-lg bg-[#FF671F]/10 flex items-center justify-center font-bold text-[#FF671F]">
                                 {selectedIssues.size}
                             </div>
-                            <span className="text-sm font-bold text-white uppercase tracking-tight">Issues Selected</span>
+                            <span className="text-sm font-bold text-[var(--muni-text-main)] uppercase tracking-tight">Issues Selected</span>
                         </div>
                         <div className="flex items-center gap-3">
                             <button
-                                onClick={handleBulkDelete}
-                                disabled={isBulkDeleting}
-                                className="px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-red-900/50 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                                type="button"
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onExportPDF(Array.from(selectedIssues).map(id => issues.find(i => i.id === id))); }}
+                                className="muni-btn-ghost flex items-center gap-2 text-xs py-2 px-4 hover:bg-white/5 transition-colors"
                             >
-                                {isBulkDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                                {isBulkDeleting ? 'DELETING...' : 'DELETE SELECTED'}
+                                <FileText size={14} /> PDF Action
                             </button>
                             <button
-                                onClick={() => setSelectedIssues(new Set())}
-                                className="px-4 py-2.5 text-[var(--muni-text-muted)] hover:text-white font-bold text-xs rounded-xl transition-all"
+                                type="button"
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onBulkDelete(Array.from(selectedIssues)); }}
+                                className="muni-btn-ghost flex items-center gap-2 text-xs py-2 px-4 text-red-500 hover:bg-red-500/10 border-red-500/20 transition-colors"
                             >
-                                CANCEL
+                                <Trash2 size={14} /> Bulk Delete
+                            </button>
+                            <button
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedIssues(new Set()); }}
+                                className="p-2 hover:bg-white/10 rounded-full transition-colors text-[var(--muni-text-muted)]"
+                            >
+                                <X size={18} />
                             </button>
                         </div>
                     </div>
@@ -459,11 +462,67 @@ const LeaderboardView = ({ issues }) => {
 };
 
 
-const SettingsView = () => (
-    <div className="muni-card p-8 text-center border-t-4 border-[#06038D]">
-        <Settings size={48} className="mx-auto mb-4 text-[#06038D]" />
-        <h3 className="text-xl font-bold text-white mb-2">Settings</h3>
-        <p className="text-[var(--muni-text-muted)]">Configuration options coming soon.</p>
+const SettingsView = ({ isLightMode, onToggleTheme, language, onToggleLanguage }) => (
+    <div className="space-y-6">
+        <div className="muni-card p-6">
+            <h3 className="text-xl font-bold text-[var(--muni-text-main)] mb-6">
+                {language === 'te' ? 'సిస్టమ్ సెట్టింగ్‌లు' : 'System Settings'}
+            </h3>
+            <div className="space-y-4">
+                {/* Theme Toggle */}
+                <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                    <div>
+                        <p className="font-bold text-[var(--muni-text-main)]">
+                            {language === 'te' ? 'ఇంటర్ఫేస్ థీమ్' : 'Interface Theme'}
+                        </p>
+                        <p className="text-xs text-[var(--muni-text-muted)]">
+                            {language === 'te' ? 'లైట్ మరియు డార్క్ మోడ్ మధ్య మారండి' : 'Switch between light and dark mode'}
+                        </p>
+                    </div>
+                    <button
+                        onClick={onToggleTheme}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--muni-surface)] border border-[var(--muni-border)] text-[var(--muni-text-main)] hover:border-[#FF671F]/50 transition-all font-bold text-xs"
+                    >
+                        {isLightMode ? <Moon size={16} /> : <Sun size={16} />}
+                        {isLightMode
+                            ? (language === 'te' ? 'డార్క్ మోడ్‌కి మారండి' : 'SWITCH TO DARK')
+                            : (language === 'te' ? 'లైట్ మోడ్‌కి మారండి' : 'SWITCH TO LIGHT')}
+                    </button>
+                </div>
+
+                {/* Language Toggle */}
+                <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                    <div>
+                        <p className="font-bold text-[var(--muni-text-main)]">
+                            {language === 'te' ? 'భాష (Language)' : 'Display Language'}
+                        </p>
+                        <p className="text-xs text-[var(--muni-text-muted)]">
+                            {language === 'te' ? 'తెలుగు మరియు ఇంగ్లీష్ మధ్య మారండి' : 'Switch between English and Telugu'}
+                        </p>
+                    </div>
+                    <button
+                        onClick={onToggleLanguage}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#FF671F]/10 border border-[#FF671F]/30 text-[#FF671F] hover:bg-[#FF671F]/20 transition-all font-bold text-xs"
+                    >
+                        {language === 'te' ? 'ENGLISH కి మారండి' : 'తెలుగులోకి మారండి'}
+                    </button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                    <div>
+                        <p className="font-bold text-[var(--muni-text-main)]">
+                            {language === 'te' ? 'నోటిఫికేషన్ హెచ్చరికలు' : 'Notification Alerts'}
+                        </p>
+                        <p className="text-xs text-[var(--muni-text-muted)]">
+                            {language === 'te' ? 'డెస్క్‌టాప్ నోటిఫికేషన్‌లను నిర్వహించండి' : 'Manage desktop notifications'}
+                        </p>
+                    </div>
+                    <div className="w-12 h-6 bg-[#046A38] rounded-full relative cursor-pointer opacity-50">
+                        <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 );
 
@@ -574,14 +633,14 @@ const DetailModal = ({ issue, onClose, onStatusUpdate, onDelete }) => {
                 doc.text('AI DEEP INTELLIGENCE ANALYSIS', 20, y);
                 y += 8;
 
-                const detData = aiDetections.map((d, i) => [
+                const tableData = aiDetections.map((d, i) => [
                     `#${i + 1}`, d.severity, d.depth, `${Math.round(d.confidence * 100)}%`, d.department || 'N/A'
                 ]);
 
                 autoTable(doc, {
                     startY: y,
-                    head: [['#', 'Severity', 'Estimated Depth', 'AI Confidence', 'Routing']],
-                    body: detData,
+                    head: [['#', 'Severity', 'Estimated Depth', 'AI Confidence', 'Assigned Department']],
+                    body: tableData,
                     theme: 'striped',
                     headStyles: { fillColor: [255, 103, 31] },
                     styles: { fontSize: 8 }
@@ -833,6 +892,31 @@ const DeleteConfirmModal = ({ deleteId, onConfirm, onCancel }) => {
     );
 };
 
+const NavItem = ({ id, icon: Icon, label, activeView, navigate, isMobile, setIsSidebarOpen, external }) => {
+    const handleClick = () => {
+        if (external) {
+            window.location.href = external;
+        } else {
+            const route = id === 'dashboard' ? '/municipal-dashboard' : `/municipal-dashboard/${id}`;
+            navigate(route);
+        }
+        if (isMobile) setIsSidebarOpen(false);
+    };
+
+    return (
+        <button
+            onClick={handleClick}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${activeView === id
+                ? 'bg-[var(--muni-surface)] text-[#FF671F] border-r-2 border-[#FF671F]'
+                : 'text-[var(--muni-text-muted)] hover:text-white hover:bg-white/5'
+                }`}
+        >
+            <Icon size={18} className={activeView === id ? "text-[#FF671F]" : ""} />
+            {label}
+        </button>
+    );
+};
+
 // --- Main Dashboard Component ---
 
 export default function MunicipalDashboard({ initialView = 'dashboard' }) {
@@ -843,6 +927,7 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isLightMode, setIsLightMode] = useState(localStorage.getItem('muni-theme') === 'light');
     const [isMobile, setIsMobile] = useState(false);
+    const [language, setLanguage] = useState(localStorage.getItem('muni-lang') || 'en');
     const [issues, setIssues] = useState([]);
     const [stats, setStats] = useState({ total: 0, resolved: 0, pending: 0, resolutionRate: 0 });
     const [selectedIssue, setSelectedIssue] = useState(null);
@@ -850,6 +935,33 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('All');
     const [filterSeverity, setFilterSeverity] = useState('All');
+
+    const translations = {
+        en: {
+            dashboard: 'Dashboard',
+            tracker: 'Issue Tracker',
+            pothole: 'Pothole Detection',
+            grouped: 'Grouped Reports',
+            video: 'Video Processor',
+            leaderboard: 'Leaderboard',
+            about: 'About Fixit',
+            settings: 'Settings',
+            register: 'Municipal Register'
+        },
+        te: {
+            dashboard: 'డాష్‌బోర్డ్',
+            tracker: 'సమస్యల ట్రాకర్',
+            pothole: 'గుంతల గుర్తింపు',
+            grouped: 'సమూహ నివేదికలు',
+            video: 'వీడియో ప్రాసెసర్',
+            leaderboard: 'లీడర్‌బోర్డ్',
+            about: 'Fixit గురించి',
+            settings: 'సెట్టింగ్‌లు',
+            register: 'మున్సిపల్ రిజిస్టర్'
+        }
+    };
+
+    const t = translations[language];
 
     // Sync activeView with URL changes
     useEffect(() => {
@@ -1039,7 +1151,7 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
 
             autoTable(doc, {
                 startY: y + 8,
-                head: [['Ref ID', 'Typology', 'Severity', 'Current Status', 'Report Date', 'Routing']],
+                head: [['Ref ID', 'Typology', 'Severity', 'Current Status', 'Report Date', 'Assigned Department']],
                 body: tableData,
                 theme: 'striped',
                 headStyles: { fillColor: [255, 103, 31] },
@@ -1065,31 +1177,7 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
         }
     };
 
-    const NavItem = ({ id, icon: IconComponent, label, external }) => {
-        const handleClick = () => {
-            if (external) {
-                navigate(external);
-            } else {
-                // Navigate to the specific route
-                const route = id === 'dashboard' ? '/municipal-dashboard' : `/municipal-dashboard/${id}`;
-                navigate(route);
-            }
-            if (isMobile) setIsSidebarOpen(false);
-        };
 
-        return (
-            <button
-                onClick={handleClick}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${activeView === id
-                    ? 'bg-[var(--muni-surface)] text-[#FF671F] border-r-2 border-[#FF671F]'
-                    : 'text-[var(--muni-text-muted)] hover:text-white hover:bg-white/5'
-                    }`}
-            >
-                <IconComponent size={18} className={activeView === id ? "text-[#FF671F]" : ""} />
-                {label}
-            </button>
-        );
-    };
 
     return (
         <div className={`municipal-theme flex h-screen h-[100dvh] overflow-hidden bg-[var(--muni-bg)] font-sans pt-[80px] ${isLightMode ? 'light-mode' : ''}`}>
@@ -1109,15 +1197,15 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
                 </div>
 
                 <nav className="flex-1 py-6 space-y-1 overflow-y-auto">
-                    <NavItem id="dashboard" icon={LayoutDashboard} label="Dashboard" />
-                    <NavItem id="tracker" icon={ClipboardList} label="Issue Tracker" />
-                    <NavItem id="pothole-detection" icon={Scan} label="Pothole Detection" />
-                    <NavItem id="grouped-reports" icon={MapPin} label="Grouped Reports" />
-                    <NavItem id="video-processor" icon={Video} label="Video Processor" />
-                    <NavItem id="leaderboard" icon={Trophy} label="Leaderboard" />
-                    <NavItem id="about" icon={Info} label="About devit." />
-                    <NavItem id="settings" icon={Settings} label="Settings" />
-                    <NavItem id="register" icon={FileText} label="Municipal Register" external="/municipal-register" />
+                    <NavItem id="dashboard" icon={LayoutDashboard} label={t.dashboard} activeView={activeView} navigate={navigate} isMobile={isMobile} setIsSidebarOpen={setIsSidebarOpen} />
+                    <NavItem id="tracker" icon={ClipboardList} label={t.tracker} activeView={activeView} navigate={navigate} isMobile={isMobile} setIsSidebarOpen={setIsSidebarOpen} />
+                    <NavItem id="pothole-detection" icon={Scan} label={t.pothole} activeView={activeView} navigate={navigate} isMobile={isMobile} setIsSidebarOpen={setIsSidebarOpen} />
+                    <NavItem id="grouped-reports" icon={MapPin} label={t.grouped} activeView={activeView} navigate={navigate} isMobile={isMobile} setIsSidebarOpen={setIsSidebarOpen} />
+                    <NavItem id="video-processor" icon={Video} label={t.video} activeView={activeView} navigate={navigate} isMobile={isMobile} setIsSidebarOpen={setIsSidebarOpen} />
+                    <NavItem id="leaderboard" icon={Trophy} label={t.leaderboard} activeView={activeView} navigate={navigate} isMobile={isMobile} setIsSidebarOpen={setIsSidebarOpen} />
+                    <NavItem id="about" icon={Info} label={t.about} activeView={activeView} navigate={navigate} isMobile={isMobile} setIsSidebarOpen={setIsSidebarOpen} />
+                    <NavItem id="settings" icon={Settings} label={t.settings} activeView={activeView} navigate={navigate} isMobile={isMobile} setIsSidebarOpen={setIsSidebarOpen} />
+                    <NavItem id="register" icon={FileText} label={t.register} activeView={activeView} navigate={navigate} isMobile={isMobile} setIsSidebarOpen={setIsSidebarOpen} external="/municipal-register" />
                 </nav>
 
                 <div className="p-4 border-t border-[var(--muni-border)] flex-none">
@@ -1196,7 +1284,23 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
                         {activeView === 'video-processor' && <DashcamVideoProcessor />}
                         {activeView === 'leaderboard' && <LeaderboardView issues={issues} />}
                         {activeView === 'about' && <AboutView />}
-                        {activeView === 'settings' && <SettingsView />}
+                        {activeView === 'settings' && (
+                            <SettingsView
+                                isLightMode={isLightMode}
+                                onToggleTheme={() => {
+                                    const newMode = !isLightMode;
+                                    setIsLightMode(newMode);
+                                    localStorage.setItem('muni-theme', newMode ? 'light' : 'dark');
+                                }}
+                                language={language}
+                                onToggleLanguage={() => {
+                                    const newLang = language === 'en' ? 'te' : 'en';
+                                    setLanguage(newLang);
+                                    localStorage.setItem('muni-lang', newLang);
+                                    toast.info(newLang === 'te' ? 'భాష మార్చబడింది' : 'Language Changed');
+                                }}
+                            />
+                        )}
                     </div>
 
                     {/* devit Footer */}

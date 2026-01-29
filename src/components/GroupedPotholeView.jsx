@@ -67,10 +67,10 @@ const GroupedPotholeView = () => {
 
     return (
         <div className="space-y-6 pb-20 md:pb-0">
-            <div className="muni-card p-6 border-l-4 border-[#FF671F]">
-                <h3 className="text-xl font-bold text-white mb-2">Pothole Reports & Detections</h3>
-                <p className="text-[var(--muni-text-muted)] text-sm">
-                    View reports grouped by submission with individual pothole detections
+            <div className="muni-card p-4 md:p-6 border-l-4 border-[#FF671F]">
+                <h3 className="text-lg md:text-xl font-bold text-white mb-1 md:mb-2 text-gradient">Pothole Reports & Detections</h3>
+                <p className="text-[var(--muni-text-muted)] text-xs md:text-sm">
+                    View reports grouped by submission with individual AI deep analysis
                 </p>
             </div>
 
@@ -87,43 +87,55 @@ const GroupedPotholeView = () => {
                             <div key={report.id} className="muni-card overflow-hidden border border-[#06038D]/30">
                                 {/* Report Header */}
                                 <div
-                                    className="p-4 cursor-pointer hover:bg-white/5 transition-colors flex items-center justify-between"
+                                    className="p-4 cursor-pointer hover:bg-white/5 transition-colors"
                                     onClick={() => toggleReport(report.id)}
                                 >
-                                    <div className="flex items-center gap-4 flex-1">
-                                        <img
-                                            src={report.annotatedImageUrl}
-                                            alt="Report"
-                                            className="w-32 h-32 rounded object-cover border border-[var(--muni-border)]"
-                                        />
-                                        <div>
-                                            <h4 className="font-bold text-white">{report.roadName}</h4>
-                                            <p className="text-sm text-[var(--muni-text-muted)]">
-                                                {report.detections?.length || 0} potholes detected
-                                            </p>
-                                            <p className="text-xs text-[var(--muni-text-muted)] font-mono">
-                                                {report.timestamp?.toDate?.().toLocaleString() || 'N/A'}
-                                            </p>
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                                            <div className="relative group flex-shrink-0">
+                                                <img
+                                                    src={report.annotatedImageUrl}
+                                                    alt="Report"
+                                                    className="w-20 h-20 md:w-32 md:h-32 rounded-lg object-cover border border-[var(--muni-border)]"
+                                                />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <h4 className="font-bold text-white truncate text-lg">{report.roadName}</h4>
+                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                                                    <span className="text-sm text-[var(--muni-text-muted)] flex items-center gap-1">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-[#FF671F]"></span>
+                                                        {report.detections?.length || 0} potholes
+                                                    </span>
+                                                    <span className="text-xs text-[#FF671F] font-bold uppercase tracking-wider bg-[#FF671F]/10 px-2 py-0.5 rounded leading-none">
+                                                        {report.department}
+                                                    </span>
+                                                </div>
+                                                <p className="text-[10px] text-[var(--muni-text-muted)] font-mono mt-2 flex items-center gap-1">
+                                                    {report.timestamp?.toDate?.().toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) || 'N/A'}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setSelectedReport(report);
-                                            }}
-                                            className="muni-btn-ghost text-sm px-4 py-2"
-                                        >
-                                            View Detections
-                                        </button>
-                                        <span className="text-xs text-[var(--muni-text-muted)] uppercase">
-                                            {report.department}
-                                        </span>
-                                        {isExpanded ? (
-                                            <ChevronUp className="text-[var(--muni-text-muted)]" size={20} />
-                                        ) : (
-                                            <ChevronDown className="text-[var(--muni-text-muted)]" size={20} />
-                                        )}
+
+                                        <div className="flex items-center justify-between md:justify-end gap-3 pt-3 md:pt-0 border-t border-white/5 md:border-none">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedReport(report);
+                                                }}
+                                                className="muni-btn-ghost text-[10px] sm:text-xs px-3 py-2 flex items-center gap-2 font-bold uppercase tracking-widest bg-white/5"
+                                            >
+                                                <Eye size={14} className="text-[#FF671F]" />
+                                                DETECTIONS
+                                            </button>
+
+                                            <div className="p-2 bg-white/5 rounded-lg text-[var(--muni-text-muted)]">
+                                                {isExpanded ? (
+                                                    <ChevronUp size={20} />
+                                                ) : (
+                                                    <ChevronDown size={20} />
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -267,22 +279,22 @@ const GroupedPotholeView = () => {
                             </div>
 
                             {/* Details Grid */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div>
-                                    <label className="text-xs font-bold text-[var(--muni-text-muted)] uppercase">Severity</label>
-                                    <p className="text-white font-bold mt-1">{selectedDetection.severity}</p>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                    <label className="text-xs font-bold text-[var(--muni-text-muted)] uppercase block mb-1">Severity</label>
+                                    <p className="text-white font-bold text-lg">{selectedDetection.severity}</p>
                                 </div>
-                                <div>
-                                    <label className="text-xs font-bold text-[var(--muni-text-muted)] uppercase">Department</label>
-                                    <p className="text-white font-bold mt-1">{selectedDetection.department}</p>
+                                <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                    <label className="text-xs font-bold text-[var(--muni-text-muted)] uppercase block mb-1">Department</label>
+                                    <p className="text-white font-bold text-lg">{selectedDetection.department}</p>
                                 </div>
-                                <div>
-                                    <label className="text-xs font-bold text-[var(--muni-text-muted)] uppercase">Confidence</label>
-                                    <p className="text-white font-bold mt-1">{Math.round(selectedDetection.confidence * 100)}%</p>
+                                <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                    <label className="text-xs font-bold text-[var(--muni-text-muted)] uppercase block mb-1">Confidence</label>
+                                    <p className="text-white font-bold text-lg">{Math.round(selectedDetection.confidence * 100)}%</p>
                                 </div>
-                                <div>
-                                    <label className="text-xs font-bold text-[var(--muni-text-muted)] uppercase">Status</label>
-                                    <p className="text-white font-bold mt-1">{selectedDetection.status}</p>
+                                <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                    <label className="text-xs font-bold text-[var(--muni-text-muted)] uppercase block mb-1">Status</label>
+                                    <p className="text-white font-bold text-lg">{selectedDetection.status}</p>
                                 </div>
                             </div>
                         </div>
@@ -330,9 +342,10 @@ const GroupedPotholeView = () => {
 
                             {/* Detections Table */}
                             <div className="overflow-x-auto">
-                                <table className="muni-table w-full">
+                                <table className="muni-table w-full min-w-[600px]">
                                     <thead>
                                         <tr>
+                                            <th className="w-10">#</th>
                                             <th className="text-[#FF671F]">Depth</th>
                                             <th>Severity</th>
                                             <th>Confidence</th>
@@ -343,7 +356,8 @@ const GroupedPotholeView = () => {
                                     </thead>
                                     <tbody>
                                         {selectedReport.detections?.map((detection, idx) => (
-                                            <tr key={detection.id} className="hover:bg-[var(--muni-surface)]">
+                                            <tr key={detection.id} className="hover:bg-[var(--muni-surface)] transition-colors">
+                                                <td className="text-[var(--muni-text-muted)] font-mono text-xs">{(idx + 1).toString().padStart(2, '0')}</td>
                                                 <td>
                                                     <span
                                                         className="muni-badge"
