@@ -1,22 +1,25 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { motion, AnimatePresence } from 'framer-motion';
-import L from "leaflet";
+import { AnimatePresence } from 'framer-motion';
+import Map, { Marker, NavigationControl } from 'react-map-gl';
 import {
   FaMapMarkerAlt, FaCalendarAlt, FaShareAlt, FaHeart, FaRegHeart,
   FaExclamationTriangle, FaHashtag, FaLayerGroup, FaArrowLeft, FaLock, FaTwitter, FaCopy
 } from 'react-icons/fa';
 import { MdCheckCircle, MdWarning, MdError, MdPending } from 'react-icons/md';
+import 'mapbox-gl/dist/mapbox-gl.css';
+
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiYXdhaXpzaGFpazI1IiwiYSI6ImNtY3J5MHQzMTEwZjcyanMzYWJuMnMxcTUifQ.bLPhS0-UAAouYlHOK396XQ';
 
 const SEVERITY_CONFIG = {
-  Critical: { color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', shadow: 'shadow-red-500/20', icon: MdError },
-  High: { color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20', shadow: 'shadow-orange-500/20', icon: MdWarning },
-  Medium: { color: 'text-yellow-400', bg: 'bg-yellow-400/10', border: 'border-yellow-400/20', shadow: 'shadow-yellow-400/20', icon: FaExclamationTriangle },
-  Low: { color: 'text-emerald-400', bg: 'bg-emerald-400/10', border: 'border-emerald-400/20', shadow: 'shadow-emerald-400/20', icon: MdCheckCircle },
-  Default: { color: 'text-gray-400', bg: 'bg-gray-700/30', border: 'border-gray-600/30', shadow: 'shadow-gray-500/10', icon: FaLayerGroup }
+  Critical: { color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', shadow: 'shadow-red-500/20', icon: MdError, marker: 'red' },
+  High: { color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20', shadow: 'shadow-orange-500/20', icon: MdWarning, marker: 'orange' },
+  Medium: { color: 'text-yellow-400', bg: 'bg-yellow-400/10', border: 'border-yellow-400/20', shadow: 'shadow-yellow-400/20', icon: FaExclamationTriangle, marker: 'yellow' },
+  Low: { color: 'text-emerald-400', bg: 'bg-emerald-400/10', border: 'border-emerald-400/20', shadow: 'shadow-emerald-400/20', icon: MdCheckCircle, marker: 'green' },
+  Default: { color: 'text-gray-400', bg: 'bg-gray-700/30', border: 'border-gray-600/30', shadow: 'shadow-gray-500/10', icon: FaLayerGroup, marker: 'green' }
 };
 
 const STATUS_CONFIG = {
@@ -47,8 +50,11 @@ function Report() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isUpvoted, setIsUpvoted] = useState(false);
 
-  const mapRef = useRef(null);
-  const [map, setMap] = useState(null);
+  const [viewState, setViewState] = useState({
+    latitude: 0,
+    longitude: 0,
+    zoom: 15
+  });
 
   // --- Auth & Data Fetching ---
   useEffect(() => {
@@ -64,7 +70,13 @@ function Report() {
       try {
         const docSnap = await getDoc(doc(db, 'issues', id));
         if (docSnap.exists()) {
-          setReport({ id: docSnap.id, ...docSnap.data() });
+          const data = { id: docSnap.id, ...docSnap.data() };
+          setReport(data);
+          setViewState(prev => ({
+            ...prev,
+            latitude: data.lat,
+            longitude: data.lng
+          }));
           const upvotedList = JSON.parse(localStorage.getItem('upvotedReports')) || [];
           setIsUpvoted(upvotedList.includes(id));
         } else {
@@ -79,40 +91,10 @@ function Report() {
     fetchReport();
   }, [id]);
 
-  // --- Map Initialization ---
-  useEffect(() => {
-    if (report && !map && mapRef.current) {
-      if (mapRef.current._leaflet_id) mapRef.current._leaflet_id = null;
-
-      const mapInstance = L.map(mapRef.current, {
-        zoomControl: false,
-        dragging: !L.Browser.mobile,
-        tap: !L.Browser.mobile
-      }).setView([report.lat, report.lng], 15);
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap'
-      }).addTo(mapInstance);
-
-      // Custom Marker Logic (simplified for theme)
-      const markerColor = report.severity === 'Critical' ? 'red' : report.severity === 'High' ? 'orange' : report.severity === 'Medium' ? 'yellow' : 'green';
-      const icon = L.icon({
-        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${markerColor}.png`,
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
-      });
-
-      L.marker([report.lat, report.lng], { icon }).addTo(mapInstance)
-        .bindPopup(`<b style="color:black">${report.type}</b>`).openPopup();
-
-      setMap(mapInstance);
-    }
-  }, [report, map]);
-
   // --- Handlers ---
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(window.location.href);
-    alert('Link copied to clipboard!'); // Replace with toast in production
+    alert('Link copied to clipboard!');
   };
 
   const handleUpvote = async () => {
@@ -207,8 +189,22 @@ function Report() {
 
             {/* Map Card */}
             <div className="bg-[var(--muni-surface)]/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden shadow-lg h-64 relative">
-              <div ref={mapRef} className="w-full h-full z-0 filter brightness-[0.85] contrast-[1.1]" />
-              <div className="absolute inset-0 pointer-events-none border-[3px] border-[var(--muni-surface)]/50 rounded-2xl z-10"></div>
+              <Map
+                {...viewState}
+                onMove={evt => setViewState(evt.viewState)}
+                style={{ width: '100%', height: '100%' }}
+                mapStyle="mapbox://styles/mapbox/dark-v11"
+                mapboxAccessToken={MAPBOX_TOKEN}
+              >
+                <NavigationControl position="bottom-right" />
+                <Marker latitude={report.lat} longitude={report.lng} anchor="bottom">
+                  <img
+                    src={`https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${sevTheme.marker}.png`}
+                    alt="Marker"
+                    style={{ width: 25, height: 41 }}
+                  />
+                </Marker>
+              </Map>
             </div>
           </motion.div>
 

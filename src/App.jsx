@@ -32,7 +32,7 @@ const OpsDashboard = lazy(() => import("./pages/OpsDashboard"));
 
 import "./App.css";
 import "./styles/municipal.css";
-import "leaflet/dist/leaflet.css";
+
 
 // Loading Component
 const PageLoader = () => (

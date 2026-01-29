@@ -4,11 +4,12 @@ import {
   orderBy, query, limit
 } from 'firebase/firestore';
 import { db } from '../utils/firebase';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { Link } from 'react-router-dom';
+
 import { AnimatePresence, motion } from 'framer-motion';
-import L from 'leaflet';
+import Map, { Marker, Popup, NavigationControl, GeolocateControl } from 'react-map-gl';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 // --- Icons ---
 import {
@@ -24,23 +25,15 @@ import Navbar from '../components/Navbar';
 import ReportIssueModal from '../components/ReportIssueModal';
 import '../styles/municipal.css';
 
-// --- Leaflet Assets Fix ---
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-
 // --- Configuration ---
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiYXdhaXpzaGFpazI1IiwiYSI6ImNtY3J5MHQzMTEwZjcyanMzYWJuMnMxcTUifQ.bLPhS0-UAAouYlHOK396XQ';
 
 const MAP_STYLES = [
-  { name: 'Midnight', id: 'mapbox/navigation-night-v1', color: 'bg-blue-900' },
-  { name: 'Dark', id: 'mapbox/dark-v11', color: 'bg-gray-900' },
-  { name: 'Satellite', id: 'mapbox/satellite-streets-v12', color: 'bg-green-900' },
-  { name: 'Light', id: 'mapbox/light-v11', color: 'bg-gray-200' },
-  { name: 'Street', id: 'mapbox/outdoors-v12', color: 'bg-green-200' }
+  { name: 'Midnight', id: 'mapbox://styles/mapbox/navigation-night-v1', color: 'bg-blue-900' },
+  { name: 'Dark', id: 'mapbox://styles/mapbox/dark-v11', color: 'bg-gray-900' },
+  { name: 'Satellite', id: 'mapbox://styles/mapbox/satellite-streets-v12', color: 'bg-green-900' },
+  { name: 'Light', id: 'mapbox://styles/mapbox/light-v11', color: 'bg-gray-200' },
+  { name: 'Street', id: 'mapbox://styles/mapbox/outdoors-v12', color: 'bg-green-200' }
 ];
 
 // --- Onboarding Tour Data ---
@@ -152,12 +145,10 @@ const OnboardingTour = ({ onComplete, targetRefs, setShowForm }) => {
 
   return (
     <div className="fixed inset-0 z-[3000] pointer-events-none">
-      {/* Dimmed Background (Only if no target, otherwise spotlight shadow handles it) */}
       {!rect && (
         <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px] pointer-events-auto transition-opacity duration-500" />
       )}
 
-      {/* Spotlight Box (Highlighting the target with massive shadow) */}
       {rect && (
         <motion.div
           layoutId="spotlight"
@@ -173,7 +164,6 @@ const OnboardingTour = ({ onComplete, targetRefs, setShowForm }) => {
         />
       )}
 
-      {/* Centered Tooltip Card */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-4">
         <motion.div
           key={step}
@@ -203,7 +193,6 @@ const OnboardingTour = ({ onComplete, targetRefs, setShowForm }) => {
             </button>
           </div>
 
-          {/* Progress Dots */}
           <div className="flex justify-center gap-1.5 mt-1">
             {TOUR_STEPS.map((_, i) => (
               <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === step ? 'w-6 bg-[#FF671F]' : 'w-1.5 bg-gray-700'}`} />
@@ -226,26 +215,29 @@ const getSeverityColors = (severity) => {
 };
 
 function Home() {
-  const mapRef = useRef(null);
+
   const reportBtnRef = useRef(null);
-  const [map, setMap] = useState(null);
   const [allIssues, setAllIssues] = useState({});
+  const [selectedIssue, setSelectedIssue] = useState(null);
 
   // UI State
   const [showForm, setShowForm] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [isStyleOpen, setIsStyleOpen] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
-  const [searchId, setSearchId] = useState('');
-  const [mapStyle, setMapStyle] = useState('mapbox/outdoors-v12');
+  const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/outdoors-v12');
+
+  // Map state
+  const [viewState, setViewState] = useState({
+    latitude: 15.8281,
+    longitude: 78.0373,
+    zoom: 14
+  });
 
   // Onboarding State
   const [showTour, setShowTour] = useState(false);
 
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { currentUser, logout } = useAuth();
-  const [loading, setLoading] = useState(true);
+
 
   // Check for first visit
   useEffect(() => {
@@ -260,32 +252,6 @@ function Home() {
     localStorage.setItem('fixit_has_seen_onboarding', 'true');
   };
 
-  // --- Map Initialization ---
-  const loadMapboxStyle = (mapInstance, styleId) => {
-    mapInstance.eachLayer((layer) => { if (layer instanceof L.TileLayer) mapInstance.removeLayer(layer); });
-    L.tileLayer(
-      `https://api.mapbox.com/styles/v1/${styleId}/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`,
-      { attribution: '© Mapbox', tileSize: 512, zoomOffset: -1, maxZoom: 19 }
-    ).addTo(mapInstance);
-  };
-
-  useEffect(() => {
-    if (mapRef.current && !map) {
-      if (mapRef.current._leaflet_id) mapRef.current._leaflet_id = null;
-      const mapInstance = L.map(mapRef.current, { zoomControl: false, attributionControl: false })
-        .setView([15.8281, 78.0373], 15); // Default View
-
-      loadMapboxStyle(mapInstance, mapStyle);
-      L.control.zoom({ position: 'bottomleft' }).addTo(mapInstance);
-      setMap(mapInstance);
-    }
-  }, []);
-
-  // Update map style when mapStyle state changes
-  useEffect(() => {
-    if (map) loadMapboxStyle(map, mapStyle);
-  }, [mapStyle, map]);
-
   // --- Data & Markers ---
   useEffect(() => {
     const q = query(collection(db, 'issues'), orderBy('ts', 'desc'), limit(50));
@@ -297,82 +263,92 @@ function Home() {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (!map) return;
-
-    map.eachLayer(layer => {
-      if (layer instanceof L.Marker) map.removeLayer(layer);
-    });
-
-    const getIconUrl = (color) => `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`;
-
-    Object.entries(allIssues).forEach(([id, issue]) => {
-      let color = 'green';
-      if (issue.severity === 'Medium') color = 'yellow';
-      if (issue.severity === 'High') color = 'orange';
-      if (issue.severity === 'Critical') color = 'red';
-
-      const icon = L.icon({
-        iconUrl: getIconUrl(color),
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34]
-      });
-
-      const sevStyle = getSeverityColors(issue.severity);
-
-      const popupHtml = `
-          <div class="muni-card" style="font-family: 'Inter', sans-serif; min-width: 240px; background: #09090b; border: 1px solid #27272a; border-radius: 0.5rem; overflow: hidden; color: white;">
-            <div style="background: ${sevStyle.bg}; padding: 12px 16px; border-bottom: 1px solid ${sevStyle.border}; display: flex; justify-content: space-between; align-items: center;">
-              <strong style="text-transform: uppercase; color: ${sevStyle.text}; font-size: 12px; letter-spacing: 0.05em; font-weight: 700;">${issue.type}</strong>
-              <span style="font-size: 10px; background: #000; color: ${sevStyle.text}; padding: 4px 8px; border-radius: 9999px; border: 1px solid ${sevStyle.border}; font-weight: 600;">${issue.severity}</span>
-            </div>
-            <div style="padding: 16px;">
-              ${issue.imageUrl ? `<div style="width: 100%; height: 120px; background-image: url('${getOptimizedImageUrl(issue.imageUrl, 300)}'); background-size: cover; background-position: center; border-radius: 0.375rem; margin-bottom: 12px; border: 1px solid #27272a;"></div>` : ''}
-              <p style="margin: 0 0 12px; font-size: 13px; color: #a1a1aa; line-height: 1.5;">${issue.desc || 'No description provided.'}</p>
-              <div style="display: flex; gap: 8px; margin-top: 12px;">
-                  <a href="/report/${id}" target="_blank" style="flex: 1; text-align: center; background: #22c55e; color: #000; text-decoration: none; padding: 8px; border-radius: 0.375rem; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; border: none;">View Details</a>
-                  <button onclick="window.copyIssueId('${id}')" style="background: transparent; color: #a1a1aa; border: 1px solid #27272a; padding: 8px 12px; border-radius: 0.375rem; cursor: pointer; transition: all 0.2s;">📋</button>
-              </div>
-            </div>
-          </div>
-        `;
-
-      L.marker([issue.lat, issue.lng], { icon }).addTo(map)
-        .bindPopup(popupHtml, { maxWidth: 300, className: 'custom-leaflet-popup' });
-    });
-  }, [map, allIssues]);
-
-  // --- Global Actions ---
-  useEffect(() => {
-    window.copyIssueId = (id) => navigator.clipboard.writeText(id).then(() => alert('ID Copied!'));
-    return () => { delete window.copyIssueId; };
-  }, []);
-
-  // --- Handlers ---
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchId && allIssues[searchId]) {
-      const issue = allIssues[searchId];
-      map.setView([issue.lat, issue.lng], 18);
-      setSearchId('');
-    } else {
-      alert("Issue ID not found");
-    }
-  };
-
   const handleReportSuccess = (data) => {
     setSummaryData(data);
     setShowSummary(true);
+  };
+
+  const getMarkerIcon = (severity) => {
+    let color = 'green';
+    if (severity === 'Medium') color = 'yellow';
+    if (severity === 'High') color = 'orange';
+    if (severity === 'Critical') color = 'red';
+    return `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`;
+  };
+
+  const copyIssueId = (id) => {
+    navigator.clipboard.writeText(id).then(() => alert('ID Copied!'));
   };
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-[var(--muni-bg)] text-white font-sans">
 
       {/* --- THE MAP --- */}
-      <div id="map-root" ref={mapRef} className="w-full h-full z-0" />
+      <div id="map-root" className="w-full h-full">
+        <Map
+          {...viewState}
+          onMove={evt => setViewState(evt.viewState)}
+          mapStyle={mapStyle}
+          mapboxAccessToken={MAPBOX_TOKEN}
+          style={{ width: '100%', height: '100%' }}
+        >
+          <NavigationControl position="bottom-left" />
+          <GeolocateControl position="bottom-left" />
 
-      {/* --- HUD: Navbar (Global) --- */}
-      {/* Handled by App.jsx */}
+          {Object.entries(allIssues).map(([id, issue]) => (
+            <Marker
+              key={id}
+              latitude={issue.lat}
+              longitude={issue.lng}
+              anchor="bottom"
+              onClick={e => {
+                e.originalEvent.stopPropagation();
+                setSelectedIssue({ id, ...issue });
+              }}
+            >
+              <img
+                src={getMarkerIcon(issue.severity)}
+                alt={issue.severity}
+                style={{ width: 25, height: 41, cursor: 'pointer' }}
+              />
+            </Marker>
+          ))}
+
+          {selectedIssue && (
+            <Popup
+              latitude={selectedIssue.lat}
+              longitude={selectedIssue.lng}
+              anchor="top"
+              onClose={() => setSelectedIssue(null)}
+              closeButton={false}
+              maxWidth="300px"
+              className="custom-map-popup"
+            >
+              {(() => {
+                const sevStyle = getSeverityColors(selectedIssue.severity);
+                return (
+                  <div className="muni-card" style={{ fontFamily: 'Inter, sans-serif', minWidth: '240px', background: '#09090b', border: '1px solid #27272a', borderRadius: '0.5rem', overflow: 'hidden', color: 'white' }}>
+                    <div style={{ background: sevStyle.bg, padding: '12px 16px', borderBottom: `1px solid ${sevStyle.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <strong style={{ textTransform: 'uppercase', color: sevStyle.text, fontSize: '12px', letterSpacing: '0.05em', fontWeight: '700' }}>{selectedIssue.type}</strong>
+                      <span style={{ fontSize: '10px', background: '#000', color: sevStyle.text, padding: '4px 8px', borderRadius: '9999px', border: `1px solid ${sevStyle.border}`, fontWeight: '600' }}>{selectedIssue.severity}</span>
+                    </div>
+                    <div style={{ padding: '16px' }}>
+                      {selectedIssue.imageUrl && (
+                        <div style={{ width: '100%', height: '120px', backgroundImage: `url('${getOptimizedImageUrl(selectedIssue.imageUrl, 300)}')`, backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: '0.375rem', marginBottom: '12px', border: '1px solid #27272a' }}></div>
+                      )}
+                      <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#a1a1aa', lineHeight: '1.5' }}>{selectedIssue.desc || 'No description provided.'}</p>
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                        <a href={`/report/${selectedIssue.id}`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, textAlign: 'center', background: '#22c55e', color: '#000', textDecoration: 'none', padding: '8px', borderRadius: '0.375rem', fontWeight: '600', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', border: 'none' }}>View Details</a>
+                        <button onClick={() => copyIssueId(selectedIssue.id)} style={{ background: 'transparent', color: '#a1a1aa', border: '1px solid #27272a', padding: '8px 12px', borderRadius: '0.375rem', cursor: 'pointer' }}>📋</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </Popup>
+          )}
+        </Map>
+      </div>
 
       {/* --- Onboarding Tour --- */}
       <AnimatePresence>
@@ -411,10 +387,20 @@ function Home() {
           </AnimatePresence>
         </div>
 
-        {/* Locate Me */}
+        {/* Locate Me (Handled by GeolocateControl now, but keeping button for UI) */}
         <motion.button
           whileTap={{ scale: 0.9 }}
-          onClick={() => navigator.geolocation.getCurrentPosition(pos => map.setView([pos.coords.latitude, pos.coords.longitude], 16))}
+          onClick={() => {
+            navigator.geolocation.getCurrentPosition(pos => {
+              setViewState({
+                ...viewState,
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                zoom: 16,
+                transitionDuration: 1000
+              });
+            });
+          }}
           className="flex items-center gap-2 px-4 py-3 rounded-full bg-black/80 text-white border border-[var(--muni-border)] shadow-lg backdrop-blur-xl hover:bg-white/10 hover:text-[var(--muni-accent)] transition-colors"
         >
           <MdGpsFixed size={18} />
@@ -458,13 +444,16 @@ function Home() {
       {/* --- Success Modal --- */}
       {showSummary && <ReportCard summaryData={summaryData} setShowSummary={setShowSummary} />}
 
-      {/* --- CSS Overrides for Leaflet --- */}
-      <style jsx global>{`
-        .leaflet-popup-content-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; border: none !important; }
-        .leaflet-popup-tip { display: none !important; }
-        .leaflet-control-zoom { border: none !important; margin-bottom: 30px !important; margin-right: 30px !important; }
-        .leaflet-control-zoom a { background-color: rgba(15, 23, 42, 0.9) !important; color: white !important; border: 1px solid rgba(255,255,255,0.1) !important; backdrop-filter: blur(10px); border-radius: 8px !important; margin-bottom: 5px !important; }
-        .leaflet-control-zoom a:hover { background-color: var(--muni-accent) !important; color: black !important; }
+      {/* --- CSS Overrides for Mapbox --- */}
+      <style>{`
+        .mapboxgl-popup-content {
+          background: transparent !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+        .mapboxgl-popup-tip {
+          display: none !important;
+        }
       `}</style>
     </div>
   );

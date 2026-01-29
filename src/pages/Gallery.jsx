@@ -146,10 +146,6 @@ function Gallery() {
 
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6 mb-4">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#FF671F] animate-pulse"></div>
-              <span className="text-[9px] font-mono text-[#FF671F] uppercase tracking-[0.2em]">System Live • Community Ops</span>
-            </div>
             <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter leading-none">
               Community <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF671F] via-[#ffffff] to-[#10b981] animate-gradient">Gallery</span>
             </h1>

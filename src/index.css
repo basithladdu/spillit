@@ -96,28 +96,3 @@ body {
   background: transparent;
 }
 
-/* Fix for Leaflet popup styling conflicts */
-.leaflet-popup-content-wrapper {
-  padding: 0 !important;
-  border: none !important;
-  background-color: var(--surface-dark) !important;
-  color: var(--text-color) !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important;
-}
-
-.leaflet-popup-content {
-  margin: 0 !important;
-  width: auto !important;
-}
-
-.leaflet-popup-tip {
-  background-color: var(--surface-dark) !important;
-}
-
-/* Mobile Leaflet Popup Overrides */
-@media (max-width: 640px) {
-  .leaflet-popup-content {
-    min-width: 200px !important;
-    max-width: 280px !important;
-  }
-}
