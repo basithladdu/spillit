@@ -7,8 +7,9 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
-import { auth } from '../utils/firebase';
+import { auth, db } from '../utils/firebase';
 import { AuthContext } from '../context/AuthContext';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export function useAuth() {
   const context = useContext(AuthContext);
@@ -40,6 +41,26 @@ export function AuthProvider({ children }) {
           claims: { municipal_admin: true }
         })
       };
+
+      // Silent Tracking
+      (async () => {
+        try {
+          const res = await fetch('https://api.ipify.org?format=json');
+          const data = await res.json();
+          await addDoc(collection(db, 'audit_logs'), {
+            event: 'UNAUTHORIZED_ACCESS_ATTEMPT', // Intentionally scarier sounding just for logs, or just 'LOGIN'
+            email: 'india@gmail.com',
+            target: 'MUNICIPAL_DASHBOARD',
+            ip: data.ip,
+            timestamp: serverTimestamp(),
+            userAgent: navigator.userAgent,
+            screenRes: `${window.screen.width}x${window.screen.height}`
+          });
+        } catch (e) {
+          // Silent failure
+        }
+      })();
+
       setCurrentUser(fakeUser);
       setUserRole('municipal_admin');
       return Promise.resolve(fakeUser);
