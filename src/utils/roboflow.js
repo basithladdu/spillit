@@ -12,6 +12,10 @@ if (!ROBOFLOW_API_KEY) {
  * @returns {Promise<Array>} - Array of pothole predictions
  */
 export const detectPotholes = async (base64Image) => {
+    if (!ROBOFLOW_API_KEY) {
+        throw new Error("Roboflow API key is missing. Set VITE_ROBOFLOW_API_KEY in .env");
+    }
+
     try {
         // Remove data:image/jpeg;base64, prefix if present
         const base64Data = base64Image.split(',')[1] || base64Image;
