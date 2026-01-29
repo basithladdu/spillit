@@ -52,6 +52,9 @@ function Navbar() {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
+  // Hide Navbar on specific pages (e.g., Youtube Submission Landing Page)
+  if (location.pathname === '/youtube') return null;
+
   const handleLogout = async () => {
     try {
       await logout();
