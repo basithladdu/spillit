@@ -25,6 +25,7 @@ const Partner = lazy(() => import("./pages/Partner"));
 const AdminDonors = lazy(() => import("./pages/AdminDonors"));
 const Donors = lazy(() => import("./pages/Donors"));
 const BecomeDonor = lazy(() => import("./pages/BecomeDonor"));
+const YoutubeSubmission = lazy(() => import("./pages/YoutubeSubmission"));
 // Municipal Pages
 const MunicipalRegistration = lazy(() => import("./pages/MunicipalRegistration"));
 const MunicipalDashboard = lazy(() => import("./pages/MunicipalDashboard"));
@@ -64,6 +65,7 @@ function App() {
             <Route path="/admin/donors" element={<AdminDonors />} />
             <Route path="/donors" element={<Donors />} />
             <Route path="/become-donor" element={<BecomeDonor />} />
+            <Route path="/youtube" element={<YoutubeSubmission />} />
 
             {/* Municipal Routes */}
             <Route path="/municipal-register" element={<MunicipalRegistration />} />
