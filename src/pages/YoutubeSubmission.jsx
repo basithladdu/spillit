@@ -36,11 +36,7 @@ const YoutubeSubmission = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-[#FF671F] via-white to-[#046A38] rounded-xl flex items-center justify-center p-[2px] shadow-lg">
-                                <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center">
-                                    <span className="font-bold text-[#046A38] text-xl">F</span>
-                                </div>
-                            </div>
+                            <img src="/india.png" alt="LetsFixIndia Logo" className="w-10 h-10 object-contain drop-shadow-sm" />
                             <div>
                                 <h1 className="text-xl font-bold tracking-tight text-slate-900">LetsFixIndia</h1>
                                 <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Municipal Dashboard Prototype</p>
