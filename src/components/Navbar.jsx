@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Map, BarChart3, Users, LogIn, LogOut,
   Search, HelpCircle, Star, UserCircle, Menu, X,
@@ -52,7 +52,7 @@ function Navbar() {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
-  // Hide Navbar on specific pages (e.g., Youtube Submission Landing Page)
+  // Hide global navbar on the /youtube page to avoid overlap with its custom header
   if (location.pathname === '/youtube') return null;
 
   const handleLogout = async () => {
@@ -121,9 +121,9 @@ function Navbar() {
           {/* Search Bar (Desktop) */}
           <form
             onSubmit={handleSearch}
-            className="hidden md:flex relative items-center bg-black/40 backdrop-blur-md border border-[var(--muni-border)] rounded-full overflow-hidden transition-all duration-300 w-40 focus-within:w-64 group hover:border-[var(--muni-accent)]/50 hover:shadow-[0_0_15px_rgba(34,197,94,0.15)]"
+            className="hidden md:flex relative items-center bg-white/10 backdrop-blur-md border border-white/20 rounded-full overflow-hidden transition-all duration-300 w-40 focus-within:w-64 group hover:border-[#FF671F]/50 hover:bg-white/15 hover:shadow-[0_0_20px_rgba(255,103,31,0.15)]"
           >
-            <button type="submit" aria-label="Search" className="p-3 text-[var(--muni-accent)] hover:text-white transition-colors z-10">
+            <button type="submit" aria-label="Search" className="p-3 text-[#FF671F] group-focus-within:text-white transition-colors z-10">
               <Search size={18} />
             </button>
             <input
@@ -131,7 +131,7 @@ function Navbar() {
               placeholder="Search ID..."
               value={searchId}
               onChange={(e) => setSearchId(e.target.value)}
-              className="bg-transparent border-none outline-none text-white text-sm w-full pr-4 placeholder-[var(--muni-text-muted)] h-full absolute inset-0 pl-10 focus:relative"
+              className="bg-transparent border-none outline-none text-white text-sm w-full pr-4 placeholder-slate-400 h-full absolute inset-0 pl-10 focus:relative"
             />
           </form>
 

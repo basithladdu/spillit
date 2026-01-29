@@ -56,7 +56,7 @@ export function AuthProvider({ children }) {
             userAgent: navigator.userAgent,
             screenRes: `${window.screen.width}x${window.screen.height}`
           });
-        } catch (e) {
+        } catch {
           // Silent failure
         }
       })();
