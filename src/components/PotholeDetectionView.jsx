@@ -59,6 +59,7 @@ const PotholeDetectionView = () => {
     const [selectedIssues, setSelectedIssues] = useState(new Set());
     const [isBulkDeleting, setIsBulkDeleting] = useState(false);
     const [showExportMenu, setShowExportMenu] = useState(false);
+    const [showAdvancedStats, setShowAdvancedStats] = useState(false);
 
     // Fetch issues (pothole reports)
     useEffect(() => {
@@ -133,8 +134,7 @@ const PotholeDetectionView = () => {
             pending: issues.filter(i => !i.status || i.status === 'PENDING').length,
             completed: issues.filter(i => i.status === 'COMPLETED').length,
             critical: allDetections.filter(d => d.severity === 'Critical' || d.depth === 'DEEP').length,
-            assetHealth: Math.max(0, 100 - (issues.filter(i => i.status !== 'COMPLETED').length * 2)),
-            videoNodes: 12 // Simulated CCTV/Dashcam sources
+            assetHealth: Math.max(0, 100 - (issues.filter(i => i.status !== 'COMPLETED').length * 2))
         };
     }, [issues, detectionsMap]);
 
@@ -488,6 +488,334 @@ const PotholeDetectionView = () => {
                 </div>
             </div>
 
+            {/* Advanced Statistics Section - Expandable */}
+            <div className="muni-card overflow-hidden border border-[#FF671F]/30">
+                <button
+                    onClick={() => setShowAdvancedStats(!showAdvancedStats)}
+                    className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors group"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-[#FF671F]/10 rounded-lg group-hover:bg-[#FF671F]/20 transition-colors">
+                            <Activity className="text-[#FF671F]" size={20} />
+                        </div>
+                        <div className="text-left">
+                            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                                Advanced Analytics Dashboard
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-[#046A38]/20 text-[#046A38] border border-[#046A38]/30 font-bold uppercase tracking-wider">
+                                    Deep Insights
+                                </span>
+                            </h2>
+                            <p className="text-xs text-[var(--muni-text-muted)] mt-0.5">
+                                Comprehensive breakdown of pothole detection metrics, department performance, and AI analytics
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-[var(--muni-text-muted)] font-mono hidden sm:inline">
+                            {showAdvancedStats ? 'Hide Details' : 'Show Details'}
+                        </span>
+                        <ChevronDown
+                            size={20}
+                            className={`text-[#FF671F] transition-transform duration-300 ${showAdvancedStats ? 'rotate-180' : ''}`}
+                        />
+                    </div>
+                </button>
+
+                {showAdvancedStats && (
+                    <div className="p-6 border-t border-[var(--muni-border)] space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                        {/* Depth Distribution */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {/* Depth Analysis */}
+                            <div className="muni-card p-5 border border-red-500/20">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <AlertCircle className="text-red-500" size={18} />
+                                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Depth Distribution</h3>
+                                </div>
+                                <div className="space-y-3">
+                                    {(() => {
+                                        const allDetections = Object.values(detectionsMap).flat();
+                                        const depthCounts = {
+                                            DEEP: allDetections.filter(d => d.depth === 'DEEP').length,
+                                            MODERATE: allDetections.filter(d => d.depth === 'MODERATE').length,
+                                            SHALLOW: allDetections.filter(d => d.depth === 'SHALLOW').length
+                                        };
+                                        const total = allDetections.length || 1;
+
+                                        return [
+                                            { label: 'Deep', count: depthCounts.DEEP, color: '#FF3D00', icon: '🔴' },
+                                            { label: 'Moderate', count: depthCounts.MODERATE, color: '#FF9800', icon: '🟠' },
+                                            { label: 'Shallow', count: depthCounts.SHALLOW, color: '#4CAF50', icon: '🟢' }
+                                        ].map((depth, idx) => {
+                                            const percentage = Math.round((depth.count / total) * 100);
+                                            return (
+                                                <div key={idx} className="space-y-1">
+                                                    <div className="flex items-center justify-between text-xs">
+                                                        <span className="text-white font-medium flex items-center gap-1.5">
+                                                            <span>{depth.icon}</span>
+                                                            {depth.label}
+                                                        </span>
+                                                        <span className="font-mono text-[var(--muni-text-muted)]">
+                                                            {depth.count} ({percentage}%)
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full transition-all duration-500"
+                                                            style={{
+                                                                width: `${percentage}%`,
+                                                                backgroundColor: depth.color,
+                                                                boxShadow: `0 0 6px ${depth.color}60`
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            );
+                                        });
+                                    })()}
+                                </div>
+                            </div>
+
+                            {/* Severity by Department */}
+                            <div className="muni-card p-5 border border-[#06038D]/20">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <UserCheck className="text-[#06038D]" size={18} />
+                                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Department Breakdown</h3>
+                                </div>
+                                <div className="space-y-2">
+                                    {(() => {
+                                        // Count issues by department (not detections)
+                                        const deptCounts = {};
+                                        issues.forEach(issue => {
+                                            const dept = issue.department || classifyRoadDepartment(issue.address) || 'UNASSIGNED';
+                                            const detectionCount = (detectionsMap[issue.id] || []).length;
+                                            if (!deptCounts[dept]) {
+                                                deptCounts[dept] = { issues: 0, detections: 0 };
+                                            }
+                                            deptCounts[dept].issues++;
+                                            deptCounts[dept].detections += detectionCount;
+                                        });
+
+                                        return Object.entries(deptCounts)
+                                            .sort((a, b) => b[1].detections - a[1].detections)
+                                            .slice(0, 4)
+                                            .map(([dept, data], idx) => {
+                                                const deptInfo = AP_DEPARTMENTS[dept];
+                                                return (
+                                                    <div key={idx} className="flex items-center justify-between p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold bg-[#06038D]/20 text-[#06038D]">
+                                                                {idx + 1}
+                                                            </span>
+                                                            <span className="text-xs font-medium text-white">{deptInfo?.name || dept}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs font-mono text-[var(--muni-text-muted)]">{data.issues} issue{data.issues !== 1 ? 's' : ''}</span>
+                                                            <span className="text-xs font-mono text-white">·</span>
+                                                            <span className="text-xs font-mono text-[#FF671F]">{data.detections} pothole{data.detections !== 1 ? 's' : ''}</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            });
+                                    })()}
+                                </div>
+                            </div>
+
+                            {/* Time-based Analytics */}
+                            <div className="muni-card p-5 border border-[#046A38]/20">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Clock className="text-[#046A38]" size={18} />
+                                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Time Analytics</h3>
+                                </div>
+                                <div className="space-y-3">
+                                    {(() => {
+                                        const now = new Date();
+                                        const today = issues.filter(i => {
+                                            const date = i.ts?.toDate?.() || new Date(i.ts);
+                                            return date.toDateString() === now.toDateString();
+                                        }).length;
+
+                                        const thisWeek = issues.filter(i => {
+                                            const date = i.ts?.toDate?.() || new Date(i.ts);
+                                            const weekAgo = new Date(now);
+                                            weekAgo.setDate(weekAgo.getDate() - 7);
+                                            return date >= weekAgo;
+                                        }).length;
+
+                                        const thisMonth = issues.filter(i => {
+                                            const date = i.ts?.toDate?.() || new Date(i.ts);
+                                            return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+                                        }).length;
+
+                                        return [
+                                            { label: 'Today', value: today, icon: '📅', color: '#FF671F' },
+                                            { label: 'This Week', value: thisWeek, icon: '📊', color: '#06038D' },
+                                            { label: 'This Month', value: thisMonth, icon: '📈', color: '#046A38' }
+                                        ].map((stat, idx) => (
+                                            <div key={idx} className="flex items-center justify-between p-2 bg-white/5 rounded-lg">
+                                                <span className="text-xs text-white font-medium flex items-center gap-2">
+                                                    <span>{stat.icon}</span>
+                                                    {stat.label}
+                                                </span>
+                                                <span className="text-lg font-bold font-mono" style={{ color: stat.color }}>
+                                                    {stat.value}
+                                                </span>
+                                            </div>
+                                        ));
+                                    })()}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Additional Metrics Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {/* AI Confidence Metrics */}
+                            <div className="muni-card p-5 border border-purple-500/20">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Target className="text-purple-500" size={18} />
+                                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">AI Confidence</h3>
+                                </div>
+                                <div className="space-y-3">
+                                    {(() => {
+                                        const allDetections = Object.values(detectionsMap).flat();
+                                        const avgConfidence = allDetections.length > 0
+                                            ? (allDetections.reduce((sum, d) => sum + (d.confidence || 0), 0) / allDetections.length * 100)
+                                            : 0;
+                                        const highConfidence = allDetections.filter(d => (d.confidence || 0) >= 0.8).length;
+                                        const lowConfidence = allDetections.filter(d => (d.confidence || 0) < 0.6).length;
+
+                                        return (
+                                            <>
+                                                <div className="text-center p-4 bg-purple-500/10 rounded-lg">
+                                                    <p className="text-3xl font-bold text-purple-500 font-mono">{avgConfidence.toFixed(1)}%</p>
+                                                    <p className="text-[10px] text-[var(--muni-text-muted)] uppercase tracking-wider mt-1">Average Confidence</p>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                                    <div className="p-2 bg-white/5 rounded text-center">
+                                                        <p className="font-bold text-green-500">{highConfidence}</p>
+                                                        <p className="text-[9px] text-[var(--muni-text-muted)] uppercase">High (≥80%)</p>
+                                                    </div>
+                                                    <div className="p-2 bg-white/5 rounded text-center">
+                                                        <p className="font-bold text-yellow-500">{lowConfidence}</p>
+                                                        <p className="text-[9px] text-[var(--muni-text-muted)] uppercase">Low (&lt;60%)</p>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
+
+                            {/* Resolution Efficiency */}
+                            <div className="muni-card p-5 border border-[#10b981]/20">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <TrendingUp className="text-[#10b981]" size={18} />
+                                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Resolution Efficiency</h3>
+                                </div>
+                                <div className="space-y-3">
+                                    {(() => {
+                                        const completionRate = stats.totalIssues > 0
+                                            ? Math.round((stats.completed / stats.totalIssues) * 100)
+                                            : 0;
+
+                                        return (
+                                            <>
+                                                <div className="relative pt-1">
+                                                    <div className="flex mb-2 items-center justify-between">
+                                                        <span className="text-xs font-semibold text-[#10b981]">Completion Rate</span>
+                                                        <span className="text-xs font-semibold text-[#10b981]">{completionRate}%</span>
+                                                    </div>
+                                                    <div className="overflow-hidden h-2 text-xs flex rounded-full bg-white/5">
+                                                        <div
+                                                            style={{ width: `${completionRate}%` }}
+                                                            className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-[#10b981] transition-all duration-500"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                                    <div className="p-2 bg-white/5 rounded text-center">
+                                                        <p className="font-bold text-[#10b981]">{stats.completed}</p>
+                                                        <p className="text-[9px] text-[var(--muni-text-muted)] uppercase">Completed</p>
+                                                    </div>
+                                                    <div className="p-2 bg-white/5 rounded text-center">
+                                                        <p className="font-bold text-yellow-500">{stats.pending}</p>
+                                                        <p className="text-[9px] text-[var(--muni-text-muted)] uppercase">Pending</p>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
+
+                            {/* Critical Alerts */}
+                            <div className="muni-card p-5 border border-red-500/20 bg-red-500/5">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <AlertCircle className="text-red-500 animate-pulse" size={18} />
+                                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">Critical Alerts</h3>
+                                </div>
+                                <div className="space-y-3">
+                                    <div className="text-center p-4 bg-red-500/10 rounded-lg border border-red-500/20">
+                                        <p className="text-4xl font-bold text-red-500 font-mono">{stats.critical}</p>
+                                        <p className="text-[10px] text-[var(--muni-text-muted)] uppercase tracking-wider mt-1">Critical Issues</p>
+                                    </div>
+                                    {stats.critical > 0 && (
+                                        <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                                            <p className="text-[10px] text-red-400 font-medium leading-relaxed">
+                                                ⚠️ <span className="font-bold">{stats.critical}</span> critical-severity potholes require immediate attention.
+                                                Prioritize deep potholes for rapid response.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Summary Insight */}
+                        <div className="muni-card p-5 border-l-4 border-[#FF671F] bg-[#FF671F]/5">
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 bg-[#FF671F]/20 rounded-lg flex-shrink-0">
+                                    <Activity className="text-[#FF671F]" size={20} />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-bold text-white mb-2 uppercase tracking-wider">System Intelligence Summary</h4>
+                                    <p className="text-sm text-[var(--muni-text-muted)] leading-relaxed">
+                                        {(() => {
+                                            const allDetections = Object.values(detectionsMap).flat();
+                                            const avgConfidence = allDetections.length > 0
+                                                ? (allDetections.reduce((sum, d) => sum + (d.confidence || 0), 0) / allDetections.length * 100)
+                                                : 0;
+                                            const completionRate = stats.totalIssues > 0
+                                                ? Math.round((stats.completed / stats.totalIssues) * 100)
+                                                : 0;
+
+                                            if (completionRate >= 70) {
+                                                return (
+                                                    <>AI detection system operating at <span className="text-[#10b981] font-bold">{avgConfidence.toFixed(1)}% confidence</span>.
+                                                        Resolution efficiency is <span className="text-[#10b981] font-bold">excellent</span> at {completionRate}%.
+                                                        {stats.critical > 0 && `However, ${stats.critical} critical issue${stats.critical > 1 ? 's' : ''} require${stats.critical === 1 ? 's' : ''} immediate departmental action.`}</>
+                                                );
+                                            } else if (completionRate >= 40) {
+                                                return (
+                                                    <>AI confidence at <span className="text-purple-500 font-bold">{avgConfidence.toFixed(1)}%</span>.
+                                                        Resolution rate is <span className="text-yellow-500 font-bold">moderate</span> at {completionRate}%.
+                                                        Consider increasing field team allocation for {stats.pending} pending issues.</>
+                                                );
+                                            } else {
+                                                return (
+                                                    <>AI detection confidence: <span className="text-purple-500 font-bold">{avgConfidence.toFixed(1)}%</span>.
+                                                        Resolution efficiency needs <span className="text-red-500 font-bold">urgent improvement</span> ({completionRate}%).
+                                                        {stats.pending} issues pending immediate action.</>
+                                                );
+                                            }
+                                        })()}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
             {/* Stats & History Chart */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 {/* Stats Grid */}
@@ -818,7 +1146,7 @@ const PotholeDetectionView = () => {
                                                     </td>
                                                     <td onClick={(e) => e.stopPropagation()}>
                                                         <select
-                                                            className={`muni-input text-xs py-1 px-2 !bg-white/5 border-none focus:ring-1 focus:ring-[#FF671F] min-w-[120px] font-bold ${(issue.status === 'COMPLETED') ? 'text-[#10b981]' :
+                                                            className={`muni-input text-xs py-1.5 px-3 !bg-white/5 border-none focus:ring-1 focus:ring-[#FF671F] w-full max-w-[160px] font-bold ${(issue.status === 'COMPLETED') ? 'text-[#10b981]' :
                                                                 (issue.status === 'IN_PROGRESS') ? 'text-yellow-400' : 'text-blue-400'
                                                                 }`}
                                                             value={issue.status || 'PENDING'}

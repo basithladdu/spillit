@@ -39,42 +39,374 @@ const getStatusConfig = (status) => {
 
 // --- Sub-Components ---
 
-const DashboardView = ({ issues, stats, isLightMode }) => (
-    <div className="space-y-6 pb-20 md:pb-0"> {/* Added padding bottom for mobile scroll */}
-        {/* KPIs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-                { label: "Total Issues", value: stats.total, change: "Live", color: "text-[#FF671F]" },
-                { label: "Resolved", value: stats.resolved, change: `${stats.resolutionRate}%`, color: "text-[#046A38]" },
-                { label: "Pending", value: stats.pending, change: "Active", color: "text-[var(--muni-text-main)]" },
-                { label: "Avg Resolution", value: "48h", change: "Target", color: "text-[#06038D]" }
-            ].map((kpi, i) => (
-                <div key={i} className="muni-card p-4 border-l-4" style={{
-                    borderLeftColor: i === 0 ? '#FF671F' : i === 1 ? '#046A38' : i === 2 ? (isLightMode ? '#0f172a' : '#ffffff') : '#06038D',
-                    backgroundColor: 'var(--muni-surface)'
-                }}>
-                    <p className="text-[var(--muni-text-muted)] text-xs uppercase tracking-wider">{kpi.label}</p>
-                    <div className="flex items-end justify-between mt-2">
-                        <h3 className={`text-2xl font-bold font-mono ${kpi.color}`}>{kpi.value}</h3>
-                        <span className={`text-xs font-mono ${i === 1 ? 'text-[#046A38]' : 'text-[var(--muni-text-muted)]'}`}>
-                            {kpi.change}
-                        </span>
+const DashboardView = ({ issues, stats, isLightMode }) => {
+    // Calculate additional statistics
+    const severityBreakdown = {
+        critical: issues.filter(i => i.severity?.toLowerCase() === 'critical').length,
+        high: issues.filter(i => i.severity?.toLowerCase() === 'high').length,
+        medium: issues.filter(i => i.severity?.toLowerCase() === 'medium').length,
+        low: issues.filter(i => i.severity?.toLowerCase() === 'low').length,
+    };
+
+    const statusBreakdown = {
+        new: issues.filter(i => !i.status || i.status === 'new').length,
+        inProgress: issues.filter(i => i.status === 'in-progress').length,
+        resolved: issues.filter(i => i.status === 'resolved').length,
+    };
+
+    // Department breakdown
+    const departmentStats = {};
+    issues.forEach(issue => {
+        const dept = issue.department || classifyRoadDepartment(issue.roadName || issue.address);
+        if (!departmentStats[dept]) {
+            departmentStats[dept] = { total: 0, resolved: 0, pending: 0 };
+        }
+        departmentStats[dept].total++;
+        if (issue.status === 'resolved') {
+            departmentStats[dept].resolved++;
+        } else {
+            departmentStats[dept].pending++;
+        }
+    });
+
+    const topDepartments = Object.entries(departmentStats)
+        .sort((a, b) => b[1].total - a[1].total)
+        .slice(0, 5);
+
+    // Recent issues (last 5)
+    const recentIssues = [...issues]
+        .sort((a, b) => {
+            const dateA = a.ts?.toDate?.() || new Date(a.ts);
+            const dateB = b.ts?.toDate?.() || new Date(b.ts);
+            return dateB - dateA;
+        })
+        .slice(0, 5);
+
+    // Time-based stats (last 24 hours, last 7 days)
+    const now = new Date();
+    const last24h = issues.filter(i => {
+        const issueDate = i.ts?.toDate?.() || new Date(i.ts);
+        return (now - issueDate) < 24 * 60 * 60 * 1000;
+    }).length;
+
+    const last7days = issues.filter(i => {
+        const issueDate = i.ts?.toDate?.() || new Date(i.ts);
+        return (now - issueDate) < 7 * 24 * 60 * 60 * 1000;
+    }).length;
+
+    return (
+        <div className="space-y-6 pb-20 md:pb-0">
+            {/* Primary KPIs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                    { label: "Total Issues", value: stats.total, change: "Live", borderColor: '#FF671F', valueColor: '#FF671F', trend: `+${last24h} today`, icon: '📊' },
+                    { label: "Resolved", value: stats.resolved, change: `${stats.resolutionRate}%`, borderColor: '#046A38', valueColor: '#046A38', trend: "Success Rate", icon: '✅' },
+                    { label: "Pending", value: stats.pending, change: "Active", borderColor: isLightMode ? '#0f172a' : '#ffffff', valueColor: isLightMode ? '#0f172a' : '#ffffff', trend: `${statusBreakdown.inProgress} in progress`, icon: '⏳' },
+                    { label: "This Week", value: last7days, change: "7 Days", borderColor: '#06038D', valueColor: '#06038D', trend: "Trend", icon: '📈' }
+                ].map((kpi, i) => (
+                    <div key={i} className={`muni-card p-5 border-l-4 hover:shadow-xl transition-all duration-200 group ${isLightMode ? 'hover:scale-[1.02]' : ''
+                        }`} style={{
+                            borderLeftColor: kpi.borderColor,
+                            backgroundColor: 'var(--muni-surface)'
+                        }}>
+                        <div className="flex items-center justify-between mb-3">
+                            <p className={`text-xs font-semibold uppercase tracking-wider ${isLightMode ? 'text-gray-600' : 'text-[var(--muni-text-muted)]'
+                                }`}>{kpi.label}</p>
+                            <span className="text-xl opacity-60 group-hover:opacity-100 transition-opacity">{kpi.icon}</span>
+                        </div>
+                        <div className="flex items-baseline justify-between">
+                            <h3 className={`text-3xl font-bold font-mono`} style={{ color: kpi.valueColor }}>{kpi.value}</h3>
+                            <span className={`text-xs font-bold px-2 py-1 rounded ${i === 1 ? 'bg-[#046A38]/10 text-[#046A38]' : isLightMode ? 'bg-gray-100 text-gray-600' : 'bg-white/10 text-[var(--muni-text-muted)]'
+                                }`}>
+                                {kpi.change}
+                            </span>
+                        </div>
+                        <p className={`text-[10px] mt-3 uppercase tracking-wide ${isLightMode ? 'text-gray-500' : 'text-[var(--muni-text-muted)]'
+                            }`}>{kpi.trend}</p>
+                    </div>
+                ))}
+            </div>
+
+            {/* Map View */}
+            <div className="muni-card h-[300px] md:h-[400px] relative overflow-hidden border border-[#046A38]/30 p-0" style={{ backgroundColor: 'var(--muni-bg)' }}>
+                <div className={`absolute top-4 right-4 z-[400] backdrop-blur px-3 py-1 rounded border text-xs font-mono ${isLightMode ? 'bg-white/80 border-slate-200 text-slate-600' : 'bg-black/80 border-[#FF671F]/30 text-[#FF671F]'
+                    }`}>
+                    {issues.length > 0 ? `${issues.length} Hotspots Live` : "System Online"}
+                </div>
+                <DashboardMap issues={issues} isLightMode={isLightMode} />
+            </div>
+
+            {/* Severity & Status Breakdown */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Severity Breakdown */}
+                <div className={`muni-card p-6 border ${isLightMode ? 'border-orange-200 bg-gradient-to-br from-orange-50/50 to-transparent' : 'border-[#FF671F]/20'
+                    }`}>
+                    <div className="flex items-center justify-between mb-5">
+                        <h3 className={`text-lg font-bold flex items-center gap-2 ${isLightMode ? 'text-gray-900' : 'text-white'
+                            }`}>
+                            <AlertCircle className="text-[#FF671F]" size={20} />
+                            Severity Distribution
+                        </h3>
+                        <span className={`text-xs font-mono px-2 py-1 rounded ${isLightMode ? 'bg-gray-100 text-gray-700' : 'bg-white/10 text-[var(--muni-text-muted)]'
+                            }`}>{stats.total} Total</span>
+                    </div>
+                    <div className="space-y-3">
+                        {[
+                            { label: 'Critical', count: severityBreakdown.critical, color: '#ef4444', icon: '🔴' },
+                            { label: 'High', count: severityBreakdown.high, color: '#f97316', icon: '🟠' },
+                            { label: 'Medium', count: severityBreakdown.medium, color: '#eab308', icon: '🟡' },
+                            { label: 'Low', count: severityBreakdown.low, color: '#22c55e', icon: '🟢' },
+                        ].map((sev, idx) => {
+                            const percentage = stats.total > 0 ? Math.round((sev.count / stats.total) * 100) : 0;
+                            return (
+                                <div key={idx} className="space-y-2">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className={`font-semibold flex items-center gap-2 ${isLightMode ? 'text-gray-900' : 'text-white'
+                                            }`}>
+                                            <span className="text-base">{sev.icon}</span>
+                                            {sev.label}
+                                        </span>
+                                        <span className={`font-mono text-sm font-bold ${isLightMode ? 'text-gray-700' : 'text-[var(--muni-text-muted)]'
+                                            }`}>
+                                            {sev.count} <span className={isLightMode ? 'text-gray-500' : 'text-[var(--muni-text-muted)]'}>({percentage}%)</span>
+                                        </span>
+                                    </div>
+                                    <div className={`w-full h-2.5 rounded-full overflow-hidden ${isLightMode ? 'bg-gray-200' : 'bg-white/5'
+                                        }`}>
+                                        <div
+                                            className="h-full transition-all duration-500 rounded-full"
+                                            style={{
+                                                width: `${percentage}%`,
+                                                backgroundColor: sev.color,
+                                                boxShadow: `0 0 10px ${sev.color}50`
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
-            ))}
-        </div>
 
-
-        {/* Map View */}
-        <div className="muni-card h-[300px] md:h-[400px] relative overflow-hidden border border-[#046A38]/30 p-0" style={{ backgroundColor: 'var(--muni-bg)' }}>
-            <div className={`absolute top-4 right-4 z-[400] backdrop-blur px-3 py-1 rounded border text-xs font-mono ${isLightMode ? 'bg-white/80 border-slate-200 text-slate-600' : 'bg-black/80 border-[#FF671F]/30 text-[#FF671F]'
-                }`}>
-                {issues.length > 0 ? `${issues.length} Hotspots Live` : "System Online"}
+                {/* Status Breakdown */}
+                <div className={`muni-card p-6 border ${isLightMode ? 'border-green-200 bg-gradient-to-br from-green-50/50 to-transparent' : 'border-[#046A38]/20'
+                    }`}>
+                    <div className="flex items-center justify-between mb-5">
+                        <h3 className={`text-lg font-bold flex items-center gap-2 ${isLightMode ? 'text-gray-900' : 'text-white'
+                            }`}>
+                            <CheckCircle className="text-[#046A38]" size={20} />
+                            Status Overview
+                        </h3>
+                        <span className={`text-xs font-mono px-2 py-1 rounded ${isLightMode ? 'bg-gray-100 text-gray-700' : 'bg-white/10 text-[var(--muni-text-muted)]'
+                            }`}>Live Stats</span>
+                    </div>
+                    <div className="space-y-4">
+                        {[
+                            { label: 'New Reports', count: statusBreakdown.new, color: '#FF671F', icon: AlertCircle },
+                            { label: 'In Progress', count: statusBreakdown.inProgress, color: '#eab308', icon: Clock },
+                            { label: 'Resolved', count: statusBreakdown.resolved, color: '#22c55e', icon: CheckCircle },
+                        ].map((stat, idx) => {
+                            const percentage = stats.total > 0 ? Math.round((stat.count / stats.total) * 100) : 0;
+                            const Icon = stat.icon;
+                            return (
+                                <div key={idx} className={`flex items-center gap-4 p-4 rounded-lg transition-all duration-200 hover:scale-[1.02] ${isLightMode ? 'bg-gray-50 hover:bg-gray-100 border border-gray-200' : 'bg-white/5 hover:bg-white/10'
+                                    }`}>
+                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${stat.color}${isLightMode ? '15' : '20'}` }}>
+                                        <Icon size={26} style={{ color: stat.color }} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className={`text-xs font-semibold uppercase tracking-wide mb-1 ${isLightMode ? 'text-gray-600' : 'text-[var(--muni-text-muted)]'
+                                            }`}>{stat.label}</p>
+                                        <p className={`text-2xl font-bold font-mono ${isLightMode ? 'text-gray-900' : 'text-white'
+                                            }`}>{stat.count}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-2xl font-bold font-mono" style={{ color: stat.color }}>{percentage}%</p>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
-            <DashboardMap issues={issues} isLightMode={isLightMode} />
+
+            {/* Department Performance & Recent Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Top Departments */}
+                <div className={`muni-card p-6 border ${isLightMode ? 'border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-transparent' : 'border-[#06038D]/20'
+                    }`}>
+                    <div className="flex items-center justify-between mb-5">
+                        <h3 className={`text-lg font-bold flex items-center gap-2 ${isLightMode ? 'text-gray-900' : 'text-white'
+                            }`}>
+                            <Trophy className="text-[#06038D]" size={20} />
+                            Top Departments by Volume
+                        </h3>
+                    </div>
+                    <div className="space-y-3">
+                        {topDepartments.length > 0 ? topDepartments.map(([dept, data], idx) => {
+                            const deptInfo = AP_DEPARTMENTS[dept];
+                            const resolutionRate = data.total > 0 ? Math.round((data.resolved / data.total) * 100) : 0;
+                            return (
+                                <div key={idx} className={`p-4 rounded-lg transition-all duration-200 hover:scale-[1.01] ${isLightMode ? 'bg-gray-50 hover:bg-gray-100 border border-gray-200' : 'bg-white/5 hover:bg-white/10'
+                                    }`}>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-3">
+                                            <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${isLightMode ? 'bg-indigo-100 text-indigo-700' : 'bg-[#06038D]/20 text-[#06038D]'
+                                                }`}>
+                                                {idx + 1}
+                                            </span>
+                                            <span className={`text-sm font-bold ${isLightMode ? 'text-gray-900' : 'text-white'
+                                                }`}>{deptInfo?.name || dept}</span>
+                                        </div>
+                                        <span className={`text-xs font-mono px-2 py-1 rounded ${isLightMode ? 'bg-gray-100 text-gray-700' : 'bg-white/10 text-[var(--muni-text-muted)]'
+                                            }`}>{data.total} issues</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-xs">
+                                        <span className="text-[#22c55e] font-semibold">✓ {data.resolved}</span>
+                                        <span className="text-[#FF671F] font-semibold">⧗ {data.pending}</span>
+                                        <div className={`flex-1 h-2 rounded-full overflow-hidden ml-2 ${isLightMode ? 'bg-gray-200' : 'bg-white/5'
+                                            }`}>
+                                            <div
+                                                className="h-full bg-[#22c55e] transition-all duration-500"
+                                                style={{ width: `${resolutionRate}%` }}
+                                            />
+                                        </div>
+                                        <span className={`font-mono font-bold ${isLightMode ? 'text-gray-700' : 'text-[var(--muni-text-muted)]'
+                                            }`}>{resolutionRate}%</span>
+                                    </div>
+                                </div>
+                            );
+                        }) : (
+                            <p className={`text-center py-8 text-sm ${isLightMode ? 'text-gray-500' : 'text-[var(--muni-text-muted)]'
+                                }`}>No department data available</p>
+                        )}
+                    </div>
+                </div>
+
+                {/* Recent Activity Feed */}
+                <div className={`muni-card p-6 border ${isLightMode ? 'border-orange-200 bg-gradient-to-br from-orange-50/50 to-transparent' : 'border-[#FF671F]/20'
+                    }`}>
+                    <div className="flex items-center justify-between mb-5">
+                        <h3 className={`text-lg font-bold flex items-center gap-2 ${isLightMode ? 'text-gray-900' : 'text-white'
+                            }`}>
+                            <Clock className="text-[#FF671F]" size={20} />
+                            Recent Activity
+                        </h3>
+                        <span className={`text-xs font-mono px-2 py-1 rounded ${isLightMode ? 'bg-gray-100 text-gray-700' : 'bg-white/10 text-[var(--muni-text-muted)]'
+                            }`}>Last 5 Reports</span>
+                    </div>
+                    <div className="space-y-3">
+                        {recentIssues.length > 0 ? recentIssues.map((issue, idx) => {
+                            const sevConfig = getSeverityConfig(issue.severity);
+                            const timeAgo = issue.ts ? (() => {
+                                const date = issue.ts.toDate?.() || new Date(issue.ts);
+                                const diff = now - date;
+                                const minutes = Math.floor(diff / 60000);
+                                const hours = Math.floor(diff / 3600000);
+                                const days = Math.floor(diff / 86400000);
+                                if (days > 0) return `${days}d ago`;
+                                if (hours > 0) return `${hours}h ago`;
+                                if (minutes > 0) return `${minutes}m ago`;
+                                return 'Just now';
+                            })() : 'N/A';
+
+                            return (
+                                <div key={idx} className={`p-3 rounded-lg transition-all duration-200 border-l-3 ${isLightMode ? 'bg-gray-50 hover:bg-gray-100 border border-gray-200' : 'bg-white/5 hover:bg-white/10 border-l-2'
+                                    }`} style={{ borderLeftColor: sevConfig.color }}>
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                                <span className={`text-xs font-bold truncate ${isLightMode ? 'text-gray-900' : 'text-white'
+                                                    }`}>{issue.type || 'General'}</span>
+                                                <span className="text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider" style={{
+                                                    color: sevConfig.color,
+                                                    backgroundColor: `${sevConfig.color}${isLightMode ? '20' : '20'}`,
+                                                    border: `1px solid ${sevConfig.color}${isLightMode ? '40' : '40'}`
+                                                }}>
+                                                    {sevConfig.label}
+                                                </span>
+                                            </div>
+                                            <p className={`text-xs truncate ${isLightMode ? 'text-gray-600' : 'text-[var(--muni-text-muted)]'
+                                                }`}>{issue.desc || 'No description'}</p>
+                                        </div>
+                                        <span className={`text-[10px] font-mono whitespace-nowrap font-semibold ${isLightMode ? 'text-gray-500' : 'text-[var(--muni-text-muted)]'
+                                            }`}>{timeAgo}</span>
+                                    </div>
+                                </div>
+                            );
+                        }) : (
+                            <p className={`text-center py-8 text-sm ${isLightMode ? 'text-gray-500' : 'text-[var(--muni-text-muted)]'
+                                }`}>No recent activity</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                    { label: 'Critical Alerts', value: severityBreakdown.critical, icon: '🚨', color: '#ef4444', bgColor: isLightMode ? 'bg-red-50' : 'bg-red-500/10' },
+                    { label: 'Assigned Officers', value: new Set(issues.filter(i => i.assignedOfficer && i.assignedOfficer !== 'Unassigned').map(i => i.assignedOfficer)).size, icon: '👮', color: '#06038D', bgColor: isLightMode ? 'bg-indigo-50' : 'bg-[#06038D]/10' },
+                    { label: 'AI Detections', value: issues.filter(i => i.type === 'Pothole').length, icon: '🤖', color: '#FF671F', bgColor: isLightMode ? 'bg-orange-50' : 'bg-[#FF671F]/10' },
+                    { label: 'Avg Response', value: '2.4h', icon: '⚡', color: '#22c55e', bgColor: isLightMode ? 'bg-green-50' : 'bg-green-500/10' },
+                ].map((stat, idx) => (
+                    <div key={idx} className={`muni-card p-5 text-center hover:scale-105 transition-all duration-200 group border ${isLightMode ? 'border-gray-200 hover:shadow-lg' : 'border-white/10 hover:border-white/20'
+                        }`}>
+                        <div className={`text-4xl mb-3 group-hover:scale-110 transition-transform duration-200`}>{stat.icon}</div>
+                        <p className={`text-3xl font-bold font-mono mb-2 ${isLightMode ? 'text-gray-900' : 'text-white'
+                            }`} style={{ color: stat.color }}>{stat.value}</p>
+                        <p className={`text-[10px] uppercase tracking-wider font-semibold ${isLightMode ? 'text-gray-600' : 'text-[var(--muni-text-muted)]'
+                            }`}>{stat.label}</p>
+                    </div>
+                ))}
+            </div>
+
+            {/* Performance Insights */}
+            <div className={`muni-card p-6 border-l-4 border-[#046A38] ${isLightMode ? 'bg-gradient-to-r from-green-50/50 to-transparent' : ''
+                }`}>
+                <div className="flex items-start gap-4">
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${isLightMode ? 'bg-green-100' : 'bg-[#046A38]/20'
+                        }`}>
+                        <Scan className="text-[#046A38]" size={26} />
+                    </div>
+                    <div className="flex-1">
+                        <h4 className={`text-sm font-bold mb-3 uppercase tracking-wider ${isLightMode ? 'text-gray-900' : 'text-white'
+                            }`}>System Performance Insight</h4>
+                        <p className={`text-sm leading-relaxed ${isLightMode ? 'text-gray-700' : 'text-[var(--muni-text-muted)]'
+                            }`}>
+                            {stats.resolutionRate >= 70 ? (
+                                <>Your team is performing <span className="text-[#22c55e] font-bold">exceptionally well</span> with a {stats.resolutionRate}% resolution rate.
+                                    {severityBreakdown.critical > 0 && ` However, ${severityBreakdown.critical} critical issue${severityBreakdown.critical > 1 ? 's' : ''} require${severityBreakdown.critical === 1 ? 's' : ''} immediate attention.`}</>
+                            ) : stats.resolutionRate >= 50 ? (
+                                <>Resolution rate at {stats.resolutionRate}% is <span className="text-[#eab308] font-bold">moderate</span>. Consider allocating more resources to pending issues.
+                                    {statusBreakdown.inProgress > 0 && ` ${statusBreakdown.inProgress} issue${statusBreakdown.inProgress > 1 ? 's are' : ' is'} currently in progress.`}</>
+                            ) : (
+                                <>Resolution rate at {stats.resolutionRate}% needs <span className="text-[#ef4444] font-bold">urgent improvement</span>.
+                                    {stats.pending} pending issues require immediate departmental action.</>
+                            )}
+                        </p>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            <span className={`text-[10px] px-3 py-1.5 rounded-full font-mono font-semibold ${isLightMode ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-[#046A38]/10 text-[#046A38] border border-[#046A38]/20'
+                                }`}>
+                                📊 {last24h} reports today
+                            </span>
+                            <span className={`text-[10px] px-3 py-1.5 rounded-full font-mono font-semibold ${isLightMode ? 'bg-orange-100 text-orange-700 border border-orange-200' : 'bg-[#FF671F]/10 text-[#FF671F] border border-[#FF671F]/20'
+                                }`}>
+                                📈 {last7days} this week
+                            </span>
+                            {severityBreakdown.critical > 0 && (
+                                <span className={`text-[10px] px-3 py-1.5 rounded-full font-mono font-semibold animate-pulse ${isLightMode ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-[#ef4444]/10 text-[#ef4444] border border-[#ef4444]/20'
+                                    }`}>
+                                    🚨 {severityBreakdown.critical} critical
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const TrackerView = ({ issues, onSelectIssue, onDelete, onExport, onExportPDF, searchQuery, setSearchQuery, filterStatus, setFilterStatus, filterSeverity, setFilterSeverity, onBulkDelete }) => {
     const [selectedIssues, setSelectedIssues] = useState(new Set());
@@ -935,6 +1267,8 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('All');
     const [filterSeverity, setFilterSeverity] = useState('All');
+    const [showNotifications, setShowNotifications] = useState(false);
+
 
     const translations = {
         en: {
@@ -1252,10 +1586,197 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
                             {isLightMode ? <Moon size={20} /> : <Sun size={20} />}
                         </button>
 
-                        <button className="relative p-2 text-[var(--muni-text-muted)] hover:text-white">
-                            <Bell size={20} />
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-[#FF671F] rounded-full"></span>
-                        </button>
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowNotifications(!showNotifications)}
+                                className="relative p-2 text-[var(--muni-text-muted)] hover:text-white transition-colors"
+                            >
+                                <Bell size={20} />
+                                {issues.filter(i => i.severity?.toLowerCase() === 'critical' && i.status !== 'resolved').length > 0 && (
+                                    <span className="absolute top-2 right-2 w-2 h-2 bg-[#FF671F] rounded-full animate-pulse"></span>
+                                )}
+                            </button>
+
+                            {/* Notification Dropdown */}
+                            {showNotifications && (
+                                <>
+                                    <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
+                                    <div className={`notification-panel absolute right-0 top-[calc(100%+8px)] w-80 md:w-96 rounded-xl shadow-2xl z-50 overflow-hidden ring-1 animate-in fade-in slide-in-from-top-4 duration-200 ${isLightMode
+                                        ? 'bg-white border border-gray-200 ring-gray-100'
+                                        : 'bg-[#0a0a0b] border border-[#FF671F]/40 ring-white/10 backdrop-blur-2xl'
+                                        }`}>
+                                        {/* Header */}
+                                        <div className={`notification-header p-4 border-b ${isLightMode
+                                            ? 'bg-gradient-to-r from-orange-50 to-transparent border-gray-200'
+                                            : 'bg-gradient-to-r from-[#FF671F]/10 to-transparent border-white/10'
+                                            }`}>
+                                            <div className="flex items-center justify-between">
+                                                <h3 className={`text-sm font-bold uppercase tracking-wider flex items-center gap-2 ${isLightMode ? 'text-gray-900' : 'text-white'
+                                                    }`}>
+                                                    <Bell size={16} className="text-[#FF671F]" />
+                                                    Notifications
+                                                </h3>
+                                                <button
+                                                    onClick={() => setShowNotifications(false)}
+                                                    className={`transition-colors ${isLightMode ? 'text-gray-500 hover:text-gray-900' : 'text-[var(--muni-text-muted)] hover:text-white'
+                                                        }`}
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Notifications List */}
+                                        <div className="max-h-[400px] overflow-y-auto">
+                                            {(() => {
+                                                const criticalIssues = issues
+                                                    .filter(i => i.severity?.toLowerCase() === 'critical' && i.status !== 'resolved')
+                                                    .slice(0, 3);
+                                                const pendingIssues = issues
+                                                    .filter(i => !i.status || i.status === 'new')
+                                                    .slice(0, 2);
+                                                const recentUpdates = issues
+                                                    .filter(i => i.status === 'in-progress')
+                                                    .slice(0, 2);
+
+                                                const hasNotifications = criticalIssues.length > 0 || pendingIssues.length > 0 || recentUpdates.length > 0;
+
+                                                if (!hasNotifications) {
+                                                    return (
+                                                        <div className="p-8 text-center">
+                                                            <Bell size={48} className={`mx-auto mb-3 opacity-20 ${isLightMode ? 'text-gray-400' : 'text-[var(--muni-text-muted)]'
+                                                                }`} />
+                                                            <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-[var(--muni-text-muted)]'}`}>
+                                                                No new notifications
+                                                            </p>
+                                                            <p className={`text-xs mt-1 ${isLightMode ? 'text-gray-500' : 'text-[var(--muni-text-muted)]'}`}>
+                                                                You're all caught up!
+                                                            </p>
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <div className={isLightMode ? 'divide-y divide-gray-100' : 'divide-y divide-white/5'}>
+                                                        {/* Critical Issues */}
+                                                        {criticalIssues.length > 0 && (
+                                                            <div className={isLightMode ? 'p-3 bg-red-50' : 'p-3 bg-red-500/5'}>
+                                                                <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                                                    <AlertCircle size={12} />
+                                                                    Critical Alerts ({criticalIssues.length})
+                                                                </p>
+                                                                {criticalIssues.map((issue, idx) => (
+                                                                    <div
+                                                                        key={idx}
+                                                                        className={`notification-item p-2 mb-2 last:mb-0 rounded-lg transition-colors cursor-pointer ${isLightMode
+                                                                            ? 'bg-white hover:bg-gray-50 border border-gray-200'
+                                                                            : 'bg-white/5 hover:bg-white/10'
+                                                                            }`}
+                                                                        onClick={() => {
+                                                                            setSelectedIssue(issue);
+                                                                            setShowNotifications(false);
+                                                                        }}
+                                                                    >
+                                                                        <p className={`text-xs font-medium line-clamp-1 ${isLightMode ? 'text-gray-900' : 'text-white'
+                                                                            }`}>
+                                                                            {issue.type || 'Issue'} - {issue.address || issue.roadName || 'Location not specified'}
+                                                                        </p>
+                                                                        <p className={`text-[10px] mt-1 ${isLightMode ? 'text-gray-600' : 'text-[var(--muni-text-muted)]'
+                                                                            }`}>
+                                                                            {issue.ts?.toDate?.().toLocaleString() || 'Recently reported'}
+                                                                        </p>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Pending Actions */}
+                                                        {pendingIssues.length > 0 && (
+                                                            <div className="p-3">
+                                                                <p className="text-[10px] font-bold text-[#FF671F] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                                                    <Clock size={12} />
+                                                                    Pending Action ({pendingIssues.length})
+                                                                </p>
+                                                                {pendingIssues.map((issue, idx) => (
+                                                                    <div
+                                                                        key={idx}
+                                                                        className={`notification-item p-2 mb-2 last:mb-0 rounded-lg transition-colors cursor-pointer ${isLightMode
+                                                                            ? 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
+                                                                            : 'bg-white/5 hover:bg-white/10'
+                                                                            }`}
+                                                                        onClick={() => {
+                                                                            setSelectedIssue(issue);
+                                                                            setShowNotifications(false);
+                                                                        }}
+                                                                    >
+                                                                        <p className={`text-xs font-medium line-clamp-1 ${isLightMode ? 'text-gray-900' : 'text-white'
+                                                                            }`}>
+                                                                            {issue.type || 'Issue'} - {issue.address || issue.roadName || 'Location not specified'}
+                                                                        </p>
+                                                                        <p className={`text-[10px] mt-1 ${isLightMode ? 'text-gray-600' : 'text-[var(--muni-text-muted)]'
+                                                                            }`}>
+                                                                            Awaiting assignment
+                                                                        </p>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Recent Updates */}
+                                                        {recentUpdates.length > 0 && (
+                                                            <div className="p-3">
+                                                                <p className="text-[10px] font-bold text-[#046A38] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                                                    <CheckCircle size={12} />
+                                                                    In Progress ({recentUpdates.length})
+                                                                </p>
+                                                                {recentUpdates.map((issue, idx) => (
+                                                                    <div
+                                                                        key={idx}
+                                                                        className={`notification-item p-2 mb-2 last:mb-0 rounded-lg transition-colors cursor-pointer ${isLightMode
+                                                                            ? 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
+                                                                            : 'bg-white/5 hover:bg-white/10'
+                                                                            }`}
+                                                                        onClick={() => {
+                                                                            setSelectedIssue(issue);
+                                                                            setShowNotifications(false);
+                                                                        }}
+                                                                    >
+                                                                        <p className={`text-xs font-medium line-clamp-1 ${isLightMode ? 'text-gray-900' : 'text-white'
+                                                                            }`}>
+                                                                            {issue.type || 'Issue'} - {issue.address || issue.roadName || 'Location not specified'}
+                                                                        </p>
+                                                                        <p className={`text-[10px] mt-1 ${isLightMode ? 'text-gray-600' : 'text-[var(--muni-text-muted)]'
+                                                                            }`}>
+                                                                            Being resolved
+                                                                        </p>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+
+                                        {/* Footer */}
+                                        <div className={`p-3 border-t ${isLightMode ? 'border-gray-200 bg-gray-50' : 'border-white/10 bg-white/5'
+                                            }`}>
+                                            <button
+                                                onClick={() => {
+                                                    setActiveView('tracker');
+                                                    navigate('/municipal-dashboard/tracker');
+                                                    setShowNotifications(false);
+                                                }}
+                                                className={`w-full text-xs font-medium transition-colors text-center ${isLightMode ? 'text-[#FF671F] hover:text-[#e55a0f]' : 'text-[#FF671F] hover:text-white'
+                                                    }`}
+                                            >
+                                                View All Issues →
+                                            </button>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </header>
 

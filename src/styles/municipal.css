@@ -95,6 +95,102 @@
 .municipal-theme.light-mode .muni-card {
   border-color: var(--muni-border) !important;
   background-color: var(--muni-surface) !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Light Mode - Notification Panel */
+.municipal-theme.light-mode .notification-panel {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+.municipal-theme.light-mode .notification-header {
+  background: linear-gradient(to right, rgba(255, 103, 31, 0.05), transparent) !important;
+  border-color: #e2e8f0 !important;
+}
+
+.municipal-theme.light-mode .notification-item {
+  background-color: #f8fafc !important;
+}
+
+.municipal-theme.light-mode .notification-item:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* Light Mode - Background Overlays */
+.municipal-theme.light-mode .bg-white\/5,
+.municipal-theme.light-mode [class*="bg-white/5"] {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+.municipal-theme.light-mode .bg-white\/10,
+.municipal-theme.light-mode [class*="bg-white/10"] {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Light Mode - Specific Color Backgrounds */
+.municipal-theme.light-mode .bg-red-500\/5,
+.municipal-theme.light-mode [class*="bg-red-500/5"] {
+  background-color: rgba(239, 68, 68, 0.05) !important;
+}
+
+.municipal-theme.light-mode .bg-red-500\/10,
+.municipal-theme.light-mode [class*="bg-red-500/10"] {
+  background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+.municipal-theme.light-mode [class*="bg-purple-500/"] {
+  background-color: rgba(168, 85, 247, 0.08) !important;
+}
+
+.municipal-theme.light-mode [class*="bg-[#FF671F]/"] {
+  background-color: rgba(255, 103, 31, 0.08) !important;
+}
+
+.municipal-theme.light-mode [class*="bg-[#10b981]/"] {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+.municipal-theme.light-mode [class*="bg-[#06038D]/"] {
+  background-color: rgba(6, 3, 141, 0.08) !important;
+}
+
+.municipal-theme.light-mode [class*="bg-[#046A38]/"] {
+  background-color: rgba(4, 106, 56, 0.08) !important;
+}
+
+/* Light Mode - Borders */
+.municipal-theme.light-mode [class*="border-white/"] {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.municipal-theme.light-mode .divide-white\/5>*+* {
+  border-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Light Mode - Advanced Stats Panel */
+.municipal-theme.light-mode .advanced-stats-panel {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Light Mode - Text Colors for Specific Elements */
+.municipal-theme.light-mode .text-purple-500 {
+  color: #9333ea !important;
+}
+
+.municipal-theme.light-mode .text-yellow-500 {
+  color: #eab308 !important;
+}
+
+.municipal-theme.light-mode .text-green-500 {
+  color: #22c55e !important;
+}
+
+/* Light Mode - Dropdown/Select backgrounds */
+.municipal-theme.light-mode select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
 }
 
 .municipal-theme {
@@ -132,7 +228,6 @@
   background-color: var(--muni-surface);
   border: 1px solid var(--muni-border);
   border-radius: 0.5rem;
-  /* rounded-lg */
 }
 
 /* Inputs */
@@ -226,7 +321,6 @@
 
 /* Specific column widths for better layout */
 .muni-table td:nth-child(5),
-/* Status column */
 .muni-table th:nth-child(5) {
   min-width: 140px;
 }
