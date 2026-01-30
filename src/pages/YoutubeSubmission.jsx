@@ -95,8 +95,8 @@ const YoutubeSubmission = () => {
                         <div className="aspect-video w-full rounded-xl overflow-hidden shadow-2xl bg-black relative group">
                             <iframe
                                 className="w-full h-full"
-                                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                                title="LetsFixIndia Prototype Demo"
+                                src="https://www.youtube.com/embed/videoseries?list=PLR8Z8esZl50iELdSGcZHdmrK7A3xVs2xw"
+                                title="LetsFixIndia Prototype Demo Playlist"
                                 frameBorder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                 allowFullScreen
@@ -156,6 +156,34 @@ const YoutubeSubmission = () => {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </motion.div>
+
+                {/* Main Frontend Website Section */}
+                <motion.div
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    variants={sectionVariants}
+                    className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
+                >
+                    <div className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                                <Globe size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-900">Main Frontend Website</h3>
+                                <p className="text-slate-500 text-sm">Explore the citizen-facing platform and interactive reporting map.</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => navigate('/')}
+                            className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all hover:border-slate-300"
+                        >
+                            <ExternalLink size={18} />
+                            Visit Homepage
+                        </button>
                     </div>
                 </motion.div>
 
