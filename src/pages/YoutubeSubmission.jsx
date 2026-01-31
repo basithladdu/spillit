@@ -95,11 +95,12 @@ const YoutubeSubmission = () => {
                         <div className="aspect-video w-full rounded-xl overflow-hidden shadow-2xl bg-black relative group">
                             <iframe
                                 className="w-full h-full"
-                                src="https://www.youtube.com/embed/videoseries?list=PLR8Z8esZl50iELdSGcZHdmrK7A3xVs2xw"
-                                title="LetsFixIndia Prototype Demo Playlist"
+                                loading="lazy"
+                                src="https://www.canva.com/design/DAG_-5v3glY/mwgVxz5JFqtfMWCykvdmmQ/view?embed"
+                                title="LetsFixIndia Prototype Presentation"
                                 frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                 allowFullScreen
+                                allow="fullscreen"
                             ></iframe>
                         </div>
                         <p className="mt-4 text-center text-sm text-slate-500 italic">
