@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Map, { Marker, NavigationControl } from 'react-map-gl';
 import {
   FaMapMarkerAlt, FaCalendarAlt, FaShareAlt, FaHeart, FaRegHeart,

@@ -315,7 +315,7 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                                                     <span className="text-[10px] font-bold">Tap to Upload</span>
                                                 </div>
                                             )}
-                                            <input type="file" accept="image/*" className="hidden" onChange={e => setFormData({ ...formData, image: e.target.files[0] })} />
+                                            <input type="file" accept="image/*" capture="environment" className="hidden" onChange={e => setFormData({ ...formData, image: e.target.files[0] })} />
                                         </label>
                                     </div>
 
