@@ -6,9 +6,9 @@ import { Layers } from 'lucide-react';
 // Mapbox Access Token - Using the same token as Home.jsx and LocationVerifier.jsx
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiYXdhaXpzaGFpazI1IiwiYSI6ImNtY3J5MHQzMTEwZjcyanMzYWJuMnMxcTUifQ.bLPhS0-UAAouYlHOK396XQ';
 
-// Default center (Andhra Pradesh - Vijayawada region)
-const DEFAULT_CENTER = { lng: 80.6480, lat: 16.5062 };
-const DEFAULT_ZOOM = 7; // Zoom out to show more of AP state
+// Default center (India)
+const DEFAULT_CENTER = { lng: 78.9629, lat: 20.5937 };
+const DEFAULT_ZOOM = 4; // Zoom out to show India state
 
 // Severity color mapping (matching Home.jsx)
 const getSeverityColors = (severity) => {

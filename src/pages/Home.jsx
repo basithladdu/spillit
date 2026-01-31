@@ -229,9 +229,9 @@ function Home() {
 
   // Map state
   const [viewState, setViewState] = useState({
-    latitude: 15.8281,
-    longitude: 78.0373,
-    zoom: 14
+    latitude: 20.5937,
+    longitude: 78.9629,
+    zoom: 4
   });
 
   // Onboarding State
