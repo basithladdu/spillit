@@ -92,17 +92,17 @@ const YoutubeSubmission = () => {
                     </div>
 
                     <div className="p-6 bg-slate-100">
-                        <div className="aspect-video w-full rounded-xl overflow-hidden shadow-2xl bg-black relative group">
+                        <div style={{ position: 'relative', width: '100%', height: 0, paddingTop: '56.2500%', paddingBottom: 0, boxShadow: '0 2px 8px 0 rgba(63,69,81,0.16)', marginTop: '1.6em', marginBottom: '0.9em', overflow: 'hidden', borderRadius: '8px', willChange: 'transform' }}>
                             <iframe
-                                className="w-full h-full"
                                 loading="lazy"
-                                src="https://www.canva.com/design/DAG_-5v3glY/mwgVxz5JFqtfMWCykvdmmQ/view?embed"
-                                title="LetsFixIndia Prototype Presentation"
-                                frameBorder="0"
+                                style={{ position: 'absolute', width: '100%', height: '100%', top: 0, left: 0, border: 'none', padding: 0, margin: 0 }}
+                                src="https://www.canva.com/design/DAG_-5v3glY/8SIPCXw7KWATWyFbj0sPKw/watch?embed"
                                 allowFullScreen
                                 allow="fullscreen"
-                            ></iframe>
+                            >
+                            </iframe>
                         </div>
+
                         <p className="mt-4 text-center text-sm text-slate-500 italic">
                             "We have Submitted video as part of National Innovation Contest of Ministry of Education Innovation Cell & AICTE"
                         </p>
