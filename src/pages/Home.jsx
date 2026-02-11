@@ -6,7 +6,7 @@ import {
 import { db } from '../utils/firebase';
 import { Link } from 'react-router-dom';
 
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import Map, { Marker, Popup, NavigationControl, GeolocateControl } from 'react-map-gl';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import 'mapbox-gl/dist/mapbox-gl.css';
