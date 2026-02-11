@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
-import { FaEnvelope, FaLock, FaArrowRight, FaExclamationCircle } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaArrowRight, FaExclamationCircle, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login, currentUser, userRole } = useAuth();
   const navigate = useNavigate();
 
@@ -71,10 +72,15 @@ function Login() {
 
           {/* Header */}
           <div className="text-center mb-10">
-            <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
-              Welcome <span className="text-[#FF671F]">Back</span>
+            <img
+              src="/aplogo.svg"
+              alt="AP Logo"
+              className="w-24 h-24 mx-auto mb-4 object-contain"
+            />
+            <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">
+              LOGIN As <span className="text-[#FF671F]">Roads and Buildings</span> Department Admin
             </h1>
-            <p className="text-[var(--muni-text-muted)] text-sm">Access your LetsFixIndia command center.</p>
+            <p className="text-[var(--muni-text-muted)] text-sm">Access the specialized internal command center.</p>
           </div>
 
           {/* Error Banner */}
@@ -101,7 +107,7 @@ function Login() {
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
                   className={`w-full bg-black/50 border ${errors.email ? 'border-red-500' : 'border-white/10'} rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-600 outline-none focus:border-[#FF671F] focus:shadow-[0_0_15px_rgba(255,103,31,0.2)] transition-all`}
-                  placeholder="agent@fixit.com"
+                  placeholder="admin@gmail.com"
                   required
                 />
               </div>
@@ -115,13 +121,20 @@ function Login() {
                 <FaLock aria-hidden="true" className="absolute left-4 top-3.5 text-[var(--muni-text-muted)] group-focus-within:text-[#FF671F] transition-colors" />
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-600 outline-none focus:border-[#FF671F] focus:shadow-[0_0_15px_rgba(255,103,31,0.2)] transition-all"
+                  className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-11 pr-12 text-white placeholder-gray-600 outline-none focus:border-[#FF671F] focus:shadow-[0_0_15px_rgba(255,103,31,0.2)] transition-all"
                   placeholder="••••••••"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-3.5 text-[var(--muni-text-muted)] hover:text-white transition-colors"
+                >
+                  {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                </button>
               </div>
             </div>
 

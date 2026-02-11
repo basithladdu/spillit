@@ -321,18 +321,32 @@ const PotholeDetectionView = () => {
         const exportData = [];
         processedIssues.forEach(issue => {
             const detections = detectionsMap[issue.id] || [];
-            detections.forEach(d => {
+            if (detections.length === 0) {
+                // Add the issue even if no sub-detections exist
                 exportData.push({
                     'Issue ID': issue.id,
-                    'Road': d.roadName || issue.address,
-                    'Depth': d.depth,
-                    'Severity': d.severity,
-                    'Department': d.department || classifyRoadDepartment(issue.address),
+                    'Road': issue.roadName || issue.address || 'N/A',
+                    'Depth': 'N/A',
+                    'Severity': issue.severity || 'N/A',
+                    'Department': issue.department || classifyRoadDepartment(issue.address),
                     'Issue Status': issue.status || 'PENDING',
-                    'Confidence': `${Math.round(d.confidence * 100)}%`,
+                    'Confidence': 'N/A',
                     'Reported': issue.ts?.toDate?.().toLocaleString() || 'N/A'
                 });
-            });
+            } else {
+                detections.forEach(d => {
+                    exportData.push({
+                        'Issue ID': issue.id,
+                        'Road': d.roadName || issue.roadName || issue.address || 'N/A',
+                        'Depth': d.depth || 'N/A',
+                        'Severity': d.severity || issue.severity || 'N/A',
+                        'Department': d.department || issue.department || classifyRoadDepartment(issue.address),
+                        'Issue Status': issue.status || 'PENDING',
+                        'Confidence': d.confidence ? `${Math.round(d.confidence * 100)}%` : 'N/A',
+                        'Reported': issue.ts?.toDate?.().toLocaleString() || 'N/A'
+                    });
+                });
+            }
         });
 
         const ws = XLSX.utils.json_to_sheet(exportData);
@@ -347,6 +361,19 @@ const PotholeDetectionView = () => {
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.getWidth();
 
+            // Helper to load image
+            const loadImage = (url) => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => resolve(img);
+                    img.onerror = () => resolve(null);
+                    img.src = url;
+                });
+            };
+
+            const logoImg = await loadImage('/roads.png');
+
             // Branding Header - Matching Municipal Theme
             doc.setFillColor(9, 9, 11); // Dark background
             doc.rect(0, 0, pageWidth, 45, 'F');
@@ -356,14 +383,22 @@ const PotholeDetectionView = () => {
             doc.setFont('helvetica', 'bold');
             doc.text('LetsFixIndia', 20, 25);
 
+            // Add R&B Logo on the right with aspect ratio preservation
+            if (logoImg) {
+                const logoWidth = 50;
+                const logoHeight = (logoImg.height * logoWidth) / logoImg.width;
+                doc.addImage(logoImg, 'PNG', pageWidth - 20 - logoWidth, 10, logoWidth, logoHeight);
+            }
+
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(10);
             doc.text('AI DEEP INTELLIGENCE - POTHOLE AUDIT REPORT', 20, 35);
 
             doc.setTextColor(161, 161, 170);
-            doc.text('CONFIDENTIAL GOVERNMENT REPORT', pageWidth - 20, 25, { align: 'right' });
-            doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 20, 32, { align: 'right' });
-            doc.text(`Total Records: ${processedIssues.length}`, pageWidth - 20, 39, { align: 'right' });
+            doc.setFontSize(8);
+            doc.text('CONFIDENTIAL GOVERNMENT REPORT', pageWidth - 20, 28, { align: 'right' });
+            doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 20, 34, { align: 'right' });
+            doc.text(`Total Records: ${processedIssues.length}`, pageWidth - 20, 40, { align: 'right' });
 
             // Executive Summary
             let y = 60;
@@ -391,16 +426,27 @@ const PotholeDetectionView = () => {
             const tableData = [];
             processedIssues.forEach(issue => {
                 const detections = detectionsMap[issue.id] || [];
-                detections.forEach(d => {
+                if (detections.length === 0) {
                     tableData.push([
                         issue.id.slice(0, 8),
-                        d.depth,
-                        d.severity,
-                        `${Math.round(d.confidence * 100)}%`,
-                        d.department || classifyRoadDepartment(issue.address),
+                        'N/A',
+                        issue.severity || 'Medium',
+                        'N/A',
+                        issue.department || classifyRoadDepartment(issue.address),
                         issue.status || 'PENDING'
                     ]);
-                });
+                } else {
+                    detections.forEach(d => {
+                        tableData.push([
+                            issue.id.slice(0, 8),
+                            d.depth || 'N/A',
+                            d.severity || issue.severity || 'Medium',
+                            d.confidence ? `${Math.round(d.confidence * 100)}%` : 'N/A',
+                            d.department || issue.department || classifyRoadDepartment(issue.address),
+                            issue.status || 'PENDING'
+                        ]);
+                    });
+                }
             });
 
             autoTable(doc, {
@@ -455,9 +501,19 @@ const PotholeDetectionView = () => {
                 </div>
                 <div className="flex gap-3 relative">
                     <button
-                        onClick={() => setShowExportMenu(!showExportMenu)}
-                        className="muni-btn-primary flex items-center gap-2 group"
-                        disabled={processedIssues.length === 0 || loading}
+                        onClick={() => {
+                            if (processedIssues.length === 0) {
+                                toast.info("No data available to generate report.", { theme: "dark" });
+                                return;
+                            }
+                            setShowExportMenu(!showExportMenu);
+                        }}
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-[#FF671F]/20 relative z-10 group"
+                        style={{
+                            background: 'linear-gradient(135deg, #FF671F 0%, #ffffff 50%, #046A38 100%)',
+                            color: 'black',
+                            border: '1px solid rgba(255,255,255,0.2)'
+                        }}
                     >
                         <Download size={16} className="group-hover:translate-y-0.5 transition-transform" />
                         GENERATE REPORT
@@ -907,7 +963,7 @@ const PotholeDetectionView = () => {
                         </div>
                     </div>
                     <div className="h-[200px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                             <AreaChart data={chartData}>
                                 <defs>
                                     <linearGradient id="colorIncoming" x1="0" y1="0" x2="0" y2="1">

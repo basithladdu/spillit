@@ -843,7 +843,7 @@ const SettingsView = ({ isLightMode, onToggleTheme, language, onToggleLanguage }
                 <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
                     <div>
                         <p className="font-bold text-[var(--muni-text-main)]">
-                            {language === 'te' ? 'నోటిఫికేషన్ హెచ్చరికలు' : 'Notification Alerts'}
+                            {language === 'te' ? 'నోటిఫికేషన్ హెచ్చరికలు' : 'Notification Alerts (FUTURE FUNCTIONALITY)'}
                         </p>
                         <p className="text-xs text-[var(--muni-text-muted)]">
                             {language === 'te' ? 'డెస్క్‌టాప్ నోటిఫికేషన్‌లను నిర్వహించండి' : 'Manage desktop notifications'}
@@ -1278,7 +1278,7 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
             grouped: 'Grouped Reports',
             video: 'Video Processor',
             leaderboard: 'Leaderboard',
-            about: 'About Fixit',
+            about: 'About Devit',
             settings: 'Settings',
             register: 'Municipal Register'
         },
@@ -1432,6 +1432,19 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.getWidth();
 
+            // Helper to load image
+            const loadImage = (url) => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => resolve(img);
+                    img.onerror = () => resolve(null);
+                    img.src = url;
+                });
+            };
+
+            const logoImg = await loadImage('/roads.png');
+
             // Branding Header
             doc.setFillColor(9, 9, 11);
             doc.rect(0, 0, pageWidth, 45, 'F');
@@ -1439,14 +1452,23 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
             doc.setFontSize(24);
             doc.setFont('helvetica', 'bold');
             doc.text('LetsFixIndia', 20, 25);
+
+            // Add R&B Logo on the right with aspect ratio preservation
+            if (logoImg) {
+                const logoWidth = 50;
+                const logoHeight = (logoImg.height * logoWidth) / logoImg.width;
+                doc.addImage(logoImg, 'PNG', pageWidth - 20 - logoWidth, 10, logoWidth, logoHeight);
+            }
+
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(10);
             doc.text('MUNICIPAL AGGREGATION SYSTEM', 20, 35);
 
             doc.setTextColor(161, 161, 170);
-            doc.text('OFFICIAL CIVIC AUDIT REPORT', pageWidth - 20, 25, { align: 'right' });
-            doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth - 20, 32, { align: 'right' });
-            doc.text(`Total Records: ${dataToExport.length}`, pageWidth - 20, 39, { align: 'right' });
+            doc.setFontSize(8);
+            doc.text('OFFICIAL CIVIC AUDIT REPORT', pageWidth - 20, 28, { align: 'right' });
+            doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth - 20, 34, { align: 'right' });
+            doc.text(`Total Records: ${dataToExport.length}`, pageWidth - 20, 40, { align: 'right' });
 
             // Stats Summary
             let y = 60;
@@ -1539,7 +1561,7 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
                     <NavItem id="leaderboard" icon={Trophy} label={t.leaderboard} activeView={activeView} navigate={navigate} isMobile={isMobile} setIsSidebarOpen={setIsSidebarOpen} />
                     <NavItem id="about" icon={Info} label={t.about} activeView={activeView} navigate={navigate} isMobile={isMobile} setIsSidebarOpen={setIsSidebarOpen} />
                     <NavItem id="settings" icon={Settings} label={t.settings} activeView={activeView} navigate={navigate} isMobile={isMobile} setIsSidebarOpen={setIsSidebarOpen} />
-                    <NavItem id="register" icon={FileText} label={t.register} activeView={activeView} navigate={navigate} isMobile={isMobile} setIsSidebarOpen={setIsSidebarOpen} external="/municipal-register" />
+                    {/* <NavItem id="register" icon={FileText} label={t.register} activeView={activeView} navigate={navigate} isMobile={isMobile} setIsSidebarOpen={setIsSidebarOpen} external="/municipal-register" /> */}
                 </nav>
 
                 <div className="p-4 border-t border-[var(--muni-border)] flex-none">
@@ -1570,7 +1592,13 @@ export default function MunicipalDashboard({ initialView = 'dashboard' }) {
                         >
                             <Menu size={20} />
                         </button>
-                        <h2 className="font-semibold capitalize text-[var(--muni-text-main)]">{activeView.replace('-', ' ')}</h2>
+                        <h2 className="font-semibold capitalize text-[var(--muni-text-main)] flex items-center gap-3">
+                            <span className="tracking-tight">{activeView.replace('-', ' ')}</span>
+
+                            {currentUser?.isRnB && (
+                                <img src="/roads.png" alt="R&B Logo" className="h-9 w-auto object-contain brightness-110" />
+                            )}
+                        </h2>
                     </div>
                     <div className="flex items-center gap-4">
                         {/* Theme Toggle Button */}

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Map, { Marker, Popup, Source, Layer } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Layers } from 'lucide-react';
+import { Layers, Map as MapIcon, Satellite, Navigation } from 'lucide-react';
 
 // Mapbox Access Token - Using the same token as Home.jsx and LocationVerifier.jsx
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiYXdhaXpzaGFpazI1IiwiYSI6ImNtY3J5MHQzMTEwZjcyanMzYWJuMnMxcTUifQ.bLPhS0-UAAouYlHOK396XQ';
@@ -166,12 +166,25 @@ const PopupContent = ({ issue, isLightMode }) => {
 const DashboardMap = ({ issues, isLightMode = false }) => {
     const [showHeatmap, setShowHeatmap] = useState(false);
     const [selectedIssue, setSelectedIssue] = useState(null);
+    const [mapStyle, setMapStyle] = useState('streets-v12'); // Default map style
     const [viewState, setViewState] = useState({
         ...DEFAULT_CENTER,
         zoom: DEFAULT_ZOOM
     });
 
-    const validIssues = issues?.filter(i => i.lat && i.lng) || [];
+    // Map style options
+    const mapStyles = [
+        { id: 'streets-v12', name: 'Streets', icon: MapIcon, style: 'mapbox://styles/mapbox/streets-v12' },
+        { id: 'satellite-v9', name: 'Satellite', icon: Satellite, style: 'mapbox://styles/mapbox/satellite-v9' },
+        { id: 'satellite-streets-v12', name: 'Satellite Streets', icon: Navigation, style: 'mapbox://styles/mapbox/satellite-streets-v12' },
+        { id: 'dark-v11', name: 'Dark', icon: MapIcon, style: 'mapbox://styles/mapbox/dark-v11' },
+        { id: 'light-v11', name: 'Light', icon: MapIcon, style: 'mapbox://styles/mapbox/light-v11' },
+        { id: 'outdoors-v12', name: 'Outdoors', icon: MapIcon, style: 'mapbox://styles/mapbox/outdoors-v12' }
+    ];
+
+    const currentMapStyle = mapStyles.find(s => s.id === mapStyle) || mapStyles[0];
+
+    const validIssues = useMemo(() => issues?.filter(i => i.lat && i.lng) || [], [issues]);
 
     // Auto-center map on issues when they load
     useEffect(() => {
@@ -201,7 +214,7 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
                 zoom: zoom
             });
         }
-    }, [validIssues.length]); // Only re-run when number of issues changes
+    }, [validIssues]); // Only re-run when issues change
 
     // Create heatmap data for Mapbox
     const heatmapData = {
@@ -253,8 +266,9 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
 
     return (
         <div className={`h-full w-full relative z-0 ${isLightMode ? 'light-map' : ''}`}>
-            {/* Heatmap Toggle Button */}
-            <div className="absolute top-4 left-4 z-[400] flex gap-2">
+            {/* Map Controls */}
+            <div className="absolute top-4 left-4 z-[400] flex flex-col gap-2">
+                {/* Heatmap Toggle Button */}
                 <button
                     onClick={() => setShowHeatmap(!showHeatmap)}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg backdrop-blur-xl border-2 shadow-lg font-bold text-xs uppercase tracking-wider transition-all ${showHeatmap
@@ -267,6 +281,44 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
                     <Layers size={16} className={showHeatmap ? 'animate-pulse' : ''} />
                     {showHeatmap ? 'Heatmap ON' : 'Heatmap OFF'}
                 </button>
+
+                {/* Map Style Selector */}
+                <div className="relative group">
+                    <button
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg backdrop-blur-xl border-2 shadow-lg font-bold text-xs uppercase tracking-wider transition-all ${isLightMode
+                            ? 'bg-white/80 text-slate-600 border-slate-200 hover:text-slate-900 hover:border-[#FF671F]/50 hover:bg-[#FF671F]/10'
+                            : 'bg-black/80 text-[var(--muni-text-muted)] border-[var(--muni-border)] hover:text-white hover:border-[#FF671F]/50 hover:bg-[#FF671F]/10'
+                            }`}
+                    >
+                        {React.createElement(currentMapStyle.icon, { size: 16 })}
+                        {currentMapStyle.name}
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    <div className="absolute top-full left-0 mt-2 w-48 rounded-lg backdrop-blur-xl border-2 shadow-xl overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        {mapStyles.map((style) => {
+                            const StyleIcon = style.icon;
+                            return (
+                                <button
+                                    key={style.id}
+                                    onClick={() => setMapStyle(style.id)}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider transition-all ${mapStyle === style.id
+                                        ? 'bg-[#FF671F] text-white'
+                                        : isLightMode
+                                            ? 'bg-white/90 text-slate-700 hover:bg-slate-50'
+                                            : 'bg-black/90 text-gray-300 hover:bg-[#FF671F]/20 hover:text-white'
+                                        }`}
+                                >
+                                    <StyleIcon size={16} />
+                                    {style.name}
+                                    {mapStyle === style.id && (
+                                        <span className="ml-auto text-[10px]">✓</span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
 
             <Map
@@ -274,7 +326,7 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
                 onMove={evt => setViewState(evt.viewState)}
                 mapboxAccessToken={MAPBOX_TOKEN}
                 style={{ width: '100%', height: '100%' }}
-                mapStyle="mapbox://styles/mapbox/streets-v12"  // Google Maps-like style for both light and dark modes
+                mapStyle={currentMapStyle.style}
                 attributionControl={true}
             >
                 {/* Heatmap Layer */}
@@ -321,7 +373,7 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
             </Map>
 
             {/* Custom Mapbox Popup Styles */}
-            <style jsx global>{`
+            <style>{`
                 .mapboxgl-popup-content {
                     background: transparent !important;
                     box-shadow: none !important;

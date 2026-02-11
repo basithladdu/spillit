@@ -82,37 +82,40 @@ function Navbar() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-4 md:px-6 py-3 md:py-4 pointer-events-none"
       >
-        {/* --- Mobile Header (Logo & Hamburger) --- */}
-        <div className="md:hidden pointer-events-auto flex items-center gap-2 bg-black/90 backdrop-blur-xl border border-[var(--muni-border)] rounded-full px-4 py-2 shadow-lg">
-          <div className="font-black text-white tracking-widest flex items-center gap-1">
-            <span className="text-[#FF671F]">Lets</span>
-            <span className="text-white">Fix</span>
-            <span className="text-[#046A38]">India</span>
+        {/* --- Left Side (Identity & Navigation) --- */}
+        <div className="flex items-center gap-4 pointer-events-auto">
+          {/* Logo Identity (Mobile Only) */}
+          <div className="md:hidden bg-black/90 backdrop-blur-xl border border-[var(--muni-border)] rounded-full px-4 py-2 shadow-lg">
+            <div className="font-black text-white tracking-widest flex items-center gap-1">
+              <span className="text-[#FF671F]">Lets</span>
+              <span className="text-white">Fix</span>
+              <span className="text-[#046A38]">India</span>
+            </div>
           </div>
-        </div>
 
-        {/* --- Desktop Menu Pill --- */}
-        <div className="hidden md:flex pointer-events-auto bg-black/80 backdrop-blur-xl border border-[var(--muni-border)] rounded-full p-1 shadow-2xl items-center gap-1">
-          <LayoutGroup id="nav-pill-group">
-            <NavItem to="/" icon={Map} label="Map" />
-            <NavItem to="/gallery" icon={Users} label="Gallery" />
-            <NavItem to="/leaderboard" icon={Star} label="Leaderboard" />
-            <NavItem to="/help" icon={HelpCircle} label="Help" />
-            <NavItem to="/about" icon={UserIcon} label="About" />
-            <NavItem to="/partner" icon={Handshake} label="Partner/Fund Us" />
-            <NavItem to="/donors" icon={Heart} label="Donors" />
+          {/* --- Desktop Menu Pill --- */}
+          <div className="hidden md:flex bg-black/80 backdrop-blur-xl border border-[var(--muni-border)] rounded-full p-1 shadow-2xl items-center gap-1">
+            <LayoutGroup id="nav-pill-group">
+              <NavItem to="/" icon={Map} label="Map" />
+              <NavItem to="/gallery" icon={Users} label="Gallery" />
+              <NavItem to="/leaderboard" icon={Star} label="Leaderboard" />
+              <NavItem to="/help" icon={HelpCircle} label="Help" />
+              <NavItem to="/about" icon={UserIcon} label="About" />
+              <NavItem to="/partner" icon={Handshake} label="Partner/Fund Us" />
+              <NavItem to="/donors" icon={Heart} label="Donors" />
 
-            {currentUser && userRole === 'municipal_admin' && (
-              <>
-                <div className="h-6 w-[1px] bg-[var(--muni-border)] mx-1"></div>
-                <NavItem
-                  to="/municipal-dashboard"
-                  icon={BarChart3}
-                  label="Dashboard"
-                />
-              </>
-            )}
-          </LayoutGroup>
+              {currentUser && userRole === 'municipal_admin' && (
+                <>
+                  <div className="h-6 w-[1px] bg-[var(--muni-border)] mx-1"></div>
+                  <NavItem
+                    to="/municipal-dashboard"
+                    icon={BarChart3}
+                    label="Dashboard"
+                  />
+                </>
+              )}
+            </LayoutGroup>
+          </div>
         </div>
 
         {/* --- Right Actions (Desktop & Mobile Toggle) --- */}
