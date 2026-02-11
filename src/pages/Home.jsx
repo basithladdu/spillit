@@ -6,7 +6,7 @@ import {
 import { db } from '../utils/firebase';
 import { Link } from 'react-router-dom';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import Map, { Marker, Popup, NavigationControl, GeolocateControl } from 'react-map-gl';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -295,29 +295,34 @@ function Home() {
           <NavigationControl position="bottom-left" />
           <GeolocateControl position="bottom-left" />
 
-          {Object.entries(allIssues).map(([id, issue]) => (
-            <Marker
-              key={id}
-              latitude={issue.lat}
-              longitude={issue.lng}
-              anchor="bottom"
-              onClick={e => {
-                e.originalEvent.stopPropagation();
-                setSelectedIssue({ id, ...issue });
-              }}
-            >
-              <img
-                src={getMarkerIcon(issue.severity)}
-                alt={issue.severity}
-                style={{ width: 25, height: 41, cursor: 'pointer' }}
-              />
-            </Marker>
-          ))}
+          {Object.entries(allIssues)
+            .filter(([, issue]) =>
+              issue.lat !== undefined && issue.lat !== null && !isNaN(Number(issue.lat)) &&
+              issue.lng !== undefined && issue.lng !== null && !isNaN(Number(issue.lng))
+            )
+            .map(([id, issue]) => (
+              <Marker
+                key={id}
+                latitude={Number(issue.lat)}
+                longitude={Number(issue.lng)}
+                anchor="bottom"
+                onClick={e => {
+                  e.originalEvent.stopPropagation();
+                  setSelectedIssue({ id, ...issue });
+                }}
+              >
+                <img
+                  src={getMarkerIcon(issue.severity)}
+                  alt={issue.severity}
+                  style={{ width: 25, height: 41, cursor: 'pointer' }}
+                />
+              </Marker>
+            ))}
 
-          {selectedIssue && (
+          {selectedIssue && !isNaN(Number(selectedIssue.lat)) && !isNaN(Number(selectedIssue.lng)) && (
             <Popup
-              latitude={selectedIssue.lat}
-              longitude={selectedIssue.lng}
+              latitude={Number(selectedIssue.lat)}
+              longitude={Number(selectedIssue.lng)}
               anchor="top"
               onClose={() => setSelectedIssue(null)}
               closeButton={false}

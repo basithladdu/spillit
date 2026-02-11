@@ -184,7 +184,12 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
 
     const currentMapStyle = mapStyles.find(s => s.id === mapStyle) || mapStyles[0];
 
-    const validIssues = useMemo(() => issues?.filter(i => i.lat && i.lng) || [], [issues]);
+    const validIssues = useMemo(() =>
+        issues?.filter(i =>
+            i.lat !== undefined && i.lat !== null && !isNaN(Number(i.lat)) &&
+            i.lng !== undefined && i.lng !== null && !isNaN(Number(i.lng))
+        ).map(i => ({ ...i, lat: Number(i.lat), lng: Number(i.lng) })) || [],
+        [issues]);
 
     // Auto-center map on issues when they load
     useEffect(() => {
@@ -208,11 +213,13 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
             else if (maxSpread < 0.5) zoom = 9;
             else if (maxSpread < 1) zoom = 8;
 
-            setViewState({
-                latitude: centerLat,
-                longitude: centerLng,
-                zoom: zoom
-            });
+            if (!isNaN(centerLat) && !isNaN(centerLng)) {
+                setViewState({
+                    latitude: centerLat,
+                    longitude: centerLng,
+                    zoom: zoom
+                });
+            }
         }
     }, [validIssues]); // Only re-run when issues change
 
