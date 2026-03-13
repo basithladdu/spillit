@@ -30,9 +30,13 @@ const YoutubeSubmission = lazy(() => import("./pages/YoutubeSubmission"));
 const MunicipalRegistration = lazy(() => import("./pages/MunicipalRegistration"));
 const MunicipalDashboard = lazy(() => import("./pages/MunicipalDashboard"));
 const OpsDashboard = lazy(() => import("./pages/OpsDashboard"));
+// ToFEI Pages
+const ToFEILogin     = lazy(() => import("./pages/ToFEILogin"));
+const ToFEIDashboard = lazy(() => import("./pages/ToFEIDashboard"));
 
 import "./App.css";
 import "./styles/municipal.css";
+import "./styles/tofei.css";
 
 
 // Loading Component
@@ -141,6 +145,15 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* ToFEI Routes */}
+            <Route path="/tofei-login" element={<ToFEILogin />} />
+            <Route path="/tofei-dashboard" element={<ProtectedRoute><ToFEIDashboard /></ProtectedRoute>} />
+            <Route path="/tofei-dashboard/tracker"     element={<ProtectedRoute><ToFEIDashboard initialView="tracker" /></ProtectedRoute>} />
+            <Route path="/tofei-dashboard/scorecard"   element={<ProtectedRoute><ToFEIDashboard initialView="scorecard" /></ProtectedRoute>} />
+            <Route path="/tofei-dashboard/leaderboard" element={<ProtectedRoute><ToFEIDashboard initialView="leaderboard" /></ProtectedRoute>} />
+            <Route path="/tofei-dashboard/about"       element={<ProtectedRoute><ToFEIDashboard initialView="about" /></ProtectedRoute>} />
+            <Route path="/tofei-dashboard/settings"    element={<ProtectedRoute><ToFEIDashboard initialView="settings" /></ProtectedRoute>} />
 
             {/* 
             <Route

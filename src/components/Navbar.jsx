@@ -52,8 +52,12 @@ function Navbar() {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
-  // Hide global navbar on the /youtube page to avoid overlap with its custom header
-  if (location.pathname === '/youtube') return null;
+  // Hide global navbar on specialized portals to avoid branding conflict
+  const isSpecializedPortal = 
+    location.pathname === '/youtube' || 
+    location.pathname.startsWith('/tofei-');
+  
+  if (isSpecializedPortal) return null;
 
   const handleLogout = async () => {
     try {

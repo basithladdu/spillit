@@ -56,5 +56,10 @@ service cloud.firestore {
       allow create: if true;
       allow read: if isOpsAdmin();
     }
+
+    // ToFEI Reports
+    match /tofei_reports/{reportId} {
+      allow read, write: if true; // Temporarily allow for testing, recommend request.auth != null for production
+    }
   }
 }

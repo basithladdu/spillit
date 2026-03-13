@@ -1,9 +1,12 @@
-// Roboflow Pothole Detection API Integration
+// Roboflow API Integration
 const ROBOFLOW_API_KEY = import.meta.env.VITE_ROBOFLOW_API_KEY;
 const ROBOFLOW_MODEL_ENDPOINT = "https://detect.roboflow.com/pothole-voxrl/1";
 
+// For the Inference SDK equivalent via HTTP
+const SERVERLESS_ROBOFLOW_URL = "https://serverless.roboflow.com";
+
 if (!ROBOFLOW_API_KEY) {
-    console.error("Missing VITE_ROBOFLOW_API_KEY environment variable. Pothole detection will fail.");
+    console.error("Missing VITE_ROBOFLOW_API_KEY environment variable. Detection will fail.");
 }
 
 /**
@@ -20,6 +23,7 @@ export const detectPotholes = async (base64Image) => {
         // Remove data:image/jpeg;base64, prefix if present
         const base64Data = base64Image.split(',')[1] || base64Image;
 
+        // Use standard detect endpoint for pothole model
         const response = await fetch(`${ROBOFLOW_MODEL_ENDPOINT}?api_key=${ROBOFLOW_API_KEY}`, {
             method: "POST",
             headers: {
@@ -35,7 +39,7 @@ export const detectPotholes = async (base64Image) => {
         const data = await response.json();
         return data.predictions || [];
     } catch (error) {
-        console.error("Roboflow detection error:", error);
+        console.error("Roboflow pothole detection error:", error);
         throw error;
     }
 };

@@ -1,0 +1,331 @@
+/* src/styles/tofei.css */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ===== ToFEI Design Tokens ===== */
+.tofei-theme {
+  --tf-bg: #060d0a;
+  --tf-surface: #0d1f17;
+  --tf-surface-2: #122b1e;
+  --tf-border: #1a4030;
+  --tf-text-main: #e8f5ee;
+  --tf-text-muted: #8bbfa0;
+  --tf-green: #16a34a;
+  --tf-green-light: #22c55e;
+  --tf-amber: #d97706;
+  --tf-red: #dc2626;
+  --tf-blue: #2563eb;
+  --tf-accent: #10b981;
+  --tf-gold: #f59e0b;
+  --navbar-height: 70px;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--tf-bg);
+  color: var(--tf-text-main);
+  min-height: 100dvh;
+}
+
+.tofei-theme.light-mode {
+  --tf-bg: #f3f4f6;
+  --tf-surface: #ffffff;
+  --tf-surface-2: #f8fafc;
+  --tf-border: #e2e8f0;
+  --tf-text-main: #0f172a;
+  --tf-text-muted: #64748b;
+  --tf-green: #16a34a;
+  --tf-green-light: #15803d;
+  --tf-amber: #d97706;
+  --tf-red: #dc2626;
+  --tf-blue: #2563eb;
+  --tf-accent: #059669;
+  --tf-gold: #d97706;
+}
+
+/* ===== Scrollbar ===== */
+.tofei-theme ::-webkit-scrollbar { display: none; }
+.tofei-theme { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ===== Cards ===== */
+.tf-card {
+  background-color: var(--tf-surface);
+  border: 1px solid var(--tf-border);
+  border-radius: 0.75rem;
+}
+
+/* ===== Inputs ===== */
+.tf-input {
+  background-color: var(--tf-surface-2);
+  border: 1px solid var(--tf-border);
+  color: var(--tf-text-main);
+  padding: 0.65rem 1rem;
+  border-radius: 0.5rem;
+  width: 100%;
+  font-size: 0.875rem;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.2s;
+}
+.tf-input:focus {
+  outline: none;
+  border-color: var(--tf-green);
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
+}
+.tf-input::placeholder { color: var(--tf-text-muted); }
+.tf-input option {
+  background-color: var(--tf-surface);
+  color: var(--tf-text-main);
+}
+
+/* ===== Buttons ===== */
+.tf-btn-primary {
+  background: linear-gradient(135deg, #16a34a, #059669);
+  color: #fff;
+  font-weight: 700;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.tf-btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.tf-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.tf-btn-ghost {
+  background-color: transparent;
+  color: var(--tf-text-muted);
+  border: 1px solid var(--tf-border);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.tf-btn-ghost:hover {
+  color: var(--tf-text-main);
+  border-color: var(--tf-green);
+  background-color: rgba(22, 163, 74, 0.05);
+}
+
+.tf-btn-danger {
+  background-color: rgba(220, 38, 38, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tf-btn-danger:hover { background-color: rgba(220, 38, 38, 0.2); }
+
+/* ===== Table ===== */
+.tf-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tf-table th {
+  text-align: left;
+  padding: 0.875rem 1rem;
+  color: var(--tf-text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--tf-border);
+  white-space: nowrap;
+  font-weight: 700;
+}
+.tf-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--tf-border);
+  font-size: 0.875rem;
+  vertical-align: middle;
+  color: var(--tf-text-main);
+}
+.tf-table tr:hover td { background-color: rgba(22, 163, 74, 0.03); }
+
+/* ===== Badges ===== */
+.tf-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.tf-badge-green  { background: rgba(22,163,74,0.1); color: #22c55e; border-color: rgba(22,163,74,0.25); }
+.tf-badge-amber  { background: rgba(217,119,6,0.1);  color: #f59e0b; border-color: rgba(217,119,6,0.25); }
+.tf-badge-red    { background: rgba(220,38,38,0.1);  color: #f87171; border-color: rgba(220,38,38,0.25); }
+.tf-badge-blue   { background: rgba(37,99,235,0.1);  color: #60a5fa; border-color: rgba(37,99,235,0.25); }
+
+/* ===== Sidebar Nav ===== */
+.tf-nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--tf-text-muted);
+  transition: all 0.15s;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  text-align: left;
+  border-right: 2px solid transparent;
+}
+.tf-nav-item:hover {
+  color: var(--tf-text-main);
+  background-color: rgba(22, 163, 74, 0.06);
+}
+.tf-nav-item.active {
+  background-color: rgba(22, 163, 74, 0.12);
+  color: var(--tf-green-light);
+  border-right-color: var(--tf-green-light);
+}
+
+/* ===== Progress Bar ===== */
+.tf-progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.tofei-theme.light-mode .tf-progress-track {
+  background: rgba(0,0,0,0.06);
+}
+.tf-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(to right, var(--tf-green), var(--tf-green-light));
+  transition: width 0.6s ease;
+}
+
+/* ===== Photo Upload ===== */
+.tf-photo-dropzone {
+  border: 2px dashed var(--tf-border);
+  border-radius: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(22, 163, 74, 0.02);
+}
+.tf-photo-dropzone:hover, .tf-photo-dropzone.drag-over {
+  border-color: var(--tf-green);
+  background: rgba(22, 163, 74, 0.06);
+}
+
+/* ===== Scorecard ===== */
+.tf-guideline-card {
+  background: var(--tf-surface-2);
+  border: 1px solid var(--tf-border);
+  border-radius: 0.75rem;
+  transition: all 0.2s;
+}
+.tf-guideline-card.completed {
+  border-color: rgba(22, 163, 74, 0.4);
+  background: rgba(22, 163, 74, 0.05);
+}
+.tf-guideline-card.mandatory { border-left: 3px solid var(--tf-amber); }
+.tf-guideline-card.mandatory.completed { border-left-color: var(--tf-green-light); }
+
+/* ===== Score Circle ===== */
+.tf-score-ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  background: conic-gradient(var(--tf-green) var(--pct), rgba(255,255,255,0.05) 0);
+  box-shadow: 0 0 20px rgba(22,163,74,0.3);
+}
+.tofei-theme.light-mode .tf-score-ring {
+  background: conic-gradient(var(--tf-green) var(--pct), rgba(0,0,0,0.05) 0);
+}
+
+/* ===== Mobile responsive ===== */
+@media (max-width: 767px) {
+  .tofei-theme {
+    padding-top: var(--navbar-height) !important;
+  }
+  
+  .tf-card { 
+    border-radius: 0.5rem; 
+    padding: 1.25rem !important;
+    margin-bottom: 0.5rem;
+  }
+  
+  .tf-table th, .tf-table td { 
+    padding: 0.6rem 0.75rem; 
+    font-size: 0.8rem; 
+  }
+  
+  .tf-btn-primary { 
+    padding: 0.65rem 1rem; 
+    font-size: 0.8rem; 
+  }
+
+  /* Grid layouts on mobile */
+  .tf-mobile-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+
+  /* School info grid */
+  .tf-school-info-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Image upload grid */
+  .tf-image-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  
+  /* KPIs on mobile */
+  .tf-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Sidebar header logo */
+  .tf-sidebar-logo {
+    height: 32px !important;
+  }
+  
+  /* Government header fixes */
+  .tf-gov-header {
+    padding: 0.5rem 1rem !important;
+  }
+  
+  .tf-gov-logo {
+    height: 28px !important;
+  }
+  
+  .tf-gov-text-primary {
+    font-size: 0.65rem !important;
+  }
+  
+  .tf-gov-text-secondary {
+    font-size: 0.55rem !important;
+  }
+}
+
+/* ===== Compliance Score Pulse ===== */
+@keyframes tf-pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(22,163,74,0.3); }
+  50%       { box-shadow: 0 0 25px rgba(22,163,74,0.7); }
+}
+.tf-compliance-glow { animation: tf-pulse-glow 2.5s ease-in-out infinite; }
