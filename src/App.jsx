@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Suspense, lazy } from "react";
 import { Analytics } from "@vercel/analytics/react"
@@ -52,135 +53,128 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-950 dark:via-black dark:to-gray-800 text-black dark:text-white transition-colors duration-300">
+      <div className="min-h-screen bg-[var(--fixit-bg)] text-[var(--fixit-text-main)] transition-colors duration-300 flex flex-col">
         <Navbar />
 
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/report/:id" element={<Report />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/help" element={<Help />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/team" element={<Team />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/sih2025" element={<SIH2025 />} />
-            <Route path="/partner" element={<Partner />} />
-            <Route path="/admin/donors" element={<AdminDonors />} />
-            <Route path="/donors" element={<Donors />} />
-            <Route path="/become-donor" element={<BecomeDonor />} />
-            <Route path="/youtube" element={<YoutubeSubmission />} />
+        <div className="flex-1 pt-16">
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/report/:id" element={<Report />} />
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/help" element={<Help />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/team" element={<Team />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/sih2025" element={<SIH2025 />} />
+              <Route path="/partner" element={<Partner />} />
+              <Route path="/admin/donors" element={<AdminDonors />} />
+              <Route path="/donors" element={<Donors />} />
+              <Route path="/become-donor" element={<BecomeDonor />} />
+              <Route path="/youtube" element={<YoutubeSubmission />} />
 
-            {/* Municipal Routes */}
-            <Route path="/municipal-register" element={<MunicipalRegistration />} />
-            <Route
-              path="/municipal-dashboard"
-              element={
-                <ProtectedRoute role="municipal_admin">
-                  <MunicipalDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/municipal-dashboard/tracker"
-              element={
-                <ProtectedRoute role="municipal_admin">
-                  <MunicipalDashboard initialView="tracker" />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/municipal-dashboard/pothole-detection"
-              element={
-                <ProtectedRoute role="municipal_admin">
-                  <MunicipalDashboard initialView="pothole-detection" />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/municipal-dashboard/grouped-reports"
-              element={
-                <ProtectedRoute role="municipal_admin">
-                  <MunicipalDashboard initialView="grouped-reports" />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/municipal-dashboard/video-processor"
-              element={
-                <ProtectedRoute role="municipal_admin">
-                  <MunicipalDashboard initialView="video-processor" />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/municipal-dashboard/leaderboard"
-              element={
-                <ProtectedRoute role="municipal_admin">
-                  <MunicipalDashboard initialView="leaderboard" />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/municipal-dashboard/about"
-              element={
-                <ProtectedRoute role="municipal_admin">
-                  <MunicipalDashboard initialView="about" />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/municipal-dashboard/settings"
-              element={
-                <ProtectedRoute role="municipal_admin">
-                  <MunicipalDashboard initialView="settings" />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ops-dashboard"
-              element={
-                <ProtectedRoute>
-                  <OpsDashboard />
-                </ProtectedRoute>
-              }
-            />
+              {/* Municipal Routes */}
+              <Route path="/municipal-register" element={<MunicipalRegistration />} />
+              <Route
+                path="/municipal-dashboard"
+                element={
+                  <ProtectedRoute role="municipal_admin">
+                    <MunicipalDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/municipal-dashboard/tracker"
+                element={
+                  <ProtectedRoute role="municipal_admin">
+                    <MunicipalDashboard initialView="tracker" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/municipal-dashboard/pothole-detection"
+                element={
+                  <ProtectedRoute role="municipal_admin">
+                    <MunicipalDashboard initialView="pothole-detection" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/municipal-dashboard/grouped-reports"
+                element={
+                  <ProtectedRoute role="municipal_admin">
+                    <MunicipalDashboard initialView="grouped-reports" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/municipal-dashboard/video-processor"
+                element={
+                  <ProtectedRoute role="municipal_admin">
+                    <MunicipalDashboard initialView="video-processor" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/municipal-dashboard/leaderboard"
+                element={
+                  <ProtectedRoute role="municipal_admin">
+                    <MunicipalDashboard initialView="leaderboard" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/municipal-dashboard/about"
+                element={
+                  <ProtectedRoute role="municipal_admin">
+                    <MunicipalDashboard initialView="about" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/municipal-dashboard/settings"
+                element={
+                  <ProtectedRoute role="municipal_admin">
+                    <MunicipalDashboard initialView="settings" />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/ops-dashboard"
+                element={
+                  <ProtectedRoute>
+                    <OpsDashboard />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* ToFEI Routes */}
-            <Route path="/tofei-login" element={<ToFEILogin />} />
-            {/* STCC – full state view */}
-            <Route path="/tofei-dashboard"             element={<ProtectedRoute><ToFEIDashboard /></ProtectedRoute>} />
-            <Route path="/tofei-dashboard/tracker"     element={<ProtectedRoute><ToFEIDashboard initialView="tracker" /></ProtectedRoute>} />
-            <Route path="/tofei-dashboard/scorecard"   element={<ProtectedRoute><ToFEIDashboard initialView="scorecard" /></ProtectedRoute>} />
-            <Route path="/tofei-dashboard/leaderboard" element={<ProtectedRoute><ToFEIDashboard initialView="leaderboard" /></ProtectedRoute>} />
-            <Route path="/tofei-dashboard/users"       element={<ProtectedRoute><ToFEIDashboard initialView="users" /></ProtectedRoute>} />
-            <Route path="/tofei-dashboard/about"       element={<ProtectedRoute><ToFEIDashboard initialView="about" /></ProtectedRoute>} />
-            <Route path="/tofei-dashboard/settings"    element={<ProtectedRoute><ToFEIDashboard initialView="settings" /></ProtectedRoute>} />
-            {/* DTCC – district scoped view */}
-            <Route path="/tofei-dtcc"             element={<ProtectedRoute><ToFEIDTCCDashboard /></ProtectedRoute>} />
-            <Route path="/tofei-dtcc/tracker"     element={<ProtectedRoute><ToFEIDTCCDashboard initialView="tracker" /></ProtectedRoute>} />
-            <Route path="/tofei-dtcc/leaderboard" element={<ProtectedRoute><ToFEIDTCCDashboard initialView="leaderboard" /></ProtectedRoute>} />
-            <Route path="/tofei-dtcc/settings"    element={<ProtectedRoute><ToFEIDTCCDashboard initialView="settings" /></ProtectedRoute>} />
-            {/* School – submit & view own reports */}
-            <Route path="/tofei-school" element={<ProtectedRoute><ToFEISchoolDashboard /></ProtectedRoute>} />
-            <Route path="/tofei-school/history" element={<ProtectedRoute><ToFEISchoolDashboard initialView="history" /></ProtectedRoute>} />
-            <Route path="/tofei-school/stats" element={<ProtectedRoute><ToFEISchoolDashboard initialView="stats" /></ProtectedRoute>} />
+              {/* ToFEI Routes */}
+              <Route path="/tofei-login" element={<ToFEILogin />} />
+              {/* STCC – full state view */}
+              <Route path="/tofei-dashboard"             element={<ProtectedRoute><ToFEIDashboard /></ProtectedRoute>} />
+              <Route path="/tofei-dashboard/tracker"     element={<ProtectedRoute><ToFEIDashboard initialView="tracker" /></ProtectedRoute>} />
+              <Route path="/tofei-dashboard/scorecard"   element={<ProtectedRoute><ToFEIDashboard initialView="scorecard" /></ProtectedRoute>} />
+              <Route path="/tofei-dashboard/leaderboard" element={<ProtectedRoute><ToFEIDashboard initialView="leaderboard" /></ProtectedRoute>} />
+              <Route path="/tofei-dashboard/users"       element={<ProtectedRoute><ToFEIDashboard initialView="users" /></ProtectedRoute>} />
+              <Route path="/tofei-dashboard/about"       element={<ProtectedRoute><ToFEIDashboard initialView="about" /></ProtectedRoute>} />
+              <Route path="/tofei-dashboard/settings"    element={<ProtectedRoute><ToFEIDashboard initialView="settings" /></ProtectedRoute>} />
+              {/* DTCC – district scoped view */}
+              <Route path="/tofei-dtcc"             element={<ProtectedRoute><ToFEIDTCCDashboard /></ProtectedRoute>} />
+              <Route path="/tofei-dtcc/tracker"     element={<ProtectedRoute><ToFEIDTCCDashboard initialView="tracker" /></ProtectedRoute>} />
+              <Route path="/tofei-dtcc/leaderboard" element={<ProtectedRoute><ToFEIDTCCDashboard initialView="leaderboard" /></ProtectedRoute>} />
+              <Route path="/tofei-dtcc/settings"    element={<ProtectedRoute><ToFEIDTCCDashboard initialView="settings" /></ProtectedRoute>} />
+              {/* School – submit & view own reports */}
+              <Route path="/tofei-school" element={<ProtectedRoute><ToFEISchoolDashboard /></ProtectedRoute>} />
+              <Route path="/tofei-school/history" element={<ProtectedRoute><ToFEISchoolDashboard initialView="history" /></ProtectedRoute>} />
+              <Route path="/tofei-school/stats" element={<ProtectedRoute><ToFEISchoolDashboard initialView="stats" /></ProtectedRoute>} />
 
-            {/* 
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            /> 
-            */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </div>
+
         <Analytics />
         <ToastContainer
           position="bottom-right"
@@ -194,6 +188,7 @@ function App() {
           pauseOnHover
           theme="dark"
         />
+        <Footer />
       </div>
     </AuthProvider>
   );

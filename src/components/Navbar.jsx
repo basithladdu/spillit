@@ -2,9 +2,21 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import {
-  Map, BarChart3, Users, LogIn, LogOut,
-  Search, HelpCircle, Star, UserCircle, Menu, X,
-  User as UserIcon, Handshake, Heart
+  Map,
+  BarChart3,
+  Users,
+  LogIn,
+  LogOut,
+  Search,
+  HelpCircle,
+  Star,
+  UserCircle,
+  Menu,
+  X,
+  User as UserIcon,
+  Handshake,
+  Heart,
+  Flame
 } from 'lucide-react';
 
 import { useAuth } from '../hooks/useAuth';
@@ -18,8 +30,16 @@ const NavItem = ({ to, icon: IconComponent, label, colorClass = "text-[var(--mun
 
   return (
     <Link to={to} onClick={onClick} className="relative group w-full md:w-auto">
-      <div className={`flex items-center gap-3 md:gap-2 px-4 py-3 md:py-2 rounded-xl md:rounded-full transition-all duration-300 ${isActive ? 'text-[var(--muni-accent)] bg-white/10' : `${colorClass} hover:text-[var(--muni-accent)] hover:bg-white/5`}`}>
-        <span className="relative z-10"><IconComponent size={20} className="md:w-[18px] md:h-[18px]" /></span>
+      <div
+        className={`flex items-center gap-3 md:gap-2 px-4 py-3 md:py-2 rounded-xl md:rounded-full transition-all duration-300 ${
+          isActive
+            ? 'text-[var(--fixit-primary)] bg-white/5'
+            : `${colorClass} hover:text-[var(--fixit-primary)] hover:bg-white/5`
+        }`}
+      >
+        <span className="relative z-10">
+          <IconComponent size={20} className="md:w-[18px] md:h-[18px]" />
+        </span>
         <span className="font-medium text-base md:text-sm relative z-10">{label}</span>
 
         {/* Active/Hover Glow Effect (Desktop) */}
@@ -100,9 +120,9 @@ function Navbar() {
           {/* --- Desktop Menu Pill --- */}
           <div className="hidden md:flex bg-black/80 backdrop-blur-xl border border-[var(--muni-border)] rounded-full p-1 shadow-2xl items-center gap-1">
             <LayoutGroup id="nav-pill-group">
-              <NavItem to="/" icon={Map} label="Map" />
-              <NavItem to="/gallery" icon={Users} label="Gallery" />
-              <NavItem to="/leaderboard" icon={Star} label="Leaderboard" />
+              <NavItem to="/" icon={Map} label="Feed & Map" />
+              <NavItem to="/gallery" icon={Users} label="Community" />
+              <NavItem to="/leaderboard" icon={Star} label="Impact" />
               <NavItem to="/help" icon={HelpCircle} label="Help" />
               <NavItem to="/about" icon={UserIcon} label="About" />
               <NavItem to="/partner" icon={Handshake} label="Partner/Fund Us" />
@@ -142,8 +162,20 @@ function Navbar() {
             />
           </form>
 
-          {/* Auth Buttons (Desktop) */}
+          {/* CTA + Auth Buttons (Desktop) */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Report CTA */}
+            <Link to="/#report">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 px-5 py-2 rounded-full bg-[var(--fixit-primary)] text-black font-semibold shadow-[0_0_24px_rgba(255,107,0,0.45)] hover:shadow-[0_0_32px_rgba(255,107,0,0.7)] transition-all heading-font tracking-[0.12em] text-xs uppercase"
+              >
+                <Flame size={16} />
+                <span>Report Issue</span>
+              </motion.button>
+            </Link>
+
             <AnimatePresence mode="wait">
               {currentUser ? (
                 <>
@@ -152,8 +184,10 @@ function Navbar() {
                     animate={{ opacity: 1, scale: 1 }}
                     className="hidden xl:flex items-center gap-2 bg-black/80 backdrop-blur-md border border-[var(--muni-border)] px-4 py-2 rounded-full"
                   >
-                    <UserCircle size={16} className="text-[var(--muni-accent)]" />
-                    <span className="text-xs text-[var(--muni-text-muted)] font-mono">{currentUser.email?.split('@')[0]}</span>
+                    <UserCircle size={16} className="text-[var(--fixit-primary)]" />
+                    <span className="text-xs text-[var(--fixit-text-muted)] font-mono">
+                      {currentUser.email?.split('@')[0]}
+                    </span>
                   </motion.div>
 
                   <motion.button
@@ -171,7 +205,7 @@ function Navbar() {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-2 bg-gradient-to-r from-[#FF671F] via-white to-[#046A38] text-black font-bold px-5 py-2 rounded-full shadow-[0_0_20px_rgba(255,103,31,0.3)] hover:shadow-[0_0_30px_rgba(4,106,56,0.5)] border border-white/10 transition-all"
+                    className="flex items-center gap-2 bg-white/5 text-[var(--fixit-text-main)] border border-[var(--fixit-border)] px-4 py-2 rounded-full hover:bg-white/10 transition-all text-sm"
                   >
                     <LogIn size={18} />
                     <span className="text-sm">Login</span>
@@ -180,6 +214,15 @@ function Navbar() {
               )}
             </AnimatePresence>
           </div>
+
+          {/* Mobile Report CTA */}
+          <Link to="/#report" className="md:hidden">
+            <button
+              className="mr-2 px-4 py-2 rounded-full bg-[var(--fixit-primary)] text-black text-xs font-semibold heading-font tracking-[0.16em] uppercase shadow-[0_0_22px_rgba(255,107,0,0.55)] active:scale-95 transition-all"
+            >
+              Report
+            </button>
+          </Link>
 
           {/* Mobile Menu Toggle */}
           <button
@@ -255,11 +298,18 @@ function Navbar() {
                   </button>
                 </div>
               ) : (
-                <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                  <button className="w-full py-3 bg-gradient-to-r from-[#FF671F] via-white to-[#046A38] text-black rounded-xl font-bold shadow-lg shadow-[var(--muni-accent)]/20 flex items-center justify-center gap-2 active:scale-95 transition-all">
-                    <LogIn size={18} /> Login
-                  </button>
-                </Link>
+                <div className="flex gap-3">
+                  <Link to="/#report" onClick={() => setIsMenuOpen(false)} className="flex-1">
+                    <button className="w-full py-3 rounded-xl bg-[var(--fixit-primary)] text-black font-semibold heading-font tracking-[0.16em] uppercase shadow-[0_0_26px_rgba(255,107,0,0.6)] active:scale-95 transition-all flex items-center justify-center gap-2">
+                      <Flame size={18} /> Report Issue
+                    </button>
+                  </Link>
+                  <Link to="/login" onClick={() => setIsMenuOpen(false)} className="flex-1">
+                    <button className="w-full py-3 bg-white/5 border border-[var(--muni-border)] text-white rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-95 transition-all text-sm">
+                      <LogIn size={18} /> Login
+                    </button>
+                  </Link>
+                </div>
               )}
             </div>
           </motion.div>

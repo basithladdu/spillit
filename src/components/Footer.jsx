@@ -2,27 +2,51 @@ import React from 'react';
 
 function Footer() {
   return (
-    <footer className="text-center text-xs text-gray-500 dark:text-gray-400 py-6">
-      <div className="flex justify-center items-center space-x-4">
-        <a 
-          href="https://support.google.com/maps/answer/2839911" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-        >
-          how to enable gps/geotagging?
-        </a>
-        <span className="text-gray-300 dark:text-gray-600">|</span>
-        <a 
-          href="https://twitter.com/letsfixindia" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-        >
-          follow us on twitter
-        </a>
+    <footer className="mt-8 border-t border-[var(--fixit-border)] bg-black/40 backdrop-blur-xl">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] sm:text-xs text-[var(--fixit-text-muted)]">
+        <div className="flex items-center gap-2">
+          <span className="heading-font tracking-[0.18em] uppercase text-[var(--fixit-text-main)]">
+            FixIt India
+          </span>
+          <span className="hidden sm:inline text-[var(--fixit-text-muted)]">
+            Spot it. Post it. Fix it.
+          </span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <span className="text-[var(--fixit-text-muted)]">
+            Built with <span className="text-[var(--fixit-primary)]">❤️</span> for India
+          </span>
+          <span className="hidden sm:inline text-gray-700">|</span>
+          <a
+            href="https://wedevit.in"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-[var(--fixit-primary)] transition-colors"
+          >
+            Powered by Devit
+          </a>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <a
+            href="https://twitter.com/letsfixindia"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-[var(--fixit-primary)] transition-colors"
+          >
+            Twitter
+          </a>
+          <a
+            href="https://support.google.com/maps/answer/2839911"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-[var(--fixit-primary)] transition-colors"
+          >
+            Enable GPS / Geotagging
+          </a>
+        </div>
       </div>
-     
     </footer>
   );
 }

@@ -137,11 +137,20 @@ function Report() {
   const statTheme = STATUS_CONFIG[report.status] || STATUS_CONFIG.new;
   const SeverityIcon = sevTheme.icon;
 
+  const timelineSteps = [
+    { key: 'reported', label: 'Reported' },
+    { key: 'assigned', label: 'Assigned' },
+    { key: 'in-progress', label: 'In Progress' },
+    { key: 'resolved', label: 'Fixed' }
+  ];
+
+  const currentStatus = (report.status || 'new').toLowerCase();
+
   return (
-    <div className="min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans selection:bg-[#FF671F]/30 pb-20">
+    <div className="min-h-screen bg-[var(--fixit-bg)] text-[var(--muni-text-main)] font-sans selection:bg-[var(--fixit-primary)]/30 pb-20">
 
       {/* --- Background Glow --- */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#FF671F]/10 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[var(--fixit-primary)]/20 rounded-full blur-[140px] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-24 relative z-10">
 
@@ -158,9 +167,9 @@ function Report() {
             initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}
             className="space-y-6"
           >
-            {/* Image Card */}
+            {/* Image Card / Hero */}
             <div className="bg-[var(--muni-surface)]/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden shadow-2xl relative group">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FF671F] via-white to-[#046A38] opacity-50"></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--fixit-primary)] via-[#ffb347] to-[var(--fixit-secondary)] opacity-60"></div>
               {report.imageUrl ? (
                 <img
                   src={report.imageUrl}
@@ -228,7 +237,9 @@ function Report() {
                       {statTheme.label}
                     </span>
                   </div>
-                  <h1 className="text-3xl font-bold text-white">{report.type}</h1>
+                  <h1 className="text-3xl font-bold text-white heading-font tracking-[0.08em] uppercase">
+                    {report.type}
+                  </h1>
                 </div>
 
                 {/* Upvote Big Button */}
@@ -246,6 +257,38 @@ function Report() {
                 <p className="text-gray-300 leading-relaxed bg-black/20 p-4 rounded-xl border border-white/5 text-sm">
                   {report.desc}
                 </p>
+              </div>
+
+              {/* Status Timeline */}
+              <div className="mb-8">
+                <h3 className="text-xs font-bold text-[var(--muni-text-muted)] uppercase tracking-wider mb-3">
+                  Resolution Timeline
+                </h3>
+                <div className="flex items-center justify-between gap-2 text-[10px]">
+                  {timelineSteps.map((step, index) => {
+                    const isActive =
+                      step.key === 'reported' ||
+                      (step.key === 'assigned' && (currentStatus === 'in-progress' || currentStatus === 'resolved')) ||
+                      (step.key === 'in-progress' && (currentStatus === 'in-progress' || currentStatus === 'resolved')) ||
+                      (step.key === 'resolved' && currentStatus === 'resolved');
+                    return (
+                      <div key={step.key} className="flex-1 flex flex-col items-center">
+                        <div
+                          className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold border ${
+                            isActive
+                              ? 'bg-[var(--fixit-primary)] text-black border-[var(--fixit-primary)] shadow-[0_0_16px_rgba(255,107,0,0.7)]'
+                              : 'bg-black/60 text-[var(--muni-text-muted)] border-white/10'
+                          }`}
+                        >
+                          {index + 1}
+                        </div>
+                        <span className="mt-1 text-[10px] text-center text-[var(--muni-text-muted)]">
+                          {step.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

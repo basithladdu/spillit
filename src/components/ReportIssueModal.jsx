@@ -53,7 +53,8 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
         image: null,
         lat: null,
         lng: null,
-        address: ''
+        address: '',
+        anonymous: true
     });
 
     const showToast = (message, type = 'error') => {
@@ -108,7 +109,7 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                 const imgUrl = await uploadToCloudinary(imageFile);
 
                 // Extract and exclude file objects from Firestore data
-                const { image, lat, lng, address, ...cleanData } = formData;
+                const { image, lat, lng, address, anonymous, ...cleanData } = formData;
 
                 // Save references for background AI processing BEFORE clearing formData
                 const savedImage = formData.image;
@@ -124,12 +125,12 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                     address,
                     imageUrl: imgUrl,
                     ts: serverTimestamp(),
-                    userId: currentUser ? currentUser.uid : "guest",
+                    userId: anonymous || !currentUser ? "anonymous_citizen" : currentUser.uid,
                     upvotes: 0,
                 });
 
-                setFormData({ type: "Pothole", severity: "Low", desc: "", image: null, lat: null, lng: null, address: '' });
-                onSuccess({ ...cleanData, lat, lng, address, imageUrl: imgUrl, id: newDoc.id });
+                setFormData({ type: "Pothole", severity: "Low", desc: "", image: null, lat: null, lng: null, address: '', anonymous: true });
+                onSuccess({ ...cleanData, lat, lng, address, anonymous, imageUrl: imgUrl, id: newDoc.id });
 
                 showToast("✅ Report submitted successfully!", "success");
 
@@ -262,10 +263,10 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                             {/* --- Left Column: Map (Desktop) / Top (Mobile) --- */}
                             {/* Mobile: h-60 fixed height (compact), z-10 to stay on top. Desktop: h-full, w-1/2 */}
                             <div className="w-full h-60 md:h-full md:w-1/2 relative bg-gray-900 border-b md:border-b-0 md:border-r border-white/10 z-10 shadow-2xl md:shadow-none shrink-0">
-                                <div className="absolute inset-0 z-0">
+                    <div className="absolute inset-0 z-0">
                                     <div className="w-full h-full flex flex-col">
-                                        <div className="absolute top-4 left-4 z-10 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 pointer-events-none">
-                                            <MapPin size={14} className="text-[#FF671F]" />
+                                <div className="absolute top-4 left-4 z-10 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 pointer-events-none">
+                                        <MapPin size={14} className="text-[var(--fixit-primary)]" />
                                             <span className="text-xs font-bold text-white">Location Verification</span>
                                         </div>
                                         <div className="flex-1 w-full h-full [&>div]:h-full [&>div>div]:h-full [&>div>div]:rounded-none [&>div>div]:border-0">
@@ -281,10 +282,12 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                                 {/* Header */}
                                 <div className="px-5 py-3 border-b border-white/10 flex justify-between items-center bg-[#18181b] z-20 shrink-0">
                                     <div>
-                                        <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
-                                            <Crosshair className="text-[#FF671F]" size={18} /> New Report
+                                        <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2 heading-font tracking-[0.16em] uppercase">
+                                            <Crosshair className="text-[var(--fixit-primary)]" size={18} /> New Issue
                                         </h2>
-                                        <p className="text-[10px] md:text-xs text-gray-400 mt-0.5">Submit an issue to your local council.</p>
+                                        <p className="text-[10px] md:text-xs text-gray-400 mt-0.5">
+                                            Spot it. Post it. Fix it. Your report nudges the system.
+                                        </p>
                                     </div>
                                     <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white">
                                         <X size={20} />
@@ -367,8 +370,44 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                                             value={formData.desc}
                                             onChange={e => setFormData({ ...formData, desc: e.target.value })}
                                             className="w-full h-20 md:h-32 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-xs md:text-sm outline-none focus:border-[#FF671F] transition resize-none placeholder:text-gray-600"
-                                            placeholder="Describe the issue clearly..."
+                                            placeholder="Describe what&apos;s broken, how long it&apos;s been there..."
                                         />
+                                    </div>
+
+                                    {/* Anonymous toggle */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                            <span>Identity</span>
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, anonymous: !prev.anonymous }))}
+                                            className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-xs md:text-sm transition-all ${
+                                                formData.anonymous
+                                                    ? 'bg-black/60 border-[var(--fixit-primary)] text-[var(--fixit-primary)]'
+                                                    : 'bg-black/40 border-white/10 text-gray-300'
+                                            }`}
+                                        >
+                                            <span className="flex flex-col text-left">
+                                                <span className="font-semibold">
+                                                    {formData.anonymous ? 'Posted as Anonymous Citizen 🇮🇳' : 'Posted with my account'}
+                                                </span>
+                                                <span className="text-[10px] text-gray-400">
+                                                    {formData.anonymous
+                                                        ? 'We only share your report, not your name.'
+                                                        : 'Your account may be visible to municipal partners.'}
+                                                </span>
+                                            </span>
+                                            <span
+                                                className={`ml-3 inline-flex h-5 w-9 items-center rounded-full border transition-all ${
+                                                    formData.anonymous
+                                                        ? 'bg-[var(--fixit-primary)]/20 border-[var(--fixit-primary)] justify-end'
+                                                        : 'bg-black/60 border-white/20 justify-start'
+                                                }`}
+                                            >
+                                                <span className="h-4 w-4 rounded-full bg-white" />
+                                            </span>
+                                        </button>
                                     </div>
                                 </form>
 
@@ -377,7 +416,7 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                                     <button
                                         onClick={handleSubmit}
                                         disabled={isSubmitting}
-                                        className="w-full py-3 bg-gradient-to-r from-[#FF671F] via-white to-[#046A38] rounded-xl text-black font-bold shadow-lg shadow-[#FF671F]/20 hover:shadow-[#FF671F]/40 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98] text-sm md:text-base"
+                                        className="w-full py-3 rounded-xl bg-[var(--fixit-primary)] text-black font-bold shadow-lg shadow-[rgba(255,107,0,0.45)] hover:shadow-[0_0_32px_rgba(255,107,0,0.7)] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98] text-sm md:text-base heading-font tracking-[0.16em] uppercase"
                                     >
                                         {isSubmitting ? (
                                             <>
@@ -387,7 +426,7 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                                         ) : (
                                             <>
                                                 <Send size={16} />
-                                                <span>SUBMIT REPORT</span>
+                                                <span>Report This Issue →</span>
                                             </>
                                         )}
                                     </button>

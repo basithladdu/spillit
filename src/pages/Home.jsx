@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   collection, onSnapshot,
   orderBy, query, limit
@@ -21,7 +21,6 @@ import { SiGoogledocs } from 'react-icons/si';
 import { MdGpsFixed } from 'react-icons/md';
 
 import ReportCard from './ReportCard';
-import Navbar from '../components/Navbar';
 import ReportIssueModal from '../components/ReportIssueModal';
 import '../styles/municipal.css';
 
@@ -280,8 +279,148 @@ function Home() {
     navigator.clipboard.writeText(id).then(() => alert('ID Copied!'));
   };
 
+  const issuesArray = useMemo(
+    () =>
+      Object.entries(allIssues)
+        .map(([id, issue]) => ({ id, ...issue }))
+        .sort((a, b) => (b.ts?.toMillis?.() || 0) - (a.ts?.toMillis?.() || 0)),
+    [allIssues]
+  );
+
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-[var(--muni-bg)] text-white font-sans">
+    <div className="relative w-full h-screen overflow-hidden bg-[var(--fixit-bg)] text-[var(--fixit-text-main)] font-sans">
+      {/* --- HERO & FEED OVERLAY (Desktop) --- */}
+      <div className="pointer-events-none hidden lg:flex flex-col gap-4 absolute inset-y-24 left-8 z-[850] max-w-xl">
+        <div className="glass-card rounded-3xl px-6 py-5 shadow-2xl border border-[var(--fixit-border)]/70">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-2xl bg-[var(--fixit-primary)]/15 flex items-center justify-center text-[var(--fixit-primary)]">
+              <span className="heading-font text-xs tracking-[0.18em] uppercase">FI</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="heading-font text-xs tracking-[0.22em] text-[var(--fixit-text-muted)] uppercase">
+                FixIt India
+              </span>
+              <span className="text-[11px] text-[var(--fixit-text-muted)]">letsfixindia.com</span>
+            </div>
+          </div>
+          <h1 className="heading-font text-3xl leading-snug sm:text-4xl tracking-[0.08em]">
+            India has issues.
+            <br />
+            <span className="bg-gradient-to-r from-[var(--fixit-primary)] via-[#ffb347] to-[var(--fixit-secondary)] bg-clip-text text-transparent">
+              Let&apos;s fix them.
+            </span>
+          </h1>
+          <p className="mt-3 text-sm text-[var(--fixit-text-muted)] max-w-md">
+            Spot potholes, leaks, garbage and more. Post them in seconds. Nudge your city to act.
+          </p>
+        </div>
+
+        {/* Stats / Impact mini row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="glass-card rounded-2xl px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--fixit-text-muted)] mb-1 heading-font">
+              Issues Reported
+            </p>
+            <p className="text-2xl font-semibold text-[var(--fixit-primary)]">
+              {issuesArray.length.toString().padStart(2, '0')}
+            </p>
+          </div>
+          <div className="glass-card rounded-2xl px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--fixit-text-muted)] mb-1 heading-font">
+              Cities Active
+            </p>
+            <p className="text-2xl font-semibold text-[var(--fixit-secondary)]">
+              {new Set(issuesArray.map((i) => i.address || '').filter(Boolean).map((a) => a.split(',').pop()?.trim())).size || 0}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* --- LIVE FEED PANEL (Right side on desktop) --- */}
+      <div className="hidden xl:block pointer-events-none absolute inset-y-20 right-6 z-[860] w-80">
+        <div className="glass-card rounded-3xl h-full flex flex-col border border-[var(--fixit-border)]/80 shadow-2xl overflow-hidden">
+          <div className="px-4 pt-4 pb-2 border-b border-[var(--fixit-border)] flex items-center justify-between">
+            <div>
+              <p className="heading-font text-[10px] uppercase tracking-[0.22em] text-[var(--fixit-text-muted)]">
+                Live Issues
+              </p>
+              <p className="text-xs text-[var(--fixit-text-muted)]">
+                Masonry-style feed of what citizens spot.
+              </p>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-3 space-y-3">
+            {issuesArray.slice(0, 24).map((issue, index) => {
+              const status = (issue.status || 'new').toLowerCase();
+              const statusConfig =
+                status === 'resolved'
+                  ? { label: 'Fixed', color: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40' }
+                  : status === 'in-progress'
+                  ? { label: 'In Progress', color: 'bg-sky-500/20 text-sky-300 border-sky-500/40' }
+                  : { label: 'Reported', color: 'bg-[var(--fixit-primary)]/15 text-[var(--fixit-primary)] border-[var(--fixit-primary)]/40' };
+
+              return (
+                <Link
+                  key={issue.id}
+                  to={`/report/${issue.id}`}
+                  className="block pointer-events-auto"
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                    className="rounded-2xl overflow-hidden border border-[var(--fixit-border)] bg-white/2 hover:border-[var(--fixit-primary)]/60 hover:shadow-[0_0_30px_rgba(255,107,0,0.3)] transition-all group"
+                  >
+                    {issue.imageUrl && (
+                      <div className="relative h-28 overflow-hidden">
+                        <img
+                          src={getOptimizedImageUrl(issue.imageUrl, 320)}
+                          alt={issue.type}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute top-2 left-2 flex gap-2">
+                          <span className="px-2 py-1 rounded-full text-[10px] font-semibold bg-black/70 text-white border border-white/15">
+                            {issue.type || 'Issue'}
+                          </span>
+                        </div>
+                        <span
+                          className={`absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-semibold border ${statusConfig.color}`}
+                        >
+                          {statusConfig.label}
+                        </span>
+                      </div>
+                    )}
+                    <div className="px-3 py-2.5 space-y-1.5">
+                      <p className="text-[11px] text-[var(--fixit-text-muted)] line-clamp-2">
+                        {issue.desc || 'No description provided.'}
+                      </p>
+                      <div className="flex items-center justify-between text-[10px] text-[var(--fixit-text-muted)]">
+                        <span className="flex items-center gap-1">
+                          <span>📍</span>
+                          <span className="truncate max-w-[120px]">
+                            {issue.address || 'Unknown location'}
+                          </span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span>👍</span>
+                          <span>{issue.upvotes || 0}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                </Link>
+              );
+            })}
+
+            {issuesArray.length === 0 && (
+              <p className="text-[11px] text-[var(--fixit-text-muted)] text-center mt-8">
+                No reports yet. Be the first to{" "}
+                <span className="text-[var(--fixit-primary)]">spot it, post it, fix it.</span>
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* --- THE MAP --- */}
       <div id="map-root" className="w-full h-full">
