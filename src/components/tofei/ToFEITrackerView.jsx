@@ -1,14 +1,26 @@
 import { useState } from 'react';
-import { Search, Download, Eye, Trash2, FileText, CheckCircle, XCircle, Clock, Filter, Zap } from 'lucide-react';
+import { Search, Download, Eye, Trash2, FileText, CheckCircle, XCircle, Clock, Filter, Zap, Globe, MapPin } from 'lucide-react';
+import { Map, Marker, NavigationControl } from 'react-map-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiYXdhaXpzaGFpazI1IiwiYSI6ImNtY3J5MHQzMTEwZjcyanMzYWJuMnMxcTUifQ.bLPhS0-UAAouYlHOK396XQ';
+
 const statusColor = (s) => s === 'compliant' ? '#22c55e' : s === 'non-compliant' ? '#f87171' : '#f59e0b';
 const statusLabel = (s) => s === 'compliant' ? 'Compliant' : s === 'non-compliant' ? 'Non-Compliant' : 'Pending';
 
-function DetailModal({ report, onClose, onStatusUpdate, onDelete }) {
+function getReportLatLng(report) {
+  const lat = report?.latitude ?? report?.location?.lat;
+  const lng = report?.longitude ?? report?.location?.lng;
+  return { lat, lng };
+}
+
+export function DetailModal({ report, onClose, onStatusUpdate, onDelete, readOnly = false }) {
   if (!report) return null;
+  const { lat, lng } = getReportLatLng(report);
+  const hasCoords = lat != null && lng != null && !Number.isNaN(lat) && !Number.isNaN(lng);
   const score = report.totalScore || 0;
   const guidelineLabels = [
     'Tobacco-Free Signage (inside)', 'Boundary Signage (outside)', 'No tobacco evidence on premises',
@@ -45,6 +57,38 @@ function DetailModal({ report, onClose, onStatusUpdate, onDelete }) {
               <span style={{ fontSize: '0.8rem', color: 'var(--tf-text-main)' }}>{v}</span>
             </div>
           ))}
+
+          {/* GPS Info - show on all portals, normalize location/lat-lng */}
+          <div style={{ padding: '0.625rem', background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.1)', borderRadius: '0.5rem', alignItems: 'center' }}>
+            <div style={{ minWidth: '120px', fontSize: '0.72rem', color: '#3b82f6', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: hasCoords ? '0.35rem' : 0 }}>
+              <Globe size={14} /> GPS LOCATION
+            </div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--tf-text-main)', fontFamily: "'JetBrains Mono', monospace" }}>
+              {hasCoords ? `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}` : '—'}
+            </div>
+          </div>
+
+          {/* Map */}
+          {hasCoords && (
+            <div>
+              <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--tf-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <MapPin size={14} /> Location on Map
+              </p>
+              <div style={{ height: '220px', width: '100%', borderRadius: '0.5rem', overflow: 'hidden', border: '1px solid var(--tf-border)', background: 'var(--tf-surface-2)' }}>
+                <Map
+                  initialViewState={{ longitude: Number(lng), latitude: Number(lat), zoom: 15 }}
+                  mapStyle="mapbox://styles/mapbox/light-v11"
+                  mapboxAccessToken={MAPBOX_TOKEN}
+                  style={{ width: '100%', height: '100%' }}
+                >
+                  <Marker longitude={Number(lng)} latitude={Number(lat)} anchor="bottom">
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#22c55e', border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }} />
+                  </Marker>
+                  <NavigationControl position="top-right" />
+                </Map>
+              </div>
+            </div>
+          )}
 
           {/* Guideline scores */}
           {report.guidelineScores?.length > 0 && (
@@ -98,14 +142,16 @@ function DetailModal({ report, onClose, onStatusUpdate, onDelete }) {
           )}
 
           {/* Actions */}
-          <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.5rem', borderTop: '1px solid var(--tf-border)' }}>
-            <button onClick={() => onStatusUpdate(report.id, report.complianceStatus)} className="tf-btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
-              <CheckCircle size={15} /> Update Status
-            </button>
-            <button onClick={() => { onDelete(report.id); onClose(); }} className="tf-btn-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Trash2 size={15} /> Delete
-            </button>
-          </div>
+          {!readOnly && (
+            <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.5rem', borderTop: '1px solid var(--tf-border)' }}>
+              <button onClick={() => onStatusUpdate(report.id, report.complianceStatus)} className="tf-btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
+                <CheckCircle size={15} /> Update Status
+              </button>
+              <button onClick={() => { onDelete(report.id); onClose(); }} className="tf-btn-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Trash2 size={15} /> Delete
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -216,6 +262,7 @@ export default function ToFEITrackerView({ reports, onDelete, onStatusUpdate }) 
               <tr>
                 <th>School Name</th>
                 <th>District / Block</th>
+                <th>GPS Location</th>
                 <th>Score</th>
                 <th>Status</th>
                 <th>Officer</th>
@@ -227,9 +274,12 @@ export default function ToFEITrackerView({ reports, onDelete, onStatusUpdate }) 
               {filtered.length === 0 ? (
                 <tr><td colSpan={7} style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--tf-text-muted)' }}>No reports found. Submit a scorecard to get started.</td></tr>
               ) : filtered.map(r => (
-                <tr key={r.id}>
+                <tr key={r.id} onClick={() => setSelected(r)} style={{ cursor: 'pointer' }}>
                   <td style={{ fontWeight: 600 }}>{r.schoolName || '—'}</td>
                   <td style={{ color: 'var(--tf-text-muted)', fontSize: '0.8rem' }}>{r.district || '—'}{r.block ? ` / ${r.block}` : ''}</td>
+                  <td style={{ fontSize: '0.75rem', color: '#3b82f6', fontFamily: "'JetBrains Mono', monospace" }}>
+                    {(() => { const c = getReportLatLng(r); return (c.lat != null && c.lng != null) ? `${Number(c.lat).toFixed(4)}, ${Number(c.lng).toFixed(4)}` : '—'; })()}
+                  </td>
                   <td>
                     <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: (r.totalScore || 0) >= 70 ? '#22c55e' : (r.totalScore || 0) >= 50 ? '#f59e0b' : '#f87171' }}>
                       {r.totalScore || 0}/95
@@ -242,10 +292,12 @@ export default function ToFEITrackerView({ reports, onDelete, onStatusUpdate }) 
                   </td>
                   <td style={{ fontSize: '0.8rem', color: 'var(--tf-text-muted)' }}>{r.reportingOfficer || '—'}</td>
                   <td style={{ fontSize: '0.75rem', color: 'var(--tf-text-muted)', fontFamily: "'JetBrains Mono', monospace" }}>{r.createdAt?.toDate?.().toLocaleDateString('en-IN') || 'N/A'}</td>
-                  <td style={{ textAlign: 'right' }}>
+                  <td style={{ textAlign: 'right' }} onClick={e => e.stopPropagation()}>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.375rem' }}>
-                      <button onClick={() => setSelected(r)} className="tf-btn-ghost" style={{ padding: '0.375rem', border: 'none' }}><Eye size={15} /></button>
-                      <button onClick={() => onDelete(r.id)} className="tf-btn-danger" style={{ padding: '0.375rem' }}><Trash2 size={15} /></button>
+                      <button onClick={() => setSelected(r)} className="tf-btn-ghost" style={{ padding: '0.375rem 0.6rem', border: '1px solid var(--tf-border)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem' }}>
+                        <Eye size={14} /> View
+                      </button>
+                      <button onClick={() => onDelete(r.id)} className="tf-btn-danger" style={{ padding: '0.375rem' }}><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>

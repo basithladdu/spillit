@@ -255,71 +255,173 @@
   background: conic-gradient(var(--tf-green) var(--pct), rgba(0,0,0,0.05) 0);
 }
 
-/* ===== Mobile responsive ===== */
+/* ===== Main content: prevent top clipped on mobile (not the header) ===== */
+.tofei-main-scroll {
+  padding-top: 1.5rem;
+}
+@media (max-width: 767px) {
+  .tofei-main-scroll {
+    padding-top: calc(1.25rem + env(safe-area-inset-top, 0px)) !important;
+    padding-left: calc(1.25rem + env(safe-area-inset-left, 0px)) !important;
+    padding-right: calc(1.25rem + env(safe-area-inset-right, 0px)) !important;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ===== Mobile responsive (max-width 767px) ===== */
 @media (max-width: 767px) {
   .tofei-theme {
+    --navbar-height: calc(88px + env(safe-area-inset-top, 0px));
     padding-top: var(--navbar-height) !important;
-  }
-  
-  .tf-card { 
-    border-radius: 0.5rem; 
-    padding: 1.25rem !important;
-    margin-bottom: 0.5rem;
-  }
-  
-  .tf-table th, .tf-table td { 
-    padding: 0.6rem 0.75rem; 
-    font-size: 0.8rem; 
-  }
-  
-  .tf-btn-primary { 
-    padding: 0.65rem 1rem; 
-    font-size: 0.8rem; 
+    overflow-x: hidden;
   }
 
-  /* Grid layouts on mobile */
+  /* 1. Gov header: stack logo/title on top, School Portal button below, left-aligned */
+  .tf-gov-header-mobile .tf-gov-header-inner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+  .tf-gov-header-mobile .tf-gov-divider {
+    display: none;
+  }
+  .tf-gov-header-mobile .tf-gov-title-wrap span:first-child {
+    font-size: 0.65rem !important;
+  }
+  .tf-gov-header-mobile .tf-gov-title-wrap span:last-child {
+    font-size: 0.6rem !important;
+  }
+  .tf-gov-header-mobile .tf-gov-portal-badge {
+    font-size: 0.6rem !important;
+    padding: 0.2rem 0.5rem !important;
+  }
+
+  /* 2. Page header: compact title + breadcrumb, smaller font */
+  .tf-page-header {
+    /* Keep the Submit Scorecard / My Reports bar always visible on mobile */
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  .tf-page-title {
+    font-size: 0.8rem !important;
+    line-height: 1.2;
+  }
+  .tf-page-breadcrumb {
+    font-size: 0.6rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tf-reports-badge {
+    font-size: 0.6rem !important;
+    padding: 0.15rem 0.4rem !important;
+  }
+
+  /* 3. Main content: consistent padding (1rem + safe-area), no horizontal overflow */
+  .tofei-main-scroll {
+    padding-left: calc(1rem + env(safe-area-inset-left, 0px)) !important;
+    padding-right: calc(1rem + env(safe-area-inset-right, 0px)) !important;
+  }
+
+  /* 4. Footer: stack columns vertically, full width, centered */
+  .tf-footer .tf-footer-inner {
+    padding: 1.5rem 1rem !important;
+  }
+  .tf-footer .tf-footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+    text-align: center;
+  }
+  .tf-footer .tf-footer-col {
+    text-align: center;
+  }
+  .tf-footer .tf-footer-col h3,
+  .tf-footer .tf-footer-col h4 {
+    justify-content: center;
+  }
+  .tf-footer .tf-footer-col a {
+    display: inline-block;
+  }
+  .tf-footer > .tf-footer-inner > div:last-child {
+    text-align: center;
+  }
+
+  /* Bottom tab bar: safe area */
+  .tf-bottom-tabs {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  .tf-bottom-tab {
+    min-width: 0;
+  }
+
+  .tf-card {
+    border-radius: 0.5rem;
+    padding: 1rem !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .tf-table th,
+  .tf-table td {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .tf-btn-primary {
+    padding: 0.65rem 1rem;
+    font-size: 0.8rem;
+  }
+
   .tf-mobile-grid {
     display: flex !important;
     flex-direction: column !important;
     gap: 1rem !important;
   }
 
-  /* School info grid */
   .tf-school-info-grid {
     grid-template-columns: 1fr !important;
   }
 
-  /* Image upload grid */
   .tf-image-grid {
     grid-template-columns: repeat(3, 1fr) !important;
   }
-  
-  /* KPIs on mobile */
+
   .tf-kpi-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 0.75rem !important;
   }
 
-  /* Sidebar header logo */
   .tf-sidebar-logo {
     height: 32px !important;
   }
-  
-  /* Government header fixes */
+
   .tf-gov-header {
     padding: 0.5rem 1rem !important;
+    padding-top: calc(0.5rem + env(safe-area-inset-top, 0px)) !important;
+    min-height: 70px;
   }
-  
+
   .tf-gov-logo {
     height: 28px !important;
   }
-  
-  .tf-gov-text-primary {
-    font-size: 0.65rem !important;
+
+  .tofei-theme aside .tf-nav-item {
+    min-height: 48px;
+    padding: 0.875rem 1rem !important;
   }
-  
-  .tf-gov-text-secondary {
-    font-size: 0.55rem !important;
+
+  /* Section titles and content: scale down on mobile */
+  .tf-section-title {
+    font-size: 0.9rem !important;
+  }
+  .tf-history-view,
+  .tf-stats-view {
+    min-width: 0;
+    overflow: hidden;
   }
 }
 

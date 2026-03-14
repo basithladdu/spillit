@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { CheckCircle, AlertCircle, Clock, TrendingUp, School, ShieldCheck, MapPin, FileText, X } from 'lucide-react';
+import { CheckCircle, AlertCircle, Clock, TrendingUp, School, ShieldCheck, MapPin, FileText, X, LayoutList, BarChart3, AlertTriangle, Timer, LineChart } from 'lucide-react';
 import { Map, Marker, Popup, NavigationControl } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiYXdhaXpzaGFpazI1IiwiYSI6ImNtY3J5MHQzMTEwZjcyanMzYWJuMnMxcTUifQ.bLPhS0-UAAouYlHOK396XQ';
 
 const Card = ({ children, style }) => (
   <div className="tf-card" style={{ padding: '1.25rem', ...style }}>{children}</div>
@@ -73,19 +75,125 @@ export default function ToFEIDashboardView({ reports = [], stats = { total: 0, c
   };
 
   const statusColor = (s) => s === 'compliant' ? '#22c55e' : s === 'non-compliant' ? '#f87171' : '#f59e0b';
-  const statusLabel = (s) => s === 'compliant' ? '✅ Compliant' : s === 'non-compliant' ? '❌ Non-Compliant' : '⏳ Pending';
+  const statusLabel = (s) => s === 'compliant' ? 'Compliant' : s === 'non-compliant' ? 'Non-Compliant' : 'Pending';
+  const StatusIcon = ({ status, size=14 }) => {
+    if (status === 'compliant') return <CheckCircle size={size} color="#22c55e" />;
+    if (status === 'non-compliant') return <AlertCircle size={size} color="#f87171" />;
+    return <Timer size={size} color="#f59e0b" />;
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
       {/* KPIs */}
       <div className="tf-kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.875rem' }}>
-        <KPI label="Total Reports" value={stats.total} sub={`+${today} today`} icon="📊" color="#22c55e" border="#16a34a" />
-        <KPI label="Compliant" value={stats.compliant} sub={`${stats.rate}% rate`} icon="✅" color="#22c55e" border="#16a34a" />
-        <KPI label="Non-Compliant" value={stats.nonCompliant} sub="Action required" icon="⚠️" color="#f87171" border="#dc2626" />
-        <KPI label="Pending Review" value={stats.pending} sub="Awaiting verification" icon="⏳" color="#f59e0b" border="#d97706" />
-        <KPI label="This Week" value={thisWeek} sub="New submissions" icon="📈" color="#60a5fa" border="#2563eb" />
+        <KPI label="Total Reports" value={stats.total} sub={`+${today} today`} icon={<BarChart3 size={20} />} color="#22c55e" border="#16a34a" />
+        <KPI label="Compliant" value={stats.compliant} sub={`${stats.rate}% rate`} icon={<ShieldCheck size={20} />} color="#22c55e" border="#16a34a" />
+        <KPI label="Non-Compliant" value={stats.nonCompliant} sub="Action required" icon={<AlertTriangle size={20} />} color="#f87171" border="#dc2626" />
+        <KPI label="Pending Review" value={stats.pending} sub="Awaiting verification" icon={<Clock size={20} />} color="#f59e0b" border="#d97706" />
+        <KPI label="This Week" value={thisWeek} sub="New submissions" icon={<LineChart size={20} />} color="#60a5fa" border="#2563eb" />
       </div>
+
+      {/* Map View */}
+      <Card style={{ zIndex: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--tf-text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <MapPin size={16} color="#60a5fa" /> Geographic Overview
+          </h3>
+          <span style={{ fontSize: '0.65rem', color: 'var(--tf-text-muted)' }}>GPS tracked submissions</span>
+        </div>
+        <div style={{ height: '400px', width: '100%', borderRadius: '0.5rem', overflow: 'hidden', border: '1px solid var(--tf-border)', background: 'var(--tf-surface-2)', position: 'relative' }}>
+          <Map
+            initialViewState={{
+              longitude: 80.6,
+              latitude: 16.5,
+              zoom: 6
+            }}
+            mapStyle={isLightMode ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11"}
+            mapboxAccessToken={MAPBOX_TOKEN}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <NavigationControl position="top-right" />
+            {reports.filter(r => {
+              const lat = r.latitude ?? r.location?.lat;
+              const lng = r.longitude ?? r.location?.lng;
+              return lat != null && lng != null;
+            }).map(r => {
+              const lat = r.latitude ?? r.location?.lat;
+              const lng = r.longitude ?? r.location?.lng;
+              return (
+              <Marker 
+                key={r.id} 
+                longitude={Number(lng)} 
+                latitude={Number(lat)} 
+                anchor="bottom"
+                onClick={e => {
+                  e.originalEvent.stopPropagation();
+                  setPopupInfo(r);
+                }}
+              >
+                <div 
+                  style={{ 
+                    cursor: 'pointer',
+                    width: '14px', 
+                    height: '14px', 
+                    borderRadius: '50%', 
+                    background: r.complianceStatus === 'compliant' ? '#22c55e' : r.complianceStatus === 'non-compliant' ? '#f87171' : '#f59e0b',
+                    border: '2px solid #fff',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                    transition: 'transform 0.2s',
+                  }} 
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.3)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                />
+              </Marker>
+            );
+            })}
+
+            {popupInfo && (() => {
+              const plng = popupInfo.longitude ?? popupInfo.location?.lng;
+              const plat = popupInfo.latitude ?? popupInfo.location?.lat;
+              if (plat == null || plng == null) return null;
+              return (
+              <Popup
+                anchor="top"
+                longitude={Number(plng)}
+                latitude={Number(plat)}
+                onClose={() => setPopupInfo(null)}
+                closeButton={false}
+                maxWidth="240px"
+              >
+                <div style={{ padding: '0.25rem', color: '#1a1a1a', minWidth: '180px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
+                    <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 800, color: '#046A38', flex: 1, paddingRight: '0.5rem' }}>{popupInfo.schoolName}</h4>
+                    <button 
+                      onClick={() => setPopupInfo(null)}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#999' }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#666', marginBottom: '0.5rem' }}>
+                    UDISE: {popupInfo.udiseCode || 'N/A'} · {popupInfo.district}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '0.4rem 0.6rem', borderRadius: '0.4rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Score: {popupInfo.totalScore}/95</span>
+                    <span style={{ 
+                      fontSize: '0.6rem', 
+                      fontWeight: 700, 
+                      color: popupInfo.complianceStatus === 'compliant' ? '#16a34a' : '#dc2626',
+                      textTransform: 'uppercase'
+                    }}>
+                      {popupInfo.complianceStatus}
+                    </span>
+                  </div>
+                </div>
+              </Popup>
+              );
+            })()}
+          </Map>
+        </div>
+      </Card>
 
       {/* Compliance overview + District breakdown */}
       <div className="tf-mobile-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem' }}>
@@ -183,104 +291,19 @@ export default function ToFEIDashboardView({ reports = [], stats = { total: 0, c
                   <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--tf-text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.schoolName || 'Unknown School'}</div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--tf-text-muted)' }}>{r.district || '—'} · Score: <span style={{ color: '#22c55e', fontWeight: 700 }}>{r.totalScore || 0}/95</span></div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem', flexShrink: 0 }}>
-                  <span style={{ fontSize: '0.65rem', fontWeight: 700, color: statusColor(r.complianceStatus), background: `${statusColor(r.complianceStatus)}15`, padding: '0.15rem 0.5rem', borderRadius: '9999px', whiteSpace: 'nowrap' }}>
-                    {statusLabel(r.complianceStatus)}
-                  </span>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--tf-text-muted)' }}>{timeAgo(r.createdAt)}</span>
-                </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: `${statusColor(r.complianceStatus)}15`, padding: '0.15rem 0.5rem', borderRadius: '9999px' }}>
+                      <StatusIcon status={r.complianceStatus} size={12} />
+                      <span style={{ fontSize: '0.65rem', fontWeight: 700, color: statusColor(r.complianceStatus), whiteSpace: 'nowrap' }}>
+                        {statusLabel(r.complianceStatus)}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--tf-text-muted)' }}>{timeAgo(r.createdAt)}</span>
+                  </div>
               </div>
             ))}
           </div>
         }
-      </Card>
-
-      {/* Map View */}
-      <Card style={{ zIndex: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--tf-text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <MapPin size={16} color="#60a5fa" /> Geographic Overview
-          </h3>
-          <span style={{ fontSize: '0.65rem', color: 'var(--tf-text-muted)' }}>GPS tracked submissions</span>
-        </div>
-        <div style={{ height: '350px', width: '100%', borderRadius: '0.5rem', overflow: 'hidden', border: '1px solid var(--tf-border)', background: 'var(--tf-surface-2)', position: 'relative' }}>
-          <Map
-            initialViewState={{
-              longitude: 80.6,
-              latitude: 16.5,
-              zoom: 6
-            }}
-            mapStyle={isLightMode ? "mapbox://styles/mapbox/light-v11" : "mapbox://styles/mapbox/dark-v11"}
-            mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
-            style={{ width: '100%', height: '100%' }}
-          >
-            <NavigationControl position="top-right" />
-            {reports.filter(r => r.location).map(r => (
-              <Marker 
-                key={r.id} 
-                longitude={r.location.lng} 
-                latitude={r.location.lat} 
-                anchor="bottom"
-                onClick={e => {
-                  e.originalEvent.stopPropagation();
-                  setPopupInfo(r);
-                }}
-              >
-                <div 
-                  style={{ 
-                    cursor: 'pointer',
-                    width: '14px', 
-                    height: '14px', 
-                    borderRadius: '50%', 
-                    background: r.complianceStatus === 'compliant' ? '#22c55e' : r.complianceStatus === 'non-compliant' ? '#f87171' : '#f59e0b',
-                    border: '2px solid #fff',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                    transition: 'transform 0.2s',
-                  }} 
-                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.3)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                />
-              </Marker>
-            ))}
-
-            {popupInfo && (
-              <Popup
-                anchor="top"
-                longitude={Number(popupInfo.location.lng)}
-                latitude={Number(popupInfo.location.lat)}
-                onClose={() => setPopupInfo(null)}
-                closeButton={false}
-                maxWidth="240px"
-              >
-                <div style={{ padding: '0.25rem', color: '#1a1a1a', minWidth: '180px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
-                    <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 800, color: '#046A38', flex: 1, paddingRight: '0.5rem' }}>{popupInfo.schoolName}</h4>
-                    <button 
-                      onClick={() => setPopupInfo(null)}
-                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#999' }}
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: '#666', marginBottom: '0.5rem' }}>
-                    UDISE: {popupInfo.udiseCode || 'N/A'} · {popupInfo.district}
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '0.4rem 0.6rem', borderRadius: '0.4rem' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>Score: {popupInfo.totalScore}/95</span>
-                    <span style={{ 
-                      fontSize: '0.6rem', 
-                      fontWeight: 700, 
-                      color: popupInfo.complianceStatus === 'compliant' ? '#16a34a' : '#dc2626',
-                      textTransform: 'uppercase'
-                    }}>
-                      {popupInfo.complianceStatus}
-                    </span>
-                  </div>
-                </div>
-              </Popup>
-            )}
-          </Map>
-        </div>
       </Card>
 
       {/* COTPA info bar */}

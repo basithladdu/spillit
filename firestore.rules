@@ -57,9 +57,59 @@ service cloud.firestore {
       allow read: if isOpsAdmin();
     }
 
-    // ToFEI Reports
+    // ToFEI - Role-based access (Option A: role stored in tofei_users/{uid})
+    function isTofeiAuthed() {
+      return request.auth != null;
+    }
+    function hasTofeiProfile() {
+      return isTofeiAuthed() && exists(/databases/$(database)/documents/tofei_users/$(request.auth.uid));
+    }
+    function tofeiProfile() {
+      return hasTofeiProfile()
+        ? get(/databases/$(database)/documents/tofei_users/$(request.auth.uid)).data
+        : null;
+    }
+    function isSTCC() {
+      return hasTofeiProfile() && tofeiProfile().role == 'stcc';
+    }
+    function isDTCC() {
+      return hasTofeiProfile() && tofeiProfile().role == 'dtcc';
+    }
+    function isSchool() {
+      return hasTofeiProfile() && tofeiProfile().role == 'school';
+    }
+    function sameDistrict(d) {
+      return hasTofeiProfile() && (tofeiProfile().district != null) && (d == tofeiProfile().district);
+    }
+    function sameSchoolUdise(u) {
+      return hasTofeiProfile() && (tofeiProfile().schoolUdise != null) && (u == tofeiProfile().schoolUdise);
+    }
+
+    match /tofei_users/{userId} {
+      // Allow signed-in user to read their own profile (bootstrap at login)
+      allow read: if (isTofeiAuthed() && request.auth.uid == userId) || isSTCC();
+      allow create, update, delete: if isSTCC();
+    }
+
     match /tofei_reports/{reportId} {
-      allow read, write: if true; // Temporarily allow for testing, recommend request.auth != null for production
+      allow create: if isSchool()
+        && request.resource.data.schoolUdise == tofeiProfile().schoolUdise
+        && request.resource.data.udiseCode == tofeiProfile().schoolUdise
+        && request.resource.data.district == tofeiProfile().district;
+
+      allow read: if isSTCC()
+        || (isDTCC() && sameDistrict(resource.data.district))
+        || (isSchool() && sameSchoolUdise(resource.data.schoolUdise));
+
+      allow update: if isSTCC()
+        || (isDTCC() && sameDistrict(resource.data.district));
+
+      allow delete: if isSTCC();
+    }
+
+    match /tofei_logins/{logId} {
+      allow create: if true;
+      allow read: if isSTCC() || isOpsAdmin();
     }
   }
 }

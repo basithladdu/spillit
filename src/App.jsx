@@ -31,8 +31,10 @@ const MunicipalRegistration = lazy(() => import("./pages/MunicipalRegistration")
 const MunicipalDashboard = lazy(() => import("./pages/MunicipalDashboard"));
 const OpsDashboard = lazy(() => import("./pages/OpsDashboard"));
 // ToFEI Pages
-const ToFEILogin     = lazy(() => import("./pages/ToFEILogin"));
-const ToFEIDashboard = lazy(() => import("./pages/ToFEIDashboard"));
+const ToFEILogin          = lazy(() => import("./pages/ToFEILogin"));
+const ToFEIDashboard      = lazy(() => import("./pages/ToFEIDashboard"));
+const ToFEISchoolDashboard = lazy(() => import("./pages/ToFEISchoolDashboard"));
+const ToFEIDTCCDashboard   = lazy(() => import("./pages/ToFEIDTCCDashboard"));
 
 import "./App.css";
 import "./styles/municipal.css";
@@ -148,12 +150,23 @@ function App() {
 
             {/* ToFEI Routes */}
             <Route path="/tofei-login" element={<ToFEILogin />} />
-            <Route path="/tofei-dashboard" element={<ProtectedRoute><ToFEIDashboard /></ProtectedRoute>} />
+            {/* STCC – full state view */}
+            <Route path="/tofei-dashboard"             element={<ProtectedRoute><ToFEIDashboard /></ProtectedRoute>} />
             <Route path="/tofei-dashboard/tracker"     element={<ProtectedRoute><ToFEIDashboard initialView="tracker" /></ProtectedRoute>} />
             <Route path="/tofei-dashboard/scorecard"   element={<ProtectedRoute><ToFEIDashboard initialView="scorecard" /></ProtectedRoute>} />
             <Route path="/tofei-dashboard/leaderboard" element={<ProtectedRoute><ToFEIDashboard initialView="leaderboard" /></ProtectedRoute>} />
+            <Route path="/tofei-dashboard/users"       element={<ProtectedRoute><ToFEIDashboard initialView="users" /></ProtectedRoute>} />
             <Route path="/tofei-dashboard/about"       element={<ProtectedRoute><ToFEIDashboard initialView="about" /></ProtectedRoute>} />
             <Route path="/tofei-dashboard/settings"    element={<ProtectedRoute><ToFEIDashboard initialView="settings" /></ProtectedRoute>} />
+            {/* DTCC – district scoped view */}
+            <Route path="/tofei-dtcc"             element={<ProtectedRoute><ToFEIDTCCDashboard /></ProtectedRoute>} />
+            <Route path="/tofei-dtcc/tracker"     element={<ProtectedRoute><ToFEIDTCCDashboard initialView="tracker" /></ProtectedRoute>} />
+            <Route path="/tofei-dtcc/leaderboard" element={<ProtectedRoute><ToFEIDTCCDashboard initialView="leaderboard" /></ProtectedRoute>} />
+            <Route path="/tofei-dtcc/settings"    element={<ProtectedRoute><ToFEIDTCCDashboard initialView="settings" /></ProtectedRoute>} />
+            {/* School – submit & view own reports */}
+            <Route path="/tofei-school" element={<ProtectedRoute><ToFEISchoolDashboard /></ProtectedRoute>} />
+            <Route path="/tofei-school/history" element={<ProtectedRoute><ToFEISchoolDashboard initialView="history" /></ProtectedRoute>} />
+            <Route path="/tofei-school/stats" element={<ProtectedRoute><ToFEISchoolDashboard initialView="stats" /></ProtectedRoute>} />
 
             {/* 
             <Route

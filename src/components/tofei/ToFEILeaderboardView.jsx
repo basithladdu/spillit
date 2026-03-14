@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Award, TrendingUp, School } from 'lucide-react';
+import { Award, TrendingUp, School, CheckCircle, AlertCircle, Timer, Trophy } from 'lucide-react';
 
 const GUIDELINE_LABELS = [
   'Indoor signage','Boundary signage','No tobacco evidence',
@@ -42,10 +42,10 @@ export default function ToFEILeaderboardView({ reports }) {
   }, [reports]);
 
   const rankBadge = (i) => {
-    if (i === 0) return { bg: '#f59e0b', color: '#000', label: '🥇' };
-    if (i === 1) return { bg: '#9ca3af', color: '#000', label: '🥈' };
-    if (i === 2) return { bg: '#b45309', color: '#fff', label: '🥉' };
-    return { bg: 'rgba(255,255,255,0.06)', color: 'var(--tf-text-muted)', label: String(i + 1) };
+    if (i === 0) return { bg: 'rgba(245,158,11,0.15)', color: '#f59e0b', icon: <Trophy size={16} /> };
+    if (i === 1) return { bg: 'rgba(156,163,175,0.15)', color: '#9ca3af', icon: <Award size={16} /> };
+    if (i === 2) return { bg: 'rgba(180,83,9,0.15)', color: '#b45309', icon: <Award size={16} /> };
+    return { bg: 'rgba(255,255,255,0.06)', color: 'var(--tf-text-muted)', icon: <span style={{fontSize: '0.75rem', fontWeight: 800}}>{i + 1}</span> };
   };
 
   const statusColor = (s) => s === 'compliant' ? '#22c55e' : s === 'non-compliant' ? '#f87171' : '#f59e0b';
@@ -84,8 +84,8 @@ export default function ToFEILeaderboardView({ reports }) {
                   return (
                     <tr key={s.name} style={{ background: i === 0 ? 'rgba(245,158,11,0.04)' : undefined }}>
                       <td style={{ textAlign: 'center' }}>
-                        <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: badge.bg, color: badge.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: i < 3 ? '1rem' : '0.75rem', fontWeight: 800, margin: '0 auto' }}>
-                          {badge.label}
+                        <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: badge.bg, color: badge.color, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
+                          {badge.icon}
                         </div>
                       </td>
                       <td>
@@ -101,9 +101,12 @@ export default function ToFEILeaderboardView({ reports }) {
                       <td style={{ textAlign: 'center', color: 'var(--tf-text-muted)', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.875rem' }}>{s.avgScore}</td>
                       <td style={{ textAlign: 'center', color: 'var(--tf-text-muted)' }}>{s.submissions}</td>
                       <td style={{ textAlign: 'center' }}>
-                        <span className="tf-badge" style={{ background: `${statusColor(s.latestStatus)}15`, color: statusColor(s.latestStatus), border: `1px solid ${statusColor(s.latestStatus)}30` }}>
-                          {s.latestStatus === 'compliant' ? '✅ Compliant' : s.latestStatus === 'non-compliant' ? '❌ Non-Compliant' : '⏳ Pending'}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center', background: `${statusColor(s.latestStatus)}15`, padding: '0.2rem 0.5rem', borderRadius: '4px', border: `1px solid ${statusColor(s.latestStatus)}30` }}>
+                          {s.latestStatus === 'compliant' ? <CheckCircle size={12} color="#22c55e" /> : s.latestStatus === 'non-compliant' ? <AlertCircle size={12} color="#f87171" /> : <Timer size={12} color="#f59e0b" />}
+                          <span style={{ fontSize: '0.65rem', fontWeight: 700, color: statusColor(s.latestStatus), textTransform: 'uppercase' }}>
+                            {s.latestStatus}
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   );

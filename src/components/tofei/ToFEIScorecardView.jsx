@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from 'react-toastify';
-import { Upload, Camera, CheckCircle, AlertCircle, Loader2, X, Zap, ChevronDown, ChevronRight, MapPin } from 'lucide-react';
+import { Upload, Camera, CheckCircle, AlertCircle, Loader2, X, Zap, ChevronDown, ChevronRight, MapPin, School, Timer, AlertTriangle } from 'lucide-react';
 import app from '../../utils/firebase';
 import { AP_DISTRICTS, AP_DISTRICTS_MANDALS } from '../../utils/apDistricts';
 import { drawDetectionsOnCanvas, fileToBase64 } from '../../utils/roboflow';
@@ -128,7 +128,7 @@ async function analyzePhotoWithRoboflow(file) {
 }
 
 // ── PhotoUploader Component ──────────────────────────────────────────────────
-function PhotoUploader({ activityNum, onPhotosChange }) {
+function PhotoUploader({ activityNum, onPhotosChange, onAnalyzingChange }) {
   const [previews, setPreviews]   = useState([]);   // { url, file, ai }
   const [analyzing, setAnalyzing] = useState(false);
   const inputRef = useRef();
@@ -137,6 +137,7 @@ function PhotoUploader({ activityNum, onPhotosChange }) {
   const processFiles = async (files) => {
     const arr = Array.from(files).slice(0, 5); // max 5 per activity
     setAnalyzing(true);
+    if (onAnalyzingChange) onAnalyzingChange(true);
     
     // Capture GPS Metadata
     const gpsData = await new Promise(resolve => {
@@ -156,15 +157,19 @@ function PhotoUploader({ activityNum, onPhotosChange }) {
       );
     });
 
-    const results = await Promise.all(arr.map(async (file) => {
-      const url = URL.createObjectURL(file);
-      const ai  = await analyzePhotoWithRoboflow(file);
-      return { url, file, ai, gps: gpsData };
-    }));
-    const next = [...previews, ...results].slice(0, 5);
-    setPreviews(next);
-    onPhotosChange(next);
-    setAnalyzing(false);
+    try {
+      const results = await Promise.all(arr.map(async (file) => {
+        const url = URL.createObjectURL(file);
+        const ai  = await analyzePhotoWithRoboflow(file);
+        return { url, file, ai, gps: gpsData };
+      }));
+      const next = [...previews, ...results].slice(0, 5);
+      setPreviews(next);
+      onPhotosChange(next);
+    } finally {
+      setAnalyzing(false);
+      if (onAnalyzingChange) onAnalyzingChange(false);
+    }
   };
 
   const removePhoto = (idx) => {
@@ -176,9 +181,9 @@ function PhotoUploader({ activityNum, onPhotosChange }) {
   const aiLabel = (ai) => {
     if (!ai) return null;
     const preds = ai.predictions || [];
-    if (preds.length === 0) return { ok: true, text: 'AI: No tobacco detected ✅' };
+    if (preds.length === 0) return { ok: true, text: 'AI: No tobacco detected', icon: <CheckCircle size={10} color="#22c55e" /> };
     const classes = [...new Set(preds.map(p => p.class))].join(', ');
-    return { ok: false, text: `AI Detected: ${classes} (${preds.length} item${preds.length > 1 ? 's' : ''}) ⚠️` };
+    return { ok: false, text: `AI Detected: ${classes} (${preds.length} item${preds.length > 1 ? 's' : ''})`, icon: <AlertTriangle size={10} color="#f87171" /> };
   };
 
   return (
@@ -226,7 +231,8 @@ function PhotoUploader({ activityNum, onPhotosChange }) {
                 <img src={p.url} alt={`Evidence ${i + 1}`} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: '0.375rem', border: `1px solid ${label ? (label.ok ? 'rgba(22,163,74,0.5)' : 'rgba(239,68,68,0.5)') : 'var(--tf-border)'}` }} />
                 <button onClick={() => removePhoto(i)} style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(0,0,0,0.7)', border: 'none', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><X size={10} color="#fff" /></button>
                 {label && (
-                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.8)', borderRadius: '0 0 0.375rem 0.375rem', padding: '2px 4px' }}>
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.8)', borderRadius: '0 0 0.375rem 0.375rem', padding: '2px 4px', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    {label.icon}
                     <p style={{ margin: 0, fontSize: '0.55rem', color: label.ok ? '#22c55e' : '#f87171', lineHeight: 1.3 }}>{label.text}</p>
                   </div>
                 )}
@@ -263,7 +269,7 @@ const dataURLToBlob = (dataURL) => {
 };
 
 // ── Main Scorecard Form ──────────────────────────────────────────────────────
-export default function ToFEIScorecardView() {
+export default function ToFEIScorecardView({ userProfile }) {
   const emptyForm = () => ({
     schoolName: '', udiseCode: '', district: '', block: '',
     reportingOfficer: '', contactNo: '', evaluatorName: '', evalDate: new Date().toISOString().slice(0, 10),
@@ -274,12 +280,27 @@ export default function ToFEIScorecardView() {
   const [photoData,    setPhotoData]    = useState({});   // activityNum → array of {file, ai, gps}
   const [submitting,   setSubmitting]   = useState(false);
   const [submitted,    setSubmitted]    = useState(false);
+  const [aiPending,    setAiPending]    = useState(0);     // how many PhotoUploaders are currently analysing
+
+  // Pre-populate if logged in as school
+  useEffect(() => {
+    if (userProfile && userProfile.role === 'school') {
+      setForm(f => ({
+        ...f,
+        schoolName: userProfile.schoolName || '',
+        udiseCode: userProfile.schoolUdise || '',
+        district: userProfile.district || '',
+      }));
+    }
+  }, [userProfile]);
+
   const [expandedGIdx, setExpandedGIdx] = useState(0); // Accordion state
 
   const totalScore     = scores.reduce((a, s) => a + (s.scored || 0), 0);
   const maxScore       = scores.reduce((a, s) => a + (s.max || 0), 0);   // 95
   const pct            = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
   const complianceStatus = pct >= 90 ? 'compliant' : pct >= 60 ? 'pending' : 'non-compliant';
+  const isAnalyzing    = aiPending > 0;
 
   const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -305,10 +326,22 @@ export default function ToFEIScorecardView() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isAnalyzing) {
+      toast.error('AI is still analysing your photos. Please wait a few seconds and try again.');
+      return;
+    }
     if (!form.schoolName.trim()) { toast.error('School name is required'); return; }
     if (!form.district.trim())   { toast.error('District is required'); return; }
     setSubmitting(true);
     try {
+      const canonicalUdise =
+        (userProfile?.schoolUdise || userProfile?.udiseCode || '').trim() ||
+        (form.udiseCode || '').trim();
+      if (!canonicalUdise) { toast.error('UDISE Code is required'); return; }
+      const canonicalDistrict = (form.district || '').trim();
+      const canonicalBlock = (form.block || '').trim();
+      const canonicalSchoolName = (form.schoolName || '').trim();
+
       // Upload all photos to Cloudinary with folder organization
       const allPhotoUrls     = []; // Original URLs
       const allAnnotatedUrls = []; // AI detected URLs
@@ -350,6 +383,11 @@ export default function ToFEIScorecardView() {
       // Build report document
       const doc = {
         ...form,
+        schoolName: canonicalSchoolName,
+        district: canonicalDistrict,
+        block: canonicalBlock,
+        udiseCode: canonicalUdise,
+        schoolUdise: canonicalUdise, // canonical filter key used by dashboards
         totalScore,
         maxScore,
         compliancePercentage: pct,
@@ -360,11 +398,15 @@ export default function ToFEIScorecardView() {
         aiDetections: allAiPreds,
         gpsMetadata: allGps, // <--- Add combined GPS Data 
         location: allGps.length > 0 ? { lat: allGps[0].lat, lng: allGps[0].lng } : null,
+        latitude: allGps.length > 0 ? allGps[0].lat : null,
+        longitude: allGps.length > 0 ? allGps[0].lng : null,
         createdAt: serverTimestamp(),
       };
 
       await addDoc(collection(db, 'tofei_reports'), doc);
-      toast.success(`✅ Scorecard submitted! Score: ${totalScore}/${maxScore} (${pct}%)`);
+      const firstGps = allGps[0];
+      const gpsText = firstGps ? ` · GPS: ${firstGps.lat.toFixed(4)}, ${firstGps.lng.toFixed(4)}` : '';
+      toast.success(`✅ Scorecard submitted! Score: ${totalScore}/${maxScore} (${pct}%)${gpsText}`);
       setSubmitted(true);
       setForm(emptyForm());
       setScores(GUIDELINES.map(g => ({ max: g.max, scored: 0, checks: {} })));
@@ -410,23 +452,24 @@ export default function ToFEIScorecardView() {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '2rem', fontWeight: 900, color: pct >= 90 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#f87171', fontFamily: "'JetBrains Mono', monospace" }}>{pct}%</div>
-            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: complianceStatus === 'compliant' ? '#22c55e' : complianceStatus === 'pending' ? '#f59e0b' : '#f87171' }}>
-              {complianceStatus === 'compliant' ? '✅ ToFEI Compliant' : complianceStatus === 'pending' ? '⏳ Partially Compliant' : '❌ Non-Compliant'}
+            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: complianceStatus === 'compliant' ? '#22c55e' : complianceStatus === 'pending' ? '#f59e0b' : '#f87171', display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'flex-end' }}>
+              {complianceStatus === 'compliant' ? <><CheckCircle size={12} /> ToFEI Compliant</> : complianceStatus === 'pending' ? <><Timer size={12} /> Partially Compliant</> : <><AlertTriangle size={12} /> Non-Compliant</>}
             </div>
           </div>
         </div>
         <div className="tf-progress-track" style={{ height: '8px' }}>
           <div className="tf-progress-fill" style={{ width: `${pct}%`, background: pct >= 90 ? 'linear-gradient(to right, #16a34a, #22c55e)' : pct >= 60 ? 'linear-gradient(to right, #d97706, #f59e0b)' : 'linear-gradient(to right, #dc2626, #f87171)' }} />
         </div>
-        <p style={{ margin: '0.5rem 0 0', fontSize: '0.7rem', color: 'var(--tf-text-muted)' }}>
-          Score ≥ 90 pts → ToFEI Award Eligible · Need all 4 mandatory criteria (marked ⚠️ Mandatory)
+        <p style={{ margin: '0.5rem 0 0', fontSize: '0.7rem', color: 'var(--tf-text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <AlertTriangle size={12} color="#f59e0b" />
+          <span>Score ≥ 90 pts → ToFEI Award Eligible · Need all 4 mandatory criteria (marked MANDATORY)</span>
         </p>
       </div>
 
       {/* School details */}
       <div className="tf-card" style={{ padding: '1.25rem' }}>
         <h3 style={{ margin: '0 0 1rem', fontSize: '0.875rem', fontWeight: 800, color: 'var(--tf-text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          🏫 School Information
+          <School size={18} color="#22c55e" /> School Information
         </h3>
         <div className="tf-school-info-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.875rem' }}>
           {[
@@ -488,7 +531,7 @@ export default function ToFEIScorecardView() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.375rem', flexWrap: 'wrap' }}>
                   {isExpanded ? <ChevronDown size={14} color="var(--tf-text-muted)" /> : <ChevronRight size={14} color="var(--tf-text-muted)" />}
                   <span style={{ fontSize: '0.65rem', fontWeight: 800, background: 'rgba(22,163,74,0.15)', color: '#22c55e', padding: '0.15rem 0.5rem', borderRadius: '9999px' }}>Activity {g.num}</span>
-                  {g.mandatory && <span style={{ fontSize: '0.6rem', fontWeight: 800, background: 'rgba(217,119,6,0.15)', color: '#f59e0b', padding: '0.15rem 0.5rem', borderRadius: '9999px' }}>⚠️ MANDATORY</span>}
+                  {g.mandatory && <span style={{ fontSize: '0.6rem', fontWeight: 800, background: 'rgba(217,119,6,0.15)', color: '#f59e0b', padding: '0.15rem 0.5rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><AlertTriangle size={10} /> MANDATORY</span>}
                   <span style={{ fontSize: '0.6rem', fontWeight: 700, color: 'var(--tf-text-muted)' }}>{g.points}</span>
                 </div>
                 <h4 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 800, color: 'var(--tf-text-main)', lineHeight: 1.4 }}>{g.title}</h4>
@@ -529,7 +572,13 @@ export default function ToFEIScorecardView() {
                 </div>
 
                 {/* Photo upload */}
-                <PhotoUploader activityNum={g.num} onPhotosChange={(dataList) => handlePhotos(gIdx, dataList)} />
+                <PhotoUploader
+                  activityNum={g.num}
+                  onPhotosChange={(dataList) => handlePhotos(gIdx, dataList)}
+                  onAnalyzingChange={(flag) =>
+                    setAiPending((curr) => Math.max(0, curr + (flag ? 1 : -1)))
+                  }
+                />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', color: 'var(--tf-text-muted)'}}>
                   <MapPin size={12} color="#f59e0b" /> <span style={{fontSize: '0.6rem'}}>Photos are strictly GPS tagged & verified with real-time browser location.</span>
                 </div>
@@ -540,11 +589,24 @@ export default function ToFEIScorecardView() {
       })}
 
       {/* Submit */}
-      <button type="submit" disabled={submitting} className="tf-btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1rem', fontSize: '1rem' }}>
+      <button
+        type="submit"
+        disabled={submitting || isAnalyzing}
+        className="tf-btn-primary"
+        style={{ width: '100%', justifyContent: 'center', padding: '1rem', fontSize: '1rem', opacity: submitting || isAnalyzing ? 0.8 : 1 }}
+      >
         {submitting ? (
-          <><Loader2 size={18} style={{ animation: 'spin 0.8s linear infinite' }} /> Uploading photos & saving…</>
+          <>
+            <Loader2 size={18} style={{ animation: 'spin 0.8s linear infinite' }} /> Uploading photos & saving…
+          </>
+        ) : isAnalyzing ? (
+          <>
+            <Loader2 size={18} style={{ animation: 'spin 0.8s linear infinite' }} /> AI is analysing photos… please wait
+          </>
         ) : (
-          <>✅ Submit ToFEI Scorecard — {totalScore}/{maxScore} pts ({pct}%)</>
+          <>
+            <CheckCircle size={18} /> Submit ToFEI Scorecard — {totalScore}/{maxScore} pts ({pct}%)
+          </>
         )}
       </button>
 

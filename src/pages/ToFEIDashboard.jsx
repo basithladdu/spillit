@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { getFirestore, collection, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { 
   BarChart3, ShieldCheck, ClipboardList, MapPin, 
-  Menu, Sun, Moon, Bell, LogOut, FileText, ChevronRight, Award, BookOpen, Settings, LayoutDashboard
+  Menu, Sun, Moon, Bell, LogOut, FileText, ChevronRight, Award, BookOpen, Settings, LayoutDashboard, X, Users, AlertTriangle, CheckCircle, Timer
 } from 'lucide-react';
 import app from '../utils/firebase';
 import apHealthLogo from '../assets/Department-of-Health-Medical-Family-Welfare-AP-Govt-Logo-474x221-1.png';
@@ -13,29 +13,30 @@ import '../styles/tofei.css';
 
 import ToFEIDashboardView   from '../components/tofei/ToFEIDashboardView';
 import ToFEITrackerView     from '../components/tofei/ToFEITrackerView';
-import ToFEIScorecardView   from '../components/tofei/ToFEIScorecardView';
+import ToFEIScorecardFormatView from '../components/tofei/ToFEIScorecardFormatView';
 import ToFEILeaderboardView from '../components/tofei/ToFEILeaderboardView';
 import ToFEISettingsView    from '../components/tofei/ToFEISettingsView';
-import ToFEIAboutView from '../components/tofei/ToFEIAboutView';
+import ToFEIAboutView       from '../components/tofei/ToFEIAboutView';
+import ToFEIUsersView       from '../components/tofei/ToFEIUsersView';
 
 const db = getFirestore(app);
 
-// ── Sidebar nav item ──────────────────────────────────────────────
-function NavItem({ id, icon: IconComp, label, active, onClick }) {
+function NavItem(props) {
+  const Icon = props.icon;
   return (
     <button
-      onClick={() => onClick(id)}
-      className={`tf-nav-item${active ? ' active' : ''}`}
+      onClick={() => props.onClick(props.id)}
+      className={`tf-nav-item${props.active ? ' active' : ''}`}
     >
-      <IconComp size={17} />
-      <span>{label}</span>
+      <Icon size={17} />
+      <span>{props.label}</span>
     </button>
   );
 }
 
 // ── Main Component ────────────────────────────────────────────────
 export default function ToFEIDashboard({ initialView = 'dashboard' }) {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, tofeiProfile, logout } = useAuth();
   const navigate   = useNavigate();
   const location   = useLocation();
 
@@ -66,6 +67,7 @@ export default function ToFEIDashboard({ initialView = 'dashboard' }) {
     if (p.includes('/tracker'))     setActiveView('tracker');
     else if (p.includes('/scorecard'))   setActiveView('scorecard');
     else if (p.includes('/leaderboard')) setActiveView('leaderboard');
+    else if (p.includes('/users'))       setActiveView('users');
     else if (p.includes('/settings'))    setActiveView('settings');
     else if (p.includes('/about'))       setActiveView('about');
     else setActiveView('dashboard');
@@ -94,6 +96,7 @@ export default function ToFEIDashboard({ initialView = 'dashboard' }) {
       tracker:     '/tofei-dashboard/tracker',
       scorecard:   '/tofei-dashboard/scorecard',
       leaderboard: '/tofei-dashboard/leaderboard',
+      users:       '/tofei-dashboard/users',
       about:       '/tofei-dashboard/about',
       settings:    '/tofei-dashboard/settings',
     };
@@ -117,8 +120,8 @@ export default function ToFEIDashboard({ initialView = 'dashboard' }) {
     const next = current === 'compliant' ? 'non-compliant'
                : current === 'non-compliant' ? 'pending'
                : 'compliant';
-    try { await updateDoc(doc(db, 'tofei_reports', id), { complianceStatus: next }); }
-    catch { toast.error('Update failed'); }
+    try { await updateDoc(doc(db, 'tofei_reports', id), { complianceStatus: next }); toast.success(`Status updated → ${next}`); }
+    catch (e) { console.error(e); toast.error(`Update failed${e?.message ? `: ${e.message}` : ''}`); }
   };
 
   const criticalAlerts = reports.filter(r => r.complianceStatus === 'non-compliant').length;
@@ -127,8 +130,9 @@ export default function ToFEIDashboard({ initialView = 'dashboard' }) {
   const sidebarItems = [
     { id: 'dashboard',   icon: LayoutDashboard, label: 'Overview' },
     { id: 'tracker',     icon: ClipboardList,   label: 'Reports Tracker' },
-    { id: 'scorecard',   icon: ShieldCheck,     label: 'Guideline Scorecard' },
+    { id: 'scorecard',   icon: ShieldCheck,     label: 'Scorecard Format' },
     { id: 'leaderboard', icon: Award,           label: 'School Rankings' },
+    { id: 'users',       icon: Users,           label: 'User Management' },
     { id: 'about',       icon: BookOpen,        label: 'About & Help' },
     { id: 'settings',    icon: Settings,        label: 'Settings' },
   ];
@@ -235,7 +239,7 @@ export default function ToFEIDashboard({ initialView = 'dashboard' }) {
             </button>
             <div>
               <h2 style={{ fontSize:'0.875rem', fontWeight:700, color:'var(--tf-text-main)', margin:0, textTransform:'capitalize' }}>
-                {activeView === 'dashboard' ? 'Overview Dashboard' : activeView.replace('-', ' ')}
+                {activeView === 'dashboard' ? 'Overview Dashboard' : activeView === 'users' ? 'User Management' : activeView.replace('-', ' ')}
               </h2>
               <p style={{ fontSize:'0.65rem', color:'var(--tf-text-muted)', margin:0 }}>Tobacco-Free Educational Institutions</p>
             </div>
@@ -262,15 +266,29 @@ export default function ToFEIDashboard({ initialView = 'dashboard' }) {
                   <div style={{ position:'fixed', inset:0, zIndex:40 }} onClick={() => setShowNotif(false)} />
                   <div style={{ position:'absolute', right:0, top:'calc(100% + 8px)', width:'280px', background:'var(--tf-surface)', border:'1px solid var(--tf-border)', borderRadius:'0.75rem', zIndex:50, boxShadow:'0 16px 48px rgba(0,0,0,0.4)', overflow:'hidden' }}>
                     <div style={{ padding:'0.875rem 1rem', borderBottom:'1px solid var(--tf-border)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                      <span style={{ fontSize:'0.8rem', fontWeight:700, color:'var(--tf-text-main)' }}>🔔 Alerts</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Bell size={16} color="var(--tf-text-main)" />
+                        <span style={{ fontSize:'0.8rem', fontWeight:700, color:'var(--tf-text-main)' }}>Alerts</span>
+                      </div>
                       <button onClick={() => setShowNotif(false)} style={{ background:'none', border:'none', color:'var(--tf-text-muted)', cursor:'pointer' }}><X size={14} /></button>
                     </div>
                     <div style={{ padding:'0.875rem 1rem' }}>
                       {criticalAlerts > 0
-                        ? <p style={{ color:'#f87171', fontSize:'0.8rem', margin:0 }}>⚠️ {criticalAlerts} school(s) non-compliant</p>
-                        : <p style={{ color:'var(--tf-text-muted)', fontSize:'0.8rem', margin:0 }}>✅ All clear — no critical alerts</p>
+                        ? <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <AlertTriangle size={14} color="#f87171" />
+                            <p style={{ color:'#f87171', fontSize:'0.8rem', margin:0 }}>{criticalAlerts} school(s) non-compliant</p>
+                          </div>
+                        : <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <CheckCircle size={14} color="#22c55e" />
+                            <p style={{ color:'var(--tf-text-muted)', fontSize:'0.8rem', margin:0 }}>All clear — no critical alerts</p>
+                          </div>
                       }
-                      {stats.pending > 0 && <p style={{ color:'#f59e0b', fontSize:'0.8rem', margin:'0.5rem 0 0' }}>⏳ {stats.pending} report(s) pending review</p>}
+                      {stats.pending > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Timer size={14} color="#f59e0b" />
+                          <p style={{ color:'#f59e0b', fontSize:'0.8rem', margin:0 }}>{stats.pending} report(s) pending review</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </>
@@ -289,11 +307,51 @@ export default function ToFEIDashboard({ initialView = 'dashboard' }) {
           <div style={{ maxWidth:'1280px', margin:'0 auto', paddingBottom:'2rem' }}>
             {activeView === 'dashboard' && <ToFEIDashboardView reports={reports} stats={stats} isLightMode={isLightMode} />}
           {activeView === 'tracker' && <ToFEITrackerView reports={reports} onDelete={handleDeleteReport} onStatusUpdate={handleStatusUpdate} />}
-          {activeView === 'scorecard' && <ToFEIScorecardView />}
+          {activeView === 'scorecard' && <ToFEIScorecardFormatView userProfile={tofeiProfile} />}
           {activeView === 'leaderboard' && <ToFEILeaderboardView reports={reports} />}
+          {activeView === 'users' && <ToFEIUsersView />}
           {activeView === 'about' && <ToFEIAboutView />}
           {activeView === 'settings' && <ToFEISettingsView isLightMode={isLightMode} onToggleTheme={() => setIsLightMode(!isLightMode)} />}
           </div>
+
+          {/* devit Footer */}
+          <footer style={{ borderTop: '1px solid var(--tf-border)', background: 'var(--tf-surface)', marginTop: '3rem' }}>
+            <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '1.5rem' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: 800, color: 'var(--tf-text-main)', marginBottom: '0.75rem' }}>
+                    Powered by <span style={{ color: '#22c55e' }}>devit.</span>
+                  </h3>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--tf-text-muted)', marginBottom: '0.75rem' }}>
+                    We design, build, and scale exceptional software for startups and businesses.
+                  </p>
+                  <a href="https://www.wedevit.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#22c55e', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none' }}>
+                    Visit wedevit.in →
+                  </a>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--tf-text-main)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>Contact</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
+                    <a href="mailto:workwithdevit@gmail.com" style={{ color: 'var(--tf-text-muted)', textDecoration: 'none' }}>workwithdevit@gmail.com</a>
+                    <a href="tel:+919553321211" style={{ color: 'var(--tf-text-muted)', textDecoration: 'none' }}>+91 95533 21211</a>
+                    <a href="https://wa.me/919553321211" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--tf-text-muted)', textDecoration: 'none' }}>WhatsApp</a>
+                  </div>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--tf-text-main)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>Connect</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem' }}>
+                    <a href="https://www.linkedin.com/in/basithladoo/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--tf-text-muted)', textDecoration: 'none' }}>LinkedIn - Basith</a>
+                    <a href="mailto:basithladoo@gmail.com" style={{ color: 'var(--tf-text-muted)', textDecoration: 'none' }}>basithladoo@gmail.com</a>
+                  </div>
+                </div>
+              </div>
+              <div style={{ borderTop: '1px solid var(--tf-border)', paddingTop: '1.5rem', textAlign: 'center' }}>
+                <p style={{ fontSize: '0.75rem', color: 'var(--tf-text-muted)', margin: 0 }}>
+                  © {new Date().getFullYear()} <span style={{ color: '#22c55e', fontWeight: 600 }}>devit</span>. All rights reserved. | Built with ❤️ for better governance
+                </p>
+              </div>
+            </div>
+          </footer>
         </div>
       </main>
 
