@@ -6,10 +6,10 @@ function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] sm:text-xs text-[var(--fixit-text-muted)]">
         <div className="flex items-center gap-2">
           <span className="heading-font tracking-[0.18em] uppercase text-[var(--fixit-text-main)]">
-            FixIt India
+            Spill It
           </span>
           <span className="hidden sm:inline text-[var(--fixit-text-muted)]">
-            Spot it. Post it. Fix it.
+            Spill it. Fix it.
           </span>
         </div>
 
@@ -29,14 +29,6 @@ function Footer() {
         </div>
 
         <div className="flex items-center gap-4">
-          <a
-            href="https://twitter.com/letsfixindia"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-[var(--fixit-primary)] transition-colors"
-          >
-            Twitter
-          </a>
           <a
             href="https://support.google.com/maps/answer/2839911"
             target="_blank"

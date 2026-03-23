@@ -38,36 +38,36 @@ const MAP_STYLES = [
 // --- Onboarding Tour Data ---
 const TOUR_STEPS = [
   {
-    title: "Welcome to LetsFixIndia! 👋",
-    content: "Join the movement to build better cities. LetsFixIndia empowers you to report civic issues.",
+    title: "Welcome to Spill It 👋",
+    content: "People everywhere can spill what’s broken around them with a photo and a message.",
     action: "Start",
     placement: 'center'
   },
   {
-    title: "Report an Issue 📸",
-    content: "Tap here to snap a photo and report a problem. We'll capture your location automatically.",
+    title: "Post a Spill 📸",
+    content: "Tap here to snap a photo and share what you see. We'll capture your location automatically.",
     action: "Next",
     targetRefKey: 'reportBtn',
     placement: 'top'
   },
   {
-    title: "Track Resolution ⏳",
-    content: "Monitor the status of your reports from 'New' to 'Resolved' right here.",
+    title: "Watch the story ⏳",
+    content: "Follow how spills move from reported to fixed over time.",
     action: "Next",
     targetId: 'navbar-root',
     placement: 'bottom'
   },
   {
-    title: "Community Impact 🗺️",
-    content: "See what others are reporting on the map and upvote issues that matter.",
+    title: "See the map 🗺️",
+    content: "Explore what others are spilling on the map and upvote what matters to you.",
     action: "Next",
     targetId: 'map-root',
     placement: 'center'
   },
   {
-    title: "Let's Fix It! 🚀",
-    content: "Ready to make a difference? Your first report is just a click away.",
-    action: "Report Issue",
+    title: "Spill it. Fix it. 🚀",
+    content: "Your first spill is just a click away.",
+    action: "Spill Something",
     placement: 'center'
   }
 ];
@@ -134,7 +134,7 @@ const OnboardingTour = ({ onComplete, targetRefs, setShowForm }) => {
       setStep(step + 1);
     } else {
       onComplete();
-      if (currentStepData.action === "Report Issue") {
+      if (currentStepData.action === "Spill Something") {
         setShowForm(true);
       }
     }
@@ -294,24 +294,24 @@ function Home() {
         <div className="glass-card rounded-3xl px-6 py-5 shadow-2xl border border-[var(--fixit-border)]/70">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-2xl bg-[var(--fixit-primary)]/15 flex items-center justify-center text-[var(--fixit-primary)]">
-              <span className="heading-font text-xs tracking-[0.18em] uppercase">FI</span>
+              <span className="heading-font text-xs tracking-[0.18em] uppercase">SI</span>
             </div>
             <div className="flex flex-col">
               <span className="heading-font text-xs tracking-[0.22em] text-[var(--fixit-text-muted)] uppercase">
-                FixIt India
+                Spill It
               </span>
-              <span className="text-[11px] text-[var(--fixit-text-muted)]">letsfixindia.com</span>
+              <span className="text-[11px] text-[var(--fixit-text-muted)]">spillit.world</span>
             </div>
           </div>
           <h1 className="heading-font text-3xl leading-snug sm:text-4xl tracking-[0.08em]">
-            India has issues.
+            The world has issues.
             <br />
             <span className="bg-gradient-to-r from-[var(--fixit-primary)] via-[#ffb347] to-[var(--fixit-secondary)] bg-clip-text text-transparent">
-              Let&apos;s fix them.
+              Spill them. Fix them.
             </span>
           </h1>
           <p className="mt-3 text-sm text-[var(--fixit-text-muted)] max-w-md">
-            Spot potholes, leaks, garbage and more. Post them in seconds. Nudge your city to act.
+            Anyone, anywhere can spill what&apos;s broken with a photo and a short message.
           </p>
         </div>
 
@@ -319,7 +319,7 @@ function Home() {
         <div className="grid grid-cols-2 gap-3">
           <div className="glass-card rounded-2xl px-4 py-3">
             <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--fixit-text-muted)] mb-1 heading-font">
-              Issues Reported
+              Spills Dropped
             </p>
             <p className="text-2xl font-semibold text-[var(--fixit-primary)]">
               {issuesArray.length.toString().padStart(2, '0')}
@@ -342,7 +342,7 @@ function Home() {
           <div className="px-4 pt-4 pb-2 border-b border-[var(--fixit-border)] flex items-center justify-between">
             <div>
               <p className="heading-font text-[10px] uppercase tracking-[0.22em] text-[var(--fixit-text-muted)]">
-                Live Issues
+                Live Spills
               </p>
               <p className="text-xs text-[var(--fixit-text-muted)]">
                 Masonry-style feed of what citizens spot.
@@ -369,7 +369,10 @@ function Home() {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.03 }}
-                    className="rounded-2xl overflow-hidden border border-[var(--fixit-border)] bg-white/2 hover:border-[var(--fixit-primary)]/60 hover:shadow-[0_0_30px_rgba(255,107,0,0.3)] transition-all group"
+                    className="rounded-2xl overflow-hidden border bg-white/2 hover:border-[var(--fixit-primary)]/60 hover:shadow-[0_0_30px_rgba(255,107,0,0.3)] transition-all group"
+                    style={{
+                      borderColor: issue.colorChoice || 'var(--fixit-border)'
+                    }}
                   >
                     {issue.imageUrl && (
                       <div className="relative h-28 overflow-hidden">
@@ -379,7 +382,12 @@ function Home() {
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute top-2 left-2 flex gap-2">
-                          <span className="px-2 py-1 rounded-full text-[10px] font-semibold bg-black/70 text-white border border-white/15">
+                          <span
+                            className="px-2 py-1 rounded-full text-[10px] font-semibold bg-black/70 text-white border border-white/15"
+                            style={{
+                              borderColor: issue.colorChoice || 'rgba(255,255,255,0.25)'
+                            }}
+                          >
                             {issue.type || 'Issue'}
                           </span>
                         </div>
@@ -391,6 +399,11 @@ function Home() {
                       </div>
                     )}
                     <div className="px-3 py-2.5 space-y-1.5">
+                      {issue.audienceName && (
+                        <p className="text-[10px] text-[var(--fixit-text-main)]/80 font-medium truncate">
+                          To: {issue.audienceName}
+                        </p>
+                      )}
                       <p className="text-[11px] text-[var(--fixit-text-muted)] line-clamp-2">
                         {issue.desc || 'No description provided.'}
                       </p>
@@ -551,7 +564,7 @@ function Home() {
           <span className="font-bold text-sm hidden md:inline">Locate Me</span>
         </motion.button>
 
-        {/* BIG REPORT BUTTON */}
+        {/* BIG SPILL BUTTON */}
         <motion.button
           ref={reportBtnRef}
           id="report-btn"
@@ -560,20 +573,24 @@ function Home() {
           className="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-[#FF671F] via-white to-[#046A38] text-black rounded-full shadow-[0_0_30px_rgba(4,106,56,0.4)] border border-white/20 backdrop-blur-md group"
         >
           <SiGoogledocs className="text-xl group-hover:rotate-12 transition-transform" />
-          <span className="font-bold tracking-wide hidden md:inline">REPORT ISSUE</span>
-          <span className="font-bold tracking-wide md:hidden">REPORT</span>
+          <span className="font-bold tracking-wide hidden md:inline">SPILL SOMETHING</span>
+          <span className="font-bold tracking-wide md:hidden">SPILL</span>
         </motion.button>
       </div>
 
       {/* --- HUD: Branding (Top Left - Desktop Only) --- */}
       <div className="fixed top-28 left-8 z-[900] pointer-events-none hidden md:block">
         <div className="flex items-center gap-3 bg-black/80 backdrop-blur-xl border border-[var(--muni-border)] px-5 py-3 rounded-2xl shadow-2xl">
-          <div className="bg-[var(--muni-accent)] text-black p-2 rounded-lg"><FaTools /></div>
+          <div className="bg-[var(--fixit-primary)] text-black p-2 rounded-lg heading-font text-xs tracking-[0.18em] uppercase">
+            SI
+          </div>
           <div>
-            <div className="text-white font-black text-xl tracking-widest leading-none flex items-center gap-1">
-              <span className="text-[#FF671F]">Lets</span><span className="text-white">Fix</span><span className="text-[#046A38]">India</span>
+            <div className="heading-font text-white text-sm tracking-[0.3em] uppercase">
+              Spill It
             </div>
-            <div className="text-[10px] text-[var(--muni-accent)] font-mono uppercase tracking-widest">Community Ops</div>
+            <div className="text-[10px] text-[var(--fixit-text-muted)] font-mono uppercase tracking-widest">
+              Photo + message from anywhere
+            </div>
           </div>
         </div>
       </div>

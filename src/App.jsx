@@ -14,32 +14,15 @@ const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Team = lazy(() => import("./pages/Team"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/About"));
 const Report = lazy(() => import("./pages/Report"));
 const Gallery = lazy(() => import("./pages/Gallery"));
 const Help = lazy(() => import("./pages/Help"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
-const SIH2025 = lazy(() => import("./pages/SIH2025"));
-const Partner = lazy(() => import("./pages/Partner"));
-const AdminDonors = lazy(() => import("./pages/AdminDonors"));
-const Donors = lazy(() => import("./pages/Donors"));
-const BecomeDonor = lazy(() => import("./pages/BecomeDonor"));
-const YoutubeSubmission = lazy(() => import("./pages/YoutubeSubmission"));
-// Municipal Pages
-const MunicipalRegistration = lazy(() => import("./pages/MunicipalRegistration"));
-const MunicipalDashboard = lazy(() => import("./pages/MunicipalDashboard"));
-const OpsDashboard = lazy(() => import("./pages/OpsDashboard"));
-// ToFEI Pages
-const ToFEILogin          = lazy(() => import("./pages/ToFEILogin"));
-const ToFEIDashboard      = lazy(() => import("./pages/ToFEIDashboard"));
-const ToFEISchoolDashboard = lazy(() => import("./pages/ToFEISchoolDashboard"));
-const ToFEIDTCCDashboard   = lazy(() => import("./pages/ToFEIDTCCDashboard"));
 
 import "./App.css";
 import "./styles/municipal.css";
-import "./styles/tofei.css";
 
 
 // Loading Component
@@ -66,109 +49,8 @@ function App() {
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/help" element={<Help />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/team" element={<Team />} />
               <Route path="/about" element={<About />} />
-              <Route path="/sih2025" element={<SIH2025 />} />
-              <Route path="/partner" element={<Partner />} />
-              <Route path="/admin/donors" element={<AdminDonors />} />
-              <Route path="/donors" element={<Donors />} />
-              <Route path="/become-donor" element={<BecomeDonor />} />
-              <Route path="/youtube" element={<YoutubeSubmission />} />
-
-              {/* Municipal Routes */}
-              <Route path="/municipal-register" element={<MunicipalRegistration />} />
-              <Route
-                path="/municipal-dashboard"
-                element={
-                  <ProtectedRoute role="municipal_admin">
-                    <MunicipalDashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/municipal-dashboard/tracker"
-                element={
-                  <ProtectedRoute role="municipal_admin">
-                    <MunicipalDashboard initialView="tracker" />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/municipal-dashboard/pothole-detection"
-                element={
-                  <ProtectedRoute role="municipal_admin">
-                    <MunicipalDashboard initialView="pothole-detection" />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/municipal-dashboard/grouped-reports"
-                element={
-                  <ProtectedRoute role="municipal_admin">
-                    <MunicipalDashboard initialView="grouped-reports" />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/municipal-dashboard/video-processor"
-                element={
-                  <ProtectedRoute role="municipal_admin">
-                    <MunicipalDashboard initialView="video-processor" />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/municipal-dashboard/leaderboard"
-                element={
-                  <ProtectedRoute role="municipal_admin">
-                    <MunicipalDashboard initialView="leaderboard" />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/municipal-dashboard/about"
-                element={
-                  <ProtectedRoute role="municipal_admin">
-                    <MunicipalDashboard initialView="about" />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/municipal-dashboard/settings"
-                element={
-                  <ProtectedRoute role="municipal_admin">
-                    <MunicipalDashboard initialView="settings" />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/ops-dashboard"
-                element={
-                  <ProtectedRoute>
-                    <OpsDashboard />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* ToFEI Routes */}
-              <Route path="/tofei-login" element={<ToFEILogin />} />
-              {/* STCC – full state view */}
-              <Route path="/tofei-dashboard"             element={<ProtectedRoute><ToFEIDashboard /></ProtectedRoute>} />
-              <Route path="/tofei-dashboard/tracker"     element={<ProtectedRoute><ToFEIDashboard initialView="tracker" /></ProtectedRoute>} />
-              <Route path="/tofei-dashboard/scorecard"   element={<ProtectedRoute><ToFEIDashboard initialView="scorecard" /></ProtectedRoute>} />
-              <Route path="/tofei-dashboard/leaderboard" element={<ProtectedRoute><ToFEIDashboard initialView="leaderboard" /></ProtectedRoute>} />
-              <Route path="/tofei-dashboard/users"       element={<ProtectedRoute><ToFEIDashboard initialView="users" /></ProtectedRoute>} />
-              <Route path="/tofei-dashboard/about"       element={<ProtectedRoute><ToFEIDashboard initialView="about" /></ProtectedRoute>} />
-              <Route path="/tofei-dashboard/settings"    element={<ProtectedRoute><ToFEIDashboard initialView="settings" /></ProtectedRoute>} />
-              {/* DTCC – district scoped view */}
-              <Route path="/tofei-dtcc"             element={<ProtectedRoute><ToFEIDTCCDashboard /></ProtectedRoute>} />
-              <Route path="/tofei-dtcc/tracker"     element={<ProtectedRoute><ToFEIDTCCDashboard initialView="tracker" /></ProtectedRoute>} />
-              <Route path="/tofei-dtcc/leaderboard" element={<ProtectedRoute><ToFEIDTCCDashboard initialView="leaderboard" /></ProtectedRoute>} />
-              <Route path="/tofei-dtcc/settings"    element={<ProtectedRoute><ToFEIDTCCDashboard initialView="settings" /></ProtectedRoute>} />
-              {/* School – submit & view own reports */}
-              <Route path="/tofei-school" element={<ProtectedRoute><ToFEISchoolDashboard /></ProtectedRoute>} />
-              <Route path="/tofei-school/history" element={<ProtectedRoute><ToFEISchoolDashboard initialView="history" /></ProtectedRoute>} />
-              <Route path="/tofei-school/stats" element={<ProtectedRoute><ToFEISchoolDashboard initialView="stats" /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<Dashboard />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

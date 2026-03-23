@@ -72,12 +72,6 @@ function Navbar() {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
-  // Hide global navbar on specialized portals to avoid branding conflict
-  const isSpecializedPortal = 
-    location.pathname === '/youtube' || 
-    location.pathname.startsWith('/tofei-');
-  
-  if (isSpecializedPortal) return null;
 
   const handleLogout = async () => {
     try {
@@ -110,10 +104,9 @@ function Navbar() {
         <div className="flex items-center gap-4 pointer-events-auto">
           {/* Logo Identity (Mobile Only) */}
           <div className="md:hidden bg-black/90 backdrop-blur-xl border border-[var(--muni-border)] rounded-full px-4 py-2 shadow-lg">
-            <div className="font-black text-white tracking-widest flex items-center gap-1">
-              <span className="text-[#FF671F]">Lets</span>
-              <span className="text-white">Fix</span>
-              <span className="text-[#046A38]">India</span>
+            <div className="heading-font text-white tracking-[0.18em] text-xs uppercase flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-[var(--fixit-primary)]" />
+              <span>Spill It</span>
             </div>
           </div>
 
@@ -121,23 +114,9 @@ function Navbar() {
           <div className="hidden md:flex bg-black/80 backdrop-blur-xl border border-[var(--muni-border)] rounded-full p-1 shadow-2xl items-center gap-1">
             <LayoutGroup id="nav-pill-group">
               <NavItem to="/" icon={Map} label="Feed & Map" />
-              <NavItem to="/gallery" icon={Users} label="Community" />
-              <NavItem to="/leaderboard" icon={Star} label="Impact" />
-              <NavItem to="/help" icon={HelpCircle} label="Help" />
+              <NavItem to="/gallery" icon={Users} label="Spills" />
+              <NavItem to="/leaderboard" icon={Star} label="Top Spillers" />
               <NavItem to="/about" icon={UserIcon} label="About" />
-              <NavItem to="/partner" icon={Handshake} label="Partner/Fund Us" />
-              <NavItem to="/donors" icon={Heart} label="Donors" />
-
-              {currentUser && userRole === 'municipal_admin' && (
-                <>
-                  <div className="h-6 w-[1px] bg-[var(--muni-border)] mx-1"></div>
-                  <NavItem
-                    to="/municipal-dashboard"
-                    icon={BarChart3}
-                    label="Dashboard"
-                  />
-                </>
-              )}
             </LayoutGroup>
           </div>
         </div>
@@ -164,7 +143,7 @@ function Navbar() {
 
           {/* CTA + Auth Buttons (Desktop) */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Report CTA */}
+            {/* Spill CTA */}
             <Link to="/#report">
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -172,7 +151,7 @@ function Navbar() {
                 className="flex items-center gap-2 px-5 py-2 rounded-full bg-[var(--fixit-primary)] text-black font-semibold shadow-[0_0_24px_rgba(255,107,0,0.45)] hover:shadow-[0_0_32px_rgba(255,107,0,0.7)] transition-all heading-font tracking-[0.12em] text-xs uppercase"
               >
                 <Flame size={16} />
-                <span>Report Issue</span>
+                <span>Spill Something</span>
               </motion.button>
             </Link>
 
@@ -215,12 +194,12 @@ function Navbar() {
             </AnimatePresence>
           </div>
 
-          {/* Mobile Report CTA */}
+          {/* Mobile Spill CTA */}
           <Link to="/#report" className="md:hidden">
             <button
               className="mr-2 px-4 py-2 rounded-full bg-[var(--fixit-primary)] text-black text-xs font-semibold heading-font tracking-[0.16em] uppercase shadow-[0_0_22px_rgba(255,107,0,0.55)] active:scale-95 transition-all"
             >
-              Report
+              Spill
             </button>
           </Link>
 
@@ -250,7 +229,7 @@ function Navbar() {
               <Search className="absolute left-4 top-3.5 text-[var(--muni-text-muted)]" size={18} />
               <input
                 type="text"
-                placeholder="Search Issue ID..."
+                placeholder="Search Spill ID..."
                 value={searchId}
                 onChange={(e) => setSearchId(e.target.value)}
                 className="w-full bg-white/5 border border-[var(--muni-border)] rounded-xl py-3 pl-12 pr-4 text-white placeholder-[var(--muni-text-muted)] focus:border-[var(--muni-accent)] focus:bg-white/10 transition-all outline-none"
@@ -259,22 +238,10 @@ function Navbar() {
 
             {/* Mobile Nav Links */}
             <div className="flex flex-col gap-2 mb-8">
-              <NavItem to="/" icon={Map} label="Map View" onClick={() => setIsMenuOpen(false)} />
-              <NavItem to="/gallery" icon={Users} label="Community Gallery" onClick={() => setIsMenuOpen(false)} />
-              <NavItem to="/leaderboard" icon={Star} label="Leaderboard" onClick={() => setIsMenuOpen(false)} />
-              <NavItem to="/help" icon={HelpCircle} label="Help" onClick={() => setIsMenuOpen(false)} />
-
+              <NavItem to="/" icon={Map} label="Feed & Map" onClick={() => setIsMenuOpen(false)} />
+              <NavItem to="/gallery" icon={Users} label="Spills" onClick={() => setIsMenuOpen(false)} />
+              <NavItem to="/leaderboard" icon={Star} label="Top Spillers" onClick={() => setIsMenuOpen(false)} />
               <NavItem to="/about" icon={UserIcon} label="About" onClick={() => setIsMenuOpen(false)} />
-              <NavItem to="/partner" icon={Handshake} label="Partner/Fund Us" onClick={() => setIsMenuOpen(false)} />
-              <NavItem to="/donors" icon={Heart} label="Donors" onClick={() => setIsMenuOpen(false)} />
-              {currentUser && userRole === 'municipal_admin' && (
-                <NavItem
-                  to="/municipal-dashboard"
-                  icon={BarChart3}
-                  label="Dashboard"
-                  onClick={() => setIsMenuOpen(false)}
-                />
-              )}
             </div>
 
             {/* Mobile Auth */}
@@ -301,7 +268,7 @@ function Navbar() {
                 <div className="flex gap-3">
                   <Link to="/#report" onClick={() => setIsMenuOpen(false)} className="flex-1">
                     <button className="w-full py-3 rounded-xl bg-[var(--fixit-primary)] text-black font-semibold heading-font tracking-[0.16em] uppercase shadow-[0_0_26px_rgba(255,107,0,0.6)] active:scale-95 transition-all flex items-center justify-center gap-2">
-                      <Flame size={18} /> Report Issue
+                      <Flame size={18} /> Spill Something
                     </button>
                   </Link>
                   <Link to="/login" onClick={() => setIsMenuOpen(false)} className="flex-1">

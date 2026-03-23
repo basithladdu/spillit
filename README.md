@@ -1,18 +1,18 @@
-# LetsFixIndia v1.0.0 Launch
+# Spill It v1.0.0
 
-Welcome to the first official release of **LetsFixIndia**! This platform is designed to empower citizens and municipal authorities to report, track, and resolve civic issues in real-time.
+Welcome to **Spill It** – a playful, anonymous platform where anyone can share what they see in the world with a photo, a color, and a message. No forms, no categories, no judgment.
 
 ## Core Features
-1. **Mapbox Integration**: Interactive, high-performance map to browse community reports with heatmaps and clustering.
-2. **Issue Reporting**: Snap and upload photos of civic problems with automatic location tagging.
-3. **Advanced AI Detection**: High-precision AI analysis powered by Roboflow to detect potholes, assess severity (Area in cm²), and validate reports automatically.
-4. **Smart Department Routing**: Intellectual routing system that automatically assigns issues to the correct department (NHAI, RNB, Municipal Corp) based on location and type.
-5. **Real-time Tracking**: Live updates on report status using Firebase with instant notifications.
-6. **Secure Architecture**: Built with modern security practices and environment-managed credentials.
-7. **Mobile Optimized**: Designed to work seamlessly on-the-go for field officers and citizens.
+1. **Mapbox Integration**: Interactive, real-time map showing spills from across the community with live feeds.
+2. **Anonymous Spilling**: Snap and upload photos with automatic location tagging – share what you see without revealing who you are.
+3. **Free Expression**: Add a custom color, a short message, and optionally who you're sending it to.
+4. **Community Feed**: Browse, upvote, and explore spills on a beautiful, fast map interface.
+5. **User Accounts**: Optional signup/login to track your spills and contribution history.
+6. **Real-time Updates**: Live feeds powered by Firebase with instant notifications.
+7. **Mobile Friendly**: Beautiful, responsive design that works perfectly on any device.
 
 ## Getting Started
-Join the movement to build better cities. Report your first issue today!
+Spill what's on your mind – a moment, an observation, a broken thing, a beautiful moment.
 
 ---
 
@@ -27,7 +27,7 @@ Join the movement to build better cities. Report your first issue today!
 1. **Clone the Repository**
    ```bash
    git clone <repository-url>
-   cd fixit
+   cd spillit
    ```
 
 2. **Install Dependencies**

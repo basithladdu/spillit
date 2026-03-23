@@ -13,30 +13,34 @@ const About = () => {
                     <motion.h1
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-4xl md:text-6xl font-bold mb-2 tracking-tight"
+                        className="text-4xl md:text-6xl font-bold mb-2 tracking-tight heading-font"
                     >
-                        About <span className="text-[#FF671F]">LetsFixIndia</span><span className="text-white"></span>
+                        About <span className="text-[var(--fixit-primary)]">Spill It</span>
                     </motion.h1>
                     <p className="text-[var(--muni-text-muted)] text-base md:text-lg max-w-2xl mx-auto">
-                        Empowering citizens to build better communities through technology and transparency.
+                        A tiny corner of the internet where anyone can spill what they see in the world with a photo, a color, and a message.
                     </p>
                 </div>
 
-                {/* Mission Section */}
+                {/* What is Spill It? */}
                 <motion.section
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="muni-card p-8 mb-12 border-t-4 border-[#FF671F]"
+                    className="muni-card p-8 mb-12 border-t-4 border-[var(--fixit-primary)]"
                 >
                     <div className="flex items-start gap-4">
-                        <div className="p-3 bg-[#FF671F]/10 rounded-lg text-[#FF671F]">
+                        <div className="p-3 bg-[var(--fixit-primary)]/10 rounded-lg text-[var(--fixit-primary)]">
                             <FaLightbulb size={24} />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-white mb-4">Our Mission</h2>
+                            <h2 className="text-2xl font-bold text-white mb-4 heading-font tracking-[0.14em] uppercase">What is Spill It?</h2>
                             <p className="text-[var(--muni-text-muted)] leading-relaxed">
-                                LetsFixIndia is a mobile-first crowdsourced platform designed to bridge the gap between citizens and municipal authorities. We believe that active citizenship, coupled with responsive governance, is the key to solving civic issues like potholes, garbage dumps, and water leaks. Our goal is to make reporting issues as easy as taking a photo.
+                                Spill It is a playful, map‑based feed where people from anywhere in the world can drop
+                                a photo, a short message, a color, and (optionally) who they&apos;re sending it to.
+                                It&apos;s not an official complaint system, not a ticketing tool, and not a serious
+                                civic reporting platform. It&apos;s closer to a public mood board of broken things,
+                                strange sights, small joys, and whatever else you feel like spilling.
                             </p>
                         </div>
                     </div>
@@ -52,25 +56,28 @@ const About = () => {
                     <div className="relative p-8 bg-[#18181b] border border-[#27272a] rounded-2xl overflow-hidden">
                         <div className="absolute top-0 left-0 w-1 h-full bg-[#FF671F]"></div>
                         <p className="text-lg text-gray-300 italic font-serif leading-relaxed">
-                            "According to all aerodynamic laws, the bumblebee cannot fly because its body weight is not in the right proportion to its wingspan... but ignoring these laws, the bee flies anyway."
+                            &quot;Most things on the internet are trying to sell you something or fix you somehow.
+                            Spill It just wants to hear what&apos;s on your mind and put it on the map.&quot;
                         </p>
                     </div>
                 </motion.div>
 
-                {/* How It Works Grid */}
+                {/* How it works */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
-                        className="muni-card p-6 border-l-4 border-[#046A38]"
+                        className="muni-card p-6 border-l-4 border-[var(--fixit-primary)]"
                     >
                         <div className="flex items-center gap-3 mb-4">
-                            <FaUsers className="text-[#046A38] text-xl" />
-                            <h3 className="text-xl font-bold text-white">For Citizens</h3>
+                            <FaUsers className="text-[var(--fixit-primary)] text-xl" />
+                            <h3 className="text-xl font-bold text-white">For humans on the internet</h3>
                         </div>
                         <p className="text-[var(--muni-text-muted)] text-sm">
-                            Simply spot an issue, snap a picture, and upload it. LetsFixIndia automatically captures the location and routes the report to the relevant department. Track the status in real-time.
+                            See something interesting, annoying, beautiful, or broken? Open Spill It, snap a photo,
+                            pick a color, write a tiny note, and (optionally) choose who you&apos;re addressing it to.
+                            That&apos;s it. No forms, no categories, no &quot;required fields&quot; beyond a photo and your words.
                         </p>
                     </motion.div>
 
@@ -82,24 +89,28 @@ const About = () => {
                     >
                         <div className="flex items-center gap-3 mb-4">
                             <FaHandshake className="text-[#22c55e] text-xl" />
-                            <h3 className="text-xl font-bold text-white">For Authorities</h3>
+                            <h3 className="text-xl font-bold text-white">What it is not</h3>
                         </div>
                         <p className="text-[var(--muni-text-muted)] text-sm">
-                            Access a comprehensive dashboard to view, prioritize, and resolve issues. Gain insights into hotspots and performance metrics to optimize resource allocation.
+                            Spill It does not replace your city&apos;s complaint system, emergency services,
+                            or formal channels. It does not guarantee that anything will get &quot;resolved&quot;.
+                            Think of it as a shared public notebook – a way to see what people are noticing, not an official workflow.
                         </p>
                     </motion.div>
                 </div>
 
-                {/* Contribution / Partnership Section */}
+                {/* Why we built this */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="muni-card p-8 mb-16 border-l-4 border-[#FF671F] bg-gradient-to-r from-[#FF671F]/10 to-transparent"
+                    className="muni-card p-8 mb-16 border-l-4 border-[var(--fixit-primary)] bg-gradient-to-r from-[var(--fixit-primary)]/10 to-transparent"
                 >
-                    <h3 className="text-2xl font-bold text-white mb-4">Partner with Us</h3>
+                    <h3 className="text-2xl font-bold text-white mb-4 heading-font tracking-[0.14em] uppercase">Why we built this</h3>
                     <p className="text-[var(--muni-text-muted)] leading-relaxed mb-6">
-                        We are actively seeking collaborations to scale our impact. Whether you represent a <strong>Municipality</strong>, <strong>Government Body</strong>, <strong>NGO</strong>, or are looking for <strong>CSR (Corporate Social Responsibility)</strong> opportunities or <strong>Investment or Incubation support</strong>, we want to work with you to transform civic infrastructure.
+                        Spill It started as a side project at Devit – we were tinkering with maps, cameras, and real‑time
+                        feeds and realised it would be fun to build a place where people can simply drop what they see
+                        in the world. No heavy onboarding, no dashboards, just vibes and a live map.
                     </p>
                     <a href="mailto:workwithdevit@gmail.com" className="inline-flex items-center gap-2 text-[#FF671F] font-bold hover:text-white transition-colors">
                         <FaEnvelope /> Get in Touch
@@ -116,9 +127,11 @@ const About = () => {
                     <div className="inline-block p-3 bg-white/5 rounded-full mb-6">
                         <FaCode className="text-white text-xl" />
                     </div>
-                    <h2 className="text-3xl font-bold text-white mb-8">Built with Passion</h2>
+                    <h2 className="text-3xl font-bold text-white mb-8 heading-font tracking-[0.16em] uppercase">Built with curiosity</h2>
                     <p className="text-[var(--muni-text-muted)] max-w-2xl mx-auto mb-8">
-                        LetsFixIndia is an initiative driven by a community of developers, designers, and civic enthusiasts committed to digital public infrastructure. It is developed by the people at Devit.
+                        Spill It is a tiny experiment from the folks at Devit. We like building tools for cities and public
+                        infrastructure, but we also like weird, playful things that don&apos;t have a strict KPI attached.
+                        This is one of those.
                     </p>
 
                     <div className="flex justify-center gap-4 flex-wrap">
@@ -130,9 +143,6 @@ const About = () => {
                         </a>
                         <a href="https://instagram.com/devit.company" target="_blank" rel="noopener noreferrer" className="muni-btn-ghost no-underline flex items-center gap-2">
                             <FaInstagram /> devit.company
-                        </a>
-                        <a href="https://twitter.com/letsfixindia" target="_blank" rel="noopener noreferrer" className="muni-btn-ghost no-underline flex items-center gap-2">
-                            <FaTwitter /> @letsfixindia
                         </a>
                         <a href="mailto:workwithdevit@gmail.com" className="muni-btn-ghost no-underline flex items-center gap-2">
                             <FaEnvelope /> Contact Us

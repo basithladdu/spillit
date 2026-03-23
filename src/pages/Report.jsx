@@ -259,6 +259,18 @@ function Report() {
                 </p>
               </div>
 
+              {report.audienceName && (
+                <div className="mb-8">
+                  <h3 className="text-xs font-bold text-[var(--muni-text-muted)] uppercase tracking-wider mb-3">
+                    Submitted To
+                  </h3>
+                  <p className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-black/40 border border-white/10">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: report.colorChoice || 'var(--fixit-primary)' }} />
+                    <span>{report.audienceName}</span>
+                  </p>
+                </div>
+              )}
+
               {/* Status Timeline */}
               <div className="mb-8">
                 <h3 className="text-xs font-bold text-[var(--muni-text-muted)] uppercase tracking-wider mb-3">
@@ -313,7 +325,7 @@ function Report() {
 
                 <button
                   onClick={() => {
-                    const text = encodeURIComponent(`Check out this issue on LetsFixIndia! @letsfixindia`);
+                    const text = encodeURIComponent(`Spilling an issue on Spill It.`);
                     const url = encodeURIComponent(window.location.href);
                     window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
                   }}

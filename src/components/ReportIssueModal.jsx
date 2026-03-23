@@ -54,7 +54,9 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
         lat: null,
         lng: null,
         address: '',
-        anonymous: true
+        anonymous: true,
+        audienceName: '',
+        colorChoice: '#FF6B00'
     });
 
     const showToast = (message, type = 'error') => {
@@ -81,7 +83,7 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
 
         // Validation with themed toasts
         if (!formData.image) {
-            showToast("📸 Please attach a photo of the issue before submitting.");
+            showToast("📸 Please attach a photo before spilling.");
             return;
         }
         if (!formData.lat || !formData.lng) {
@@ -109,7 +111,7 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                 const imgUrl = await uploadToCloudinary(imageFile);
 
                 // Extract and exclude file objects from Firestore data
-                const { image, lat, lng, address, anonymous, ...cleanData } = formData;
+                const { image, lat, lng, address, anonymous, audienceName, colorChoice, ...cleanData } = formData;
 
                 // Save references for background AI processing BEFORE clearing formData
                 const savedImage = formData.image;
@@ -127,10 +129,33 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                     ts: serverTimestamp(),
                     userId: anonymous || !currentUser ? "anonymous_citizen" : currentUser.uid,
                     upvotes: 0,
+                    audienceName: audienceName || null,
+                    colorChoice: colorChoice || null,
                 });
 
-                setFormData({ type: "Pothole", severity: "Low", desc: "", image: null, lat: null, lng: null, address: '', anonymous: true });
-                onSuccess({ ...cleanData, lat, lng, address, anonymous, imageUrl: imgUrl, id: newDoc.id });
+                setFormData({
+                    type: "Pothole",
+                    severity: "Low",
+                    desc: "",
+                    image: null,
+                    lat: null,
+                    lng: null,
+                    address: '',
+                    anonymous: true,
+                    audienceName: '',
+                    colorChoice: '#FF6B00'
+                });
+                onSuccess({
+                    ...cleanData,
+                    lat,
+                    lng,
+                    address,
+                    anonymous,
+                    audienceName,
+                    colorChoice,
+                    imageUrl: imgUrl,
+                    id: newDoc.id
+                });
 
                 showToast("✅ Report submitted successfully!", "success");
 
@@ -283,10 +308,10 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                                 <div className="px-5 py-3 border-b border-white/10 flex justify-between items-center bg-[#18181b] z-20 shrink-0">
                                     <div>
                                         <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2 heading-font tracking-[0.16em] uppercase">
-                                            <Crosshair className="text-[var(--fixit-primary)]" size={18} /> New Issue
+                                            <Crosshair className="text-[var(--fixit-primary)]" size={18} /> New Spill
                                         </h2>
                                         <p className="text-[10px] md:text-xs text-gray-400 mt-0.5">
-                                            Spot it. Post it. Fix it. Your report nudges the system.
+                                            Snap it, color it, spill it. That&apos;s the whole app.
                                         </p>
                                     </div>
                                     <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white">
@@ -300,7 +325,7 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                                     {/* Image Upload (Compact) */}
                                     <div className="space-y-1.5">
                                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                            <Camera size={12} /> Evidence Photo
+                                            <Camera size={12} /> Photo
                                         </label>
                                         <label className={`relative flex flex-col items-center justify-center w-full h-24 md:h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all group overflow-hidden ${formData.image ? 'border-[#046A38] bg-[#046A38]/10' : 'border-white/10 hover:border-[#FF671F]/50 hover:bg-[#FF671F]/5'}`}>
                                             {formData.image ? (
@@ -322,7 +347,7 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                                         </label>
                                     </div>
 
-                                    {/* Type & Severity Row */}
+                                    {/* Type & Severity Row (kept simple but still configurable) */}
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="space-y-1.5">
                                             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
@@ -332,9 +357,13 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                                                 <select
                                                     value={formData.type}
                                                     onChange={e => setFormData({ ...formData, type: e.target.value })}
-                                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm outline-none focus:border-[#FF671F] transition appearance-none cursor-pointer hover:bg-white/5"
+                                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm outline-none focus:border-[var(--fixit-primary)] transition appearance-none cursor-pointer hover:bg-white/5"
                                                 >
-                                                    <option>Pothole</option><option>Garbage</option><option>Water Leak</option><option>Street Light</option><option>Other</option>
+                                                    <option>Pothole</option>
+                                                    <option>Garbage</option>
+                                                    <option>Water Leak</option>
+                                                    <option>Street Light</option>
+                                                    <option>Other</option>
                                                 </select>
                                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
                                                     <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -350,9 +379,12 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                                                 <select
                                                     value={formData.severity}
                                                     onChange={e => setFormData({ ...formData, severity: e.target.value })}
-                                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm outline-none focus:border-[#FF671F] transition appearance-none cursor-pointer hover:bg-white/5"
+                                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm outline-none focus:border-[var(--fixit-primary)] transition appearance-none cursor-pointer hover:bg-white/5"
                                                 >
-                                                    <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+                                                    <option>Low</option>
+                                                    <option>Medium</option>
+                                                    <option>High</option>
+                                                    <option>Critical</option>
                                                 </select>
                                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
                                                     <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -372,6 +404,51 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                                             className="w-full h-20 md:h-32 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-xs md:text-sm outline-none focus:border-[#FF671F] transition resize-none placeholder:text-gray-600"
                                             placeholder="Describe what&apos;s broken, how long it&apos;s been there..."
                                         />
+                                    </div>
+
+                                    {/* Audience / recipient */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                            <span>Who are you spilling to?</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={formData.audienceName}
+                                            onChange={e => setFormData({ ...formData, audienceName: e.target.value })}
+                                            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-xs md:text-sm outline-none focus:border-[var(--fixit-primary)] transition placeholder:text-gray-600"
+                                            placeholder="Eg. My street, Berlin, Mumbai Ward 42, My Apartment RWA..."
+                                        />
+                                        <p className="text-[10px] text-gray-500">
+                                            People from anywhere in the world can direct an issue to a person, place, or institution.
+                                        </p>
+                                    </div>
+
+                                    {/* Color choice */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                            <span>Choose a color for this spill</span>
+                                        </label>
+                                        <div className="flex items-center gap-2">
+                                            {[
+                                                { label: 'Saffron', value: '#FF6B00' },
+                                                { label: 'India Green', value: '#138808' },
+                                                { label: 'Sky', value: '#38BDF8' },
+                                                { label: 'Lilac', value: '#A855F7' }
+                                            ].map((opt) => (
+                                                <button
+                                                    key={opt.value}
+                                                    type="button"
+                                                    onClick={() => setFormData(prev => ({ ...prev, colorChoice: opt.value }))}
+                                                    className={`w-8 h-8 rounded-full border-2 hover:scale-105 transition-transform ${
+                                                        formData.colorChoice === opt.value
+                                                            ? 'border-white shadow-[0_0_12px_rgba(255,255,255,0.5)]'
+                                                            : 'border-white/30 opacity-80'
+                                                    }`}
+                                                    style={{ backgroundColor: opt.value }}
+                                                    aria-label={opt.label}
+                                                />
+                                            ))}
+                                        </div>
                                     </div>
 
                                     {/* Anonymous toggle */}
@@ -426,7 +503,7 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                                         ) : (
                                             <>
                                                 <Send size={16} />
-                                                <span>Report This Issue →</span>
+                                                <span>Spill This →</span>
                                             </>
                                         )}
                                     </button>
