@@ -47,16 +47,13 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toast, setToast] = useState(null);
     const [formData, setFormData] = useState({
-        type: 'Pothole',
-        severity: 'Low',
-        desc: '',
+        caption: '',
         image: null,
         lat: null,
         lng: null,
         address: '',
         anonymous: true,
-        audienceName: '',
-        colorChoice: '#FF6B00'
+        colorChoice: '#FF671F'
     });
 
     const showToast = (message, type = 'error') => {
@@ -111,39 +108,29 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                 const imgUrl = await uploadToCloudinary(imageFile);
 
                 // Extract and exclude file objects from Firestore data
-                const { image, lat, lng, address, anonymous, audienceName, colorChoice, ...cleanData } = formData;
+                const { image, lat, lng, address, anonymous, colorChoice, caption } = formData;
 
-                // Save references for background AI processing BEFORE clearing formData
-                const savedImage = formData.image;
-                const savedType = formData.type;
-
-                // Save to issues collection (without the File object)
-                const newDoc = await addDoc(collection(db, "issues"), {
-                    type: cleanData.type,
-                    severity: cleanData.severity,
-                    desc: cleanData.desc,
+                // Save to memories collection (without the File object)
+                const newDoc = await addDoc(collection(db, "memories"), {
+                    caption,
                     lat,
                     lng,
                     address,
                     imageUrl: imgUrl,
                     ts: serverTimestamp(),
-                    userId: anonymous || !currentUser ? "anonymous_citizen" : currentUser.uid,
+                    userId: anonymous || !currentUser ? "anonymous" : currentUser.uid,
                     upvotes: 0,
-                    audienceName: audienceName || null,
-                    colorChoice: colorChoice || null,
+                    colorChoice: colorChoice || '#FF671F',
                 });
 
                 setFormData({
-                    type: "Pothole",
-                    severity: "Low",
-                    desc: "",
+                    caption: "",
                     image: null,
                     lat: null,
                     lng: null,
                     address: '',
                     anonymous: true,
-                    audienceName: '',
-                    colorChoice: '#FF6B00'
+                    colorChoice: '#FF671F'
                 });
                 onSuccess({
                     ...cleanData,
@@ -157,7 +144,7 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                     id: newDoc.id
                 });
 
-                showToast("✅ Report submitted successfully!", "success");
+                showToast("Memory pinned successfully!", "success");
 
                 // Close modal immediately
                 setTimeout(() => onClose(), 1500);
@@ -219,10 +206,10 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                                 <div className="px-5 py-3 border-b border-white/10 flex justify-between items-center bg-[#18181b] z-20 shrink-0">
                                     <div>
                                         <h2 className="text-lg md:text-xl font-bold text-white flex items-center gap-2 heading-font tracking-[0.16em] uppercase">
-                                            <Crosshair className="text-[var(--fixit-primary)]" size={18} /> New Spill
+                                            <Crosshair className="text-[var(--fixit-primary)]" size={18} /> Share a Memory
                                         </h2>
                                         <p className="text-[10px] md:text-xs text-gray-400 mt-0.5">
-                                            Snap it, color it, spill it. That&apos;s the whole app.
+                                            Pick it, tell it, map it forever.
                                         </p>
                                     </div>
                                     <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white">
@@ -258,80 +245,17 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                                         </label>
                                     </div>
 
-                                    {/* Type & Severity Row (kept simple but still configurable) */}
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                                <AlertTriangle size={12} /> Type
-                                            </label>
-                                            <div className="relative">
-                                                <select
-                                                    value={formData.type}
-                                                    onChange={e => setFormData({ ...formData, type: e.target.value })}
-                                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm outline-none focus:border-[var(--fixit-primary)] transition appearance-none cursor-pointer hover:bg-white/5"
-                                                >
-                                                    <option>Pothole</option>
-                                                    <option>Garbage</option>
-                                                    <option>Water Leak</option>
-                                                    <option>Street Light</option>
-                                                    <option>Other</option>
-                                                </select>
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                                                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                                <AlertTriangle size={12} /> Severity
-                                            </label>
-                                            <div className="relative">
-                                                <select
-                                                    value={formData.severity}
-                                                    onChange={e => setFormData({ ...formData, severity: e.target.value })}
-                                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-white text-xs md:text-sm outline-none focus:border-[var(--fixit-primary)] transition appearance-none cursor-pointer hover:bg-white/5"
-                                                >
-                                                    <option>Low</option>
-                                                    <option>Medium</option>
-                                                    <option>High</option>
-                                                    <option>Critical</option>
-                                                </select>
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                                                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Description */}
+                                    {/* Caption / Message */}
                                     <div className="space-y-1.5">
                                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                            <FileText size={12} /> Details
+                                            <FileText size={12} /> Your Memory
                                         </label>
                                         <textarea
-                                            value={formData.desc}
-                                            onChange={e => setFormData({ ...formData, desc: e.target.value })}
+                                            value={formData.caption}
+                                            onChange={e => setFormData({ ...formData, caption: e.target.value })}
                                             className="w-full h-20 md:h-32 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-xs md:text-sm outline-none focus:border-[#FF671F] transition resize-none placeholder:text-gray-600"
-                                            placeholder="Describe what&apos;s broken, how long it&apos;s been there..."
+                                            placeholder="Tell your story... What happened here? Who were you with?"
                                         />
-                                    </div>
-
-                                    {/* Audience / recipient */}
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                            <span>Who are you spilling to?</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={formData.audienceName}
-                                            onChange={e => setFormData({ ...formData, audienceName: e.target.value })}
-                                            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-xs md:text-sm outline-none focus:border-[var(--fixit-primary)] transition placeholder:text-gray-600"
-                                            placeholder="Eg. My street, Berlin, Mumbai Ward 42, My Apartment RWA..."
-                                        />
-                                        <p className="text-[10px] text-gray-500">
-                                            People from anywhere in the world can direct an issue to a person, place, or institution.
-                                        </p>
                                     </div>
 
                                     {/* Color choice */}
