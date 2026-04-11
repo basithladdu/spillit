@@ -3,8 +3,8 @@ import Map, { Marker, Popup, Source, Layer } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Layers, Map as MapIcon, Satellite, Navigation } from 'lucide-react';
 
-// Mapbox Access Token - Using the same token as Home.jsx and LocationVerifier.jsx
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiYXdhaXpzaGFpazI1IiwiYSI6ImNtY3J5MHQzMTEwZjcyanMzYWJuMnMxcTUifQ.bLPhS0-UAAouYlHOK396XQ';
+// Mapbox Access Token - Configure via .env.local or VITE_MAPBOX_TOKEN
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 // Default center (India)
 const DEFAULT_CENTER = { lng: 78.9629, lat: 20.5937 };
