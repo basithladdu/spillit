@@ -162,12 +162,6 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                 // Close modal immediately
                 setTimeout(() => onClose(), 1500);
 
-                // Run AI detection in background AFTER user sees success
-                if (savedType === 'Pothole') {
-                    console.log('🚀 Starting background AI detection...');
-                    processAIDetectionInBackground(savedImage, imgUrl, newDoc.id, lat, lng, address);
-                }
-
             } catch (err) {
                 console.error(err);
                 showToast("❌ Upload failed. Please check your connection and try again.");
@@ -175,89 +169,6 @@ const ReportIssueModal = ({ show, onClose, onSuccess }) => {
                 setIsSubmitting(false);
             }
         }, 100);
-    };
-
-    // Background AI processing - doesn't block user
-    const processAIDetectionInBackground = async (imageFile, cloudinaryUrl, issueId, lat, lng, address) => {
-        try {
-            console.log('📥 Loading AI detection modules...');
-            const { detectPotholes, drawDetectionsOnCanvas, fileToBase64 } = await import('../utils/roboflow');
-            const { classifyRoadDepartment, classifyDepth, getSeverityFromDepth } = await import('../utils/apRoads');
-
-            console.log('🔄 Converting image to base64...');
-            const base64Image = await fileToBase64(imageFile);
-
-            console.log('🤖 Calling Roboflow API...');
-            const predictions = await detectPotholes(base64Image);
-            console.log(`📊 Roboflow detected ${predictions?.length || 0} potholes`);
-
-            if (predictions && predictions.length > 0) {
-                console.log('🎨 Drawing bounding boxes...');
-                const annotatedImage = await drawDetectionsOnCanvas(base64Image, predictions);
-
-                console.log('☁️ Uploading annotated image to Cloudinary...');
-                const annotatedUrl = await uploadToCloudinary(
-                    await fetch(annotatedImage).then(r => r.blob())
-                );
-                console.log('✅ Annotated image uploaded:', annotatedUrl);
-
-                const roadName = address || 'Unknown Road';
-                const department = classifyRoadDepartment(roadName);
-
-                console.log('💾 Creating parent report in Firestore...');
-                const reportDoc = await addDoc(collection(db, 'pothole_reports'), {
-                    roadName,
-                    department,
-                    originalImageUrl: cloudinaryUrl,
-                    annotatedImageUrl: annotatedUrl,
-                    totalDetections: predictions.length,
-                    timestamp: serverTimestamp(),
-                    location: { lat, lng },
-                    address,
-                    reportedBy: currentUser ? currentUser.uid : 'guest',
-                    sourceIssueId: issueId
-                });
-                console.log('✅ Parent report created:', reportDoc.id);
-
-                console.log('💾 Saving individual detections...');
-                for (let i = 0; i < predictions.length; i++) {
-                    const pred = predictions[i];
-                    const depth = classifyDepth(pred.width, pred.height, pred.confidence);
-                    const severity = getSeverityFromDepth(depth);
-
-                    await addDoc(collection(db, 'pothole_detections'), {
-                        severity,
-                        depth,
-                        confidence: pred.confidence,
-                        class: pred.class,
-                        width: pred.width,
-                        height: pred.height,
-                        x: pred.x,
-                        y: pred.y,
-                        status: 'PENDING',
-                        department,
-                        assignedTo: null,
-                        roadName,
-                        originalImageUrl: cloudinaryUrl,
-                        annotatedImageUrl: annotatedUrl,
-                        reportId: reportDoc.id,
-                        detectionIndex: i,
-                        location: { lat, lng },
-                        address,
-                        timestamp: serverTimestamp(),
-                        reportedBy: currentUser ? currentUser.uid : 'guest',
-                        sourceIssueId: issueId
-                    });
-                }
-
-                console.log(`✅ Background AI Complete: Detected and saved ${predictions.length} potholes!`);
-            } else {
-                console.log('ℹ️ No potholes detected in image');
-            }
-        } catch (error) {
-            console.error('❌ Background AI detection failed:', error);
-            console.error('Error details:', error.message, error.stack);
-        }
     };
 
     return (
