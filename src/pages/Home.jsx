@@ -25,7 +25,7 @@ import ReportIssueModal from '../components/ReportIssueModal';
 import '../styles/municipal.css';
 
 // --- Configuration ---
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiYXdhaXpzaGFpazI1IiwiYSI6ImNtY3J5MHQzMTEwZjcyanMzYWJuMnMxcTUifQ.bLPhS0-UAAouYlHOK396XQ';
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 const MAP_STYLES = [
   { name: 'Midnight', id: 'mapbox://styles/mapbox/navigation-night-v1', color: 'bg-blue-900' },

@@ -6,7 +6,7 @@ import EXIF from 'exif-js';
 import { MapPin, Navigation, Layers, Loader2 } from 'lucide-react';
 
 // --- Configuration ---
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiYXdhaXpzaGFpazI1IiwiYSI6ImNtY3J5MHQzMTEwZjcyanMzYWJuMnMxcTUifQ.bLPhS0-UAAouYlHOK396XQ';
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 const LocationVerifier = ({ file, onLocationVerified, className }) => {
     const [viewState, setViewState] = useState({
