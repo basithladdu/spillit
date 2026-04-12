@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
-import { FaEnvelope, FaLock, FaArrowRight, FaExclamationCircle, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff, Heart } from 'lucide-react';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -10,20 +10,14 @@ function Login() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { login, currentUser, userRole } = useAuth();
+  const { login, currentUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (currentUser) {
-      if (userRole === 'municipal_admin') {
-        navigate('/municipal-dashboard');
-      } else if (userRole === 'admin') {
-        navigate('/dashboard');
-      } else {
-        navigate('/');
-      }
+      navigate('/');
     }
-  }, [currentUser, userRole, navigate]);
+  }, [currentUser, navigate]);
 
   const clearError = (field) => {
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
@@ -52,11 +46,10 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[var(--muni-bg)] relative overflow-hidden p-4 font-sans">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[var(--spillit-bg)] relative overflow-hidden p-6 font-sans">
 
       {/* --- Background Elements --- */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#FF671F]/10 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[var(--spillit-primary)]/10 rounded-full blur-[120px] pointer-events-none"></div>
 
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -65,75 +58,73 @@ function Login() {
         className="w-full max-w-md relative z-10"
       >
         {/* --- Glass Card --- */}
-        <div className="bg-[var(--muni-surface)]/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] p-8 sm:p-10 overflow-hidden relative">
+        <div className="bg-[var(--spillit-surface)] backdrop-blur-3xl border border-white/5 rounded-[40px] shadow-2xl p-10 overflow-hidden relative">
 
           {/* Decor Line */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FF671F] via-white to-[#046A38] opacity-50"></div>
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--spillit-primary)] via-[var(--spillit-secondary)] to-[var(--spillit-primary)] opacity-50"></div>
 
           {/* Header */}
           <div className="text-center mb-10">
-            <img
-              src="/aplogo.svg"
-              alt="AP Logo"
-              className="w-24 h-24 mx-auto mb-4 object-contain"
-            />
-            <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">
-              LOGIN As <span className="text-[#FF671F]">Roads and Buildings</span> Department Admin
+            <div className="w-20 h-20 rounded-[32px] bg-gradient-to-br from-[var(--spillit-primary)] to-[var(--spillit-secondary)] flex items-center justify-center text-white mx-auto mb-6 shadow-xl shadow-[var(--spillit-primary)]/20 transition-transform hover:scale-110">
+              <Heart size={32} fill="currentColor" />
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-2 tracking-tight heading-font uppercase">
+              Welcome Back
             </h1>
-            <p className="text-[var(--muni-text-muted)] text-sm">Access the specialized internal command center.</p>
+            <p className="text-[var(--spillit-text-muted)] text-sm">Sign in to Spill It.</p>
           </div>
 
           {/* Error Banner */}
           {errors.general && (
             <motion.div
               initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-              className="mb-6 p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 text-sm"
+              className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 text-xs font-bold"
             >
-              <FaExclamationCircle className="shrink-0" />
+              <AlertCircle size={16} />
               {errors.general}
             </motion.div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-6">
 
             {/* Email Field */}
-            <div className="space-y-1">
-              <label htmlFor="email" className="text-xs font-bold text-[var(--muni-text-muted)] uppercase tracking-wider ml-1">Email Address</label>
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-[10px] font-bold text-[var(--spillit-text-muted)] uppercase tracking-[0.2em] ml-2">Email</label>
               <div className="relative group">
-                <FaEnvelope aria-hidden="true" className="absolute left-4 top-3.5 text-[var(--muni-text-muted)] group-focus-within:text-[#FF671F] transition-colors" />
+                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--spillit-text-muted)] group-focus-within:text-[var(--spillit-primary)] transition-colors" size={18} />
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
-                  className={`w-full bg-black/50 border ${errors.email ? 'border-red-500' : 'border-white/10'} rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-600 outline-none focus:border-[#FF671F] focus:shadow-[0_0_15px_rgba(255,103,31,0.2)] transition-all`}
-                  placeholder="admin@gmail.com"
+                  className={`w-full bg-white/5 border ${errors.email ? 'border-red-500' : 'border-white/5'} rounded-2xl py-4 pl-14 pr-4 text-white placeholder-slate-600 outline-none focus:border-[var(--spillit-primary)]/50 transition-all`}
+                  placeholder="name@email.com"
                   required
                 />
               </div>
-              {errors.email && <p className="text-red-400 text-xs ml-1">{errors.email}</p>}
+              {errors.email && <p className="text-red-400 text-[10px] ml-2 font-bold">{errors.email}</p>}
             </div>
 
             {/* Password Field */}
-            <div className="space-y-1">
-              <label htmlFor="password" className="text-xs font-bold text-[var(--muni-text-muted)] uppercase tracking-wider ml-1">Password</label>
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-[10px] font-bold text-[var(--spillit-text-muted)] uppercase tracking-[0.2em] ml-2">Password</label>
               <div className="relative group">
-                <FaLock aria-hidden="true" className="absolute left-4 top-3.5 text-[var(--muni-text-muted)] group-focus-within:text-[#FF671F] transition-colors" />
+                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--spillit-text-muted)] group-focus-within:text-[var(--spillit-primary)] transition-colors" size={18} />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-11 pr-12 text-white placeholder-gray-600 outline-none focus:border-[#FF671F] focus:shadow-[0_0_15px_rgba(255,103,31,0.2)] transition-all"
+                  className="w-full bg-white/5 border border-white/5 rounded-2xl py-4 pl-14 pr-14 text-white placeholder-slate-600 outline-none focus:border-[var(--spillit-primary)]/50 transition-all"
                   placeholder="••••••••"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-3.5 text-[var(--muni-text-muted)] hover:text-white transition-colors"
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-[var(--spillit-text-muted)] hover:text-white transition-colors"
                 >
-                  {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
@@ -142,29 +133,25 @@ function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-6 bg-gradient-to-r from-[#FF671F] via-white to-[#046A38] text-black font-bold py-3.5 rounded-xl shadow-lg shadow-[#FF671F]/20 transition-all transform hover:scale-[1.02] active:scale-0.98 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full mt-4 py-4 rounded-2xl bg-gradient-to-r from-[var(--spillit-primary)] to-[var(--spillit-secondary)] text-white font-bold shadow-xl shadow-[var(--spillit-primary)]/20 transition-all hover:scale-[1.02] active:scale-0.98 disabled:opacity-50 flex items-center justify-center gap-3 heading-font uppercase tracking-widest"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                <>Login <FaArrowRight size={14} /></>
+                <>Enter Spill It <ArrowRight size={18} /></>
               )}
             </button>
           </form>
 
           {/* Footer Link */}
-          <p className="text-center text-[var(--muni-text-muted)] text-sm mt-8">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-[#046A38] hover:text-[#046A38]/80 font-semibold hover:underline transition-colors">
-              Register here
-            </Link>
-          </p>
-          <p className="text-center text-[var(--muni-text-muted)] text-xs mt-4">
-            Are you a municipality looking to access dashboard?{' '}
-            <Link to="/municipal-register" className="text-[#FF671F] hover:text-[#FF671F]/80 font-semibold hover:underline transition-colors">
-              Register here
-            </Link>
-          </p>
+          <div className="text-center mt-10">
+             <p className="text-[var(--spillit-text-muted)] text-sm">
+                New here?{' '}
+                <Link to="/register" className="text-[var(--spillit-primary)] hover:underline font-bold transition-all">
+                Create an account
+                </Link>
+            </p>
+          </div>
 
         </div>
       </motion.div>

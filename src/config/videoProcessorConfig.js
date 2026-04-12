@@ -1,31 +1,29 @@
 /**
- * Video Processor Configuration
+ * Memory Processor Configuration
  * 
  * SETUP INSTRUCTIONS:
  * 1. Replace the placeholder values below with your actual credentials
- * 2. This file is imported by DashcamVideoProcessor.jsx
+ * 2. This file is used to process high-res memories and visual artifacts
  */
 
 export const VIDEO_PROCESSOR_CONFIG = {
     // Cloudinary Configuration
-    // Using your existing working preset
     cloudinary: {
-        cloudName: 'fixit',                  // Your existing Cloudinary account
-        uploadPreset: 'fixit_unsigned',      // Your existing working preset
+        cloudName: 'spillit',                 // Your Spillit Cloudinary account
+        uploadPreset: 'spillit_unsigned',     // Your Spillit upload preset
     },
 
-    // Railway Backend Configuration
-    // Get this after deploying to Railway
+    // Backend Configuration
     backend: {
-        baseUrl: 'https://defenceable-vegetally-buena.ngrok-free.dev', // Your live Colab backend (via Ngrok)
-        apiKey: '4b8afa69-5426-44dd-b2af-3977e26d6b5f',
+        baseUrl: 'https://api.spillit.app',   // Your processing backend
+        apiKey: '77-spill-it-77',
     },
 
     // Processing Configuration
     processing: {
         maxFileSize: 100000000,              // 100MB
-        allowedFormats: ['mp4', 'mov', 'avi', 'webm'],
-        confidenceThreshold: 0.5,            // Minimum confidence for detections (0.0 - 1.0)
+        allowedFormats: ['mp4', 'mov', 'avi', 'webm', 'gif'],
+        confidenceThreshold: 0.5,            // Accuracy threshold for vibe detection
     }
 };
 
@@ -34,11 +32,9 @@ export const VIDEO_PROCESSOR_CONFIG = {
  * 
  * □ Step 1: Create Cloudinary account at cloudinary.com
  * □ Step 2: Get Cloud Name from Cloudinary Dashboard
- * □ Step 3: Create upload preset named 'dashcam_videos' (unsigned mode)
- * □ Step 4: Deploy backend to Railway (see VIDEO_PROCESSOR_SETUP.md)
- * □ Step 5: Get Railway URL and update backend.baseUrl above
- * □ Step 6: Test the health endpoint: YOUR_RAILWAY_URL/api/health
- * □ Step 7: Upload a test video through the dashboard
- * 
- * For detailed instructions, see: VIDEO_PROCESSOR_SETUP.md
+ * □ Step 3: Create upload preset named 'spillit_memories' (unsigned mode)
+ * □ Step 4: Deploy vibe processor backend
+ * □ Step 5: Update backend.baseUrl above
+ * □ Step 6: Test the health endpoint
+ * □ Step 7: Upload a test file through the studio
  */

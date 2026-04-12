@@ -16,19 +16,17 @@ const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const About = lazy(() => import("./pages/About"));
-const Report = lazy(() => import("./pages/Report"));
+const MemoryDetail = lazy(() => import("./pages/MemoryDetail"));
 const Gallery = lazy(() => import("./pages/Gallery"));
 const Help = lazy(() => import("./pages/Help"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 
 import "./App.css";
-import "./styles/municipal.css";
-
 
 // Loading Component
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen bg-[#0A0A1E]">
-    <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+  <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
   </div>
 );
 
@@ -36,7 +34,7 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-[var(--fixit-bg)] text-[var(--fixit-text-main)] transition-colors duration-300 flex flex-col">
+      <div className="min-h-screen bg-background text-foreground transition-colors duration-300 flex flex-col">
         <Navbar />
 
         <div className="flex-1 pt-16">
@@ -45,7 +43,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/report/:id" element={<Report />} />
+              <Route path="/memory/:id" element={<MemoryDetail />} />
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/help" element={<Help />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
@@ -68,7 +66,7 @@ function App() {
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="dark"
+          theme="light"
         />
         <Footer />
       </div>

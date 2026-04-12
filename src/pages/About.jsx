@@ -1,83 +1,49 @@
 import { motion } from 'framer-motion';
-import { FaUsers, FaLightbulb, FaHandshake, FaCode, FaInstagram, FaTwitter, FaEnvelope, FaGlobe, FaLinkedin } from 'react-icons/fa';
-import '../styles/municipal.css';
+import { Users, Lightbulb, Heart, Code, Instagram, Twitter, Mail, Globe, Linkedin, MapPin, Camera } from 'lucide-react';
 import Footer from '../components/Footer';
 
 const About = () => {
     return (
-        <div className="municipal-theme min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans pt-12 md:pt-16 pb-20">
-            <main className="container mx-auto px-6 max-w-4xl">
+        <div className="min-h-screen bg-[var(--spillit-bg)] text-[var(--spillit-text-main)] font-sans pt-12 md:pt-16 pb-20 overflow-x-hidden">
+            <main className="container mx-auto px-6 max-w-5xl relative z-10">
 
                 {/* Header */}
-                <div className="text-center mb-6">
+                <div className="text-center mb-16 pt-10">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="w-20 h-20 rounded-[32px] bg-gradient-to-br from-[var(--spillit-primary)] to-[var(--spillit-secondary)] flex items-center justify-center text-white mx-auto mb-8 shadow-2xl shadow-[var(--spillit-primary)]/20"
+                    >
+                        <Heart size={32} fill="currentColor" />
+                    </motion.div>
                     <motion.h1
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-4xl md:text-6xl font-bold mb-2 tracking-tight heading-font"
+                        className="text-5xl md:text-7xl font-bold mb-6 tracking-tight heading-font uppercase"
                     >
-                        About <span className="text-[var(--fixit-primary)]">Spill It</span>
+                        Spill <span className="text-[var(--spillit-primary)] italic">It</span>
                     </motion.h1>
-                    <p className="text-[var(--muni-text-muted)] text-base md:text-lg max-w-2xl mx-auto">
-                        A tiny corner of the internet where anyone can spill what they see in the world with a photo, a color, and a message.
+                    <p className="text-[var(--spillit-text-muted)] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                        A digital sanctuary for anonymous memories, pinned forever to the spots where life happened.
                     </p>
                 </div>
 
-                {/* What is Spill It? */}
-                <motion.section
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="muni-card p-8 mb-12 border-t-4 border-[var(--fixit-primary)]"
-                >
-                    <div className="flex items-start gap-4">
-                        <div className="p-3 bg-[var(--fixit-primary)]/10 rounded-lg text-[var(--fixit-primary)]">
-                            <FaLightbulb size={24} />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-bold text-white mb-4 heading-font tracking-[0.14em] uppercase">What is Spill It?</h2>
-                            <p className="text-[var(--muni-text-muted)] leading-relaxed">
-                                Spill It is a playful, map‑based feed where people from anywhere in the world can drop
-                                a photo, a short message, a color, and (optionally) who they&apos;re sending it to.
-                                It&apos;s not an official complaint system, not a ticketing tool, and not a serious
-                                civic reporting platform. It&apos;s closer to a public mood board of broken things,
-                                strange sights, small joys, and whatever else you feel like spilling.
-                            </p>
-                        </div>
-                    </div>
-                </motion.section>
-
-                {/* Inspirational Quote */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    className="max-w-3xl mx-auto mb-16 text-center"
-                >
-                    <div className="relative p-8 bg-[#18181b] border border-[#27272a] rounded-2xl overflow-hidden">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-[#FF671F]"></div>
-                        <p className="text-lg text-gray-300 italic font-serif leading-relaxed">
-                            &quot;Most things on the internet are trying to sell you something or fix you somehow.
-                            Spill It just wants to hear what&apos;s on your mind and put it on the map.&quot;
-                        </p>
-                    </div>
-                </motion.div>
-
-                {/* How it works */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
-                        className="muni-card p-6 border-l-4 border-[var(--fixit-primary)]"
+                        className="glass-card p-10 border-l-4 border-[var(--spillit-primary)]"
                     >
-                        <div className="flex items-center gap-3 mb-4">
-                            <FaUsers className="text-[var(--fixit-primary)] text-xl" />
-                            <h3 className="text-xl font-bold text-white">For humans on the internet</h3>
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="p-3 bg-[var(--spillit-primary)]/10 rounded-2xl text-[var(--spillit-primary)]">
+                                <Lightbulb size={24} />
+                            </div>
+                            <h2 className="text-2xl font-bold text-white heading-font uppercase tracking-widest">The Vision</h2>
                         </div>
-                        <p className="text-[var(--muni-text-muted)] text-sm">
-                            See something interesting, annoying, beautiful, or broken? Open Spill It, snap a photo,
-                            pick a color, write a tiny note, and (optionally) choose who you&apos;re addressing it to.
-                            That&apos;s it. No forms, no categories, no &quot;required fields&quot; beyond a photo and your words.
+                        <p className="text-[var(--spillit-text-muted)] leading-relaxed text-base">
+                            Spill It is a map-based memory board. We believe that every coordinate on Earth holds a story — a first kiss, a lonely walk, a sudden realization, or a moment of pure joy. We built this to give those fleeting moments a permanent home, tied to the very ground where they occurred.
                         </p>
                     </motion.div>
 
@@ -85,67 +51,75 @@ const About = () => {
                         initial={{ opacity: 0, x: 20 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
-                        className="muni-card p-6 border-l-4 border-[#22c55e]"
+                        className="glass-card p-10 border-l-4 border-[var(--spillit-secondary)]"
                     >
-                        <div className="flex items-center gap-3 mb-4">
-                            <FaHandshake className="text-[#22c55e] text-xl" />
-                            <h3 className="text-xl font-bold text-white">What it is not</h3>
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="p-3 bg-[var(--spillit-secondary)]/10 rounded-2xl text-[var(--spillit-secondary)]">
+                                <Users size={24} />
+                            </div>
+                            <h2 className="text-2xl font-bold text-white heading-font uppercase tracking-widest">The Community</h2>
                         </div>
-                        <p className="text-[var(--muni-text-muted)] text-sm">
-                            Spill It does not replace your city&apos;s complaint system, emergency services,
-                            or formal channels. It does not guarantee that anything will get &quot;resolved&quot;.
-                            Think of it as a shared public notebook – a way to see what people are noticing, not an official workflow.
+                        <p className="text-[var(--spillit-text-muted)] leading-relaxed text-base">
+                            Spill It is for the dreamers, the travelers, and the locals who see beauty in the mundane. It&apos;s a shared public journal where anonymity breeds authenticity. No judgment, no filters (except the ones on the map), just real moments from real people.
                         </p>
                     </motion.div>
                 </div>
 
-                {/* Why we built this */}
+                {/* Features Section */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
+                    <div className="glass-card p-8 text-center space-y-4 border-white/5">
+                        <Camera size={32} className="mx-auto text-[var(--spillit-primary)]" />
+                        <h3 className="font-bold text-white uppercase tracking-widest heading-font">Snap</h3>
+                        <p className="text-xs text-slate-500 leading-relaxed">Capture the scene exactly as it is. A photo is worth a thousand memories.</p>
+                    </div>
+                    <div className="glass-card p-8 text-center space-y-4 border-white/5">
+                        <MapPin size={32} className="mx-auto text-[var(--spillit-secondary)]" />
+                        <h3 className="font-bold text-white uppercase tracking-widest heading-font">Pin</h3>
+                        <p className="text-xs text-slate-500 leading-relaxed">Drop it on the map. Let your story live forever at that specific point in space.</p>
+                    </div>
+                    <div className="glass-card p-8 text-center space-y-4 border-white/5">
+                        <Ghost size={32} className="mx-auto text-[var(--spillit-accent)]" />
+                        <h3 className="font-bold text-white uppercase tracking-widest heading-font">Spill</h3>
+                        <p className="text-xs text-slate-500 leading-relaxed">Write what you felt. Share it anonymously with the world.</p>
+                    </div>
+                </div>
+
+                {/* Quote */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
-                    className="muni-card p-8 mb-16 border-l-4 border-[var(--fixit-primary)] bg-gradient-to-r from-[var(--fixit-primary)]/10 to-transparent"
+                    className="max-w-4xl mx-auto mb-20 text-center"
                 >
-                    <h3 className="text-2xl font-bold text-white mb-4 heading-font tracking-[0.14em] uppercase">Why we built this</h3>
-                    <p className="text-[var(--muni-text-muted)] leading-relaxed mb-6">
-                        Spill It started as a side project at Devit – we were tinkering with maps, cameras, and real‑time
-                        feeds and realised it would be fun to build a place where people can simply drop what they see
-                        in the world. No heavy onboarding, no dashboards, just vibes and a live map.
-                    </p>
-                    <a href="mailto:workwithdevit@gmail.com" className="inline-flex items-center gap-2 text-[#FF671F] font-bold hover:text-white transition-colors">
-                        <FaEnvelope /> Get in Touch
-                    </a>
+                    <div className="relative p-12 bg-white/2 border border-white/5 rounded-[40px] overflow-hidden">
+                        <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-[var(--spillit-primary)] to-[var(--spillit-secondary)]"></div>
+                        <p className="text-2xl md:text-3xl text-gray-200 italic font-serif leading-relaxed px-4">
+                            &quot;In a world of constant moving, Spill It is our way of saying: something happened here, and it mattered.&quot;
+                        </p>
+                    </div>
                 </motion.div>
 
-                {/* Team Section */}
+                {/* Team / Contact */}
                 <motion.section
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="text-center"
+                    className="text-center pb-20"
                 >
-                    <div className="inline-block p-3 bg-white/5 rounded-full mb-6">
-                        <FaCode className="text-white text-xl" />
+                    <div className="inline-block p-4 bg-white/5 rounded-3xl mb-8 border border-white/10">
+                        <Code className="text-white" size={24} />
                     </div>
-                    <h2 className="text-3xl font-bold text-white mb-8 heading-font tracking-[0.16em] uppercase">Built with curiosity</h2>
-                    <p className="text-[var(--muni-text-muted)] max-w-2xl mx-auto mb-8">
-                        Spill It is a tiny experiment from the folks at Devit. We like building tools for cities and public
-                        infrastructure, but we also like weird, playful things that don&apos;t have a strict KPI attached.
-                        This is one of those.
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-8 heading-font tracking-widest uppercase">Built with Love</h2>
+                    <p className="text-[var(--spillit-text-muted)] max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
+                        Spill It is a small project from the folks at Devit. We love maps, we love stories, and we love building things that make the internet a little more human.
                     </p>
 
-                    <div className="flex justify-center gap-4 flex-wrap">
-                        <a href="https://www.wedevit.in" target="_blank" rel="noopener noreferrer" className="muni-btn-primary no-underline flex items-center gap-2">
-                            <FaGlobe /> Visit Devit
+                    <div className="flex justify-center gap-6 flex-wrap">
+                        <a href="mailto:workwithdevit@gmail.com" className="flex items-center gap-3 px-8 py-4 bg-white text-black font-bold rounded-2xl hover:bg-[var(--spillit-primary)] hover:text-white transition-all shadow-xl">
+                            <Mail size={18} /> Contact Us
                         </a>
-                        <a href="https://www.linkedin.com/company/thedevit" target="_blank" rel="noopener noreferrer" className="muni-btn-ghost no-underline flex items-center gap-2">
-                            <FaLinkedin /> LinkedIn
-                        </a>
-                        <a href="https://instagram.com/devit.company" target="_blank" rel="noopener noreferrer" className="muni-btn-ghost no-underline flex items-center gap-2">
-                            <FaInstagram /> devit.company
-                        </a>
-                        <a href="mailto:workwithdevit@gmail.com" className="muni-btn-ghost no-underline flex items-center gap-2">
-                            <FaEnvelope /> Contact Us
+                        <a href="https://instagram.com/devit.company" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-8 py-4 bg-white/5 border border-white/10 text-white font-bold rounded-2xl hover:bg-white/10 transition-all">
+                            <Instagram size={18} /> Instagram
                         </a>
                     </div>
                 </motion.section>
@@ -155,5 +129,21 @@ const About = () => {
         </div>
     );
 };
+
+const Ghost = ({ size, className }) => (
+    <svg 
+        width={size} 
+        height={size} 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        className={className}
+    >
+        <path d="M9 10h.01"/><path d="M15 10h.01"/><path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/>
+    </svg>
+);
 
 export default About;

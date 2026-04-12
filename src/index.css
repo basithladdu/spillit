@@ -1,38 +1,24 @@
 @import "tailwindcss";
 
-/* --- FixIt India Global Theme --- */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
-
+/* --- Playful Geometric Design System --- */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500&display=swap');
 :root {
-  /* Core Palette - Dark & Moody Civic Tech */
-  --fixit-bg: #080808;
-  --fixit-surface: rgba(255, 255, 255, 0.04);
-  --fixit-border: rgba(255, 255, 255, 0.08);
-  --fixit-text-main: #f5f5f0;
-  --fixit-text-muted: #a3a3a3;
-  --fixit-primary: #ff6b00; /* saffron/orange */
-  --fixit-secondary: #138808; /* india green */
-  --fixit-danger: #ef4444;
+  /* Color Palette */
+  --pg-bg: #FFFDF5;
+  --pg-foreground: #1E293B;
+  --pg-muted: #F1F5F9;
+  --pg-muted-foreground: #64748B;
+  --pg-accent: #8B5CF6;
+  --pg-accent-foreground: #FFFFFF;
+  --pg-secondary: #F472B6;
+  --pg-tertiary: #FBBF24;
+  --pg-quaternary: #34D399;
+  --pg-border: #E2E8F0;
+  --pg-input: #FFFFFF;
+  --pg-card: #FFFFFF;
+  --pg-ring: #8B5CF6;
 
-  /* Legacy token mappings to keep existing components working */
-  --muni-bg: var(--fixit-bg);
-  --muni-surface: #101010;
-  --muni-border: var(--fixit-border);
-  --muni-text-main: var(--fixit-text-main);
-  --muni-text-muted: var(--fixit-text-muted);
-  --muni-accent: var(--fixit-primary);
-  --muni-error: var(--fixit-danger);
-
-  --text-color: var(--fixit-text-main);
-  --bg-color: var(--fixit-bg);
-  --border-color: var(--fixit-border);
-  --button-hover-color: #141414;
-  --highlight-color: var(--fixit-primary);
-  --thread-action-color: var(--fixit-primary);
-  --error-color: var(--fixit-danger);
-  --surface-dark: #101010;
-
-  /* Mobile Safe Areas */
+  /* Safe Areas */
   --sat: env(safe-area-inset-top);
   --sab: env(safe-area-inset-bottom);
   --sal: env(safe-area-inset-left);
@@ -44,9 +30,10 @@ body {
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  background-color: var(--fixit-bg);
-  color: var(--fixit-text-main);
-  font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: var(--pg-bg);
+  color: var(--pg-foreground);
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -54,42 +41,60 @@ body {
   min-height: 100vh;
 }
 
-/* Subtle grain / noise overlay */
+/* Warm paper texture backdrop */
 body::before {
   content: "";
   pointer-events: none;
   position: fixed;
   inset: -50px;
-  opacity: 0.25;
+  opacity: 0.03;
   mix-blend-mode: soft-light;
-  background-image:
-    radial-gradient(circle at 0 0, rgba(255, 255, 255, 0.12) 0, transparent 50%),
-    radial-gradient(circle at 100% 100%, rgba(0, 0, 0, 0.35) 0, transparent 55%),
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='noStitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.25'/%3E%3C/svg%3E");
-  z-index: -1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='noStitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.25'/%3E%3C/svg%3E");
+  z-index: 0;
 }
 
-/* Heading utility for Syne */
+/* Heading Font */
 .heading-font {
-  font-family: "Syne", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  letter-spacing: 0.08em;
+  font-family: "Outfit", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 700;
 }
 
-/* Glassmorphism surface */
-.glass-card {
-  background: var(--fixit-surface);
-  border: 1px solid var(--fixit-border);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+/* Hard Shadow Utility */
+.shadow-pop {
+  box-shadow: 4px 4px 0px 0px var(--pg-foreground);
 }
 
-/* Global Transition Override - keep animations snappy but subtle */
+.shadow-pop-hover {
+  box-shadow: 6px 6px 0px 0px var(--pg-foreground);
+}
+
+.shadow-pop-active {
+  box-shadow: 2px 2px 0px 0px var(--pg-foreground);
+}
+
+.shadow-sticker {
+  box-shadow: 8px 8px 0px #E2E8F0;
+}
+
+.shadow-sticker-pink {
+  box-shadow: 8px 8px 0px var(--pg-secondary);
+}
+
+.shadow-focus {
+  box-shadow: 4px 4px 0px 0px var(--pg-accent);
+}
+
+/* Smooth Transitions */
 * {
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+    box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+/* Focus states for accessibility */
+*:focus-visible {
+  outline: none;
+  border-color: var(--pg-accent);
+  box-shadow: 4px 4px 0px 0px var(--pg-accent);
 }
 
 /* Prevent iOS Zoom on inputs */
@@ -99,12 +104,17 @@ body::before {
   textarea {
     font-size: 16px !important;
   }
+
+  .shadow-pop,
+  .shadow-pop-hover {
+    box-shadow: 2px 2px 0px 0px var(--pg-foreground) !important;
+  }
 }
 
-/* Custom Scrollbar (Hidden/Minimal) */
+/* Minimal Scrollbar */
 ::-webkit-scrollbar {
-  width: 0px;
-  background: transparent;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -112,6 +122,36 @@ body::before {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: transparent;
+  background: var(--pg-accent);
+  border-radius: 4px;
 }
 
+::-webkit-scrollbar-thumb:hover {
+  background: var(--pg-secondary);
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dot Pattern Background (Utility) */
+.bg-dots {
+  background-image: radial-gradient(circle, #E2E8F0 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Confetti decoration shapes */
+.shape-blob {
+  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+}
+
+.shape-arch {
+  border-radius: 50% 50% 0 0;
+}

@@ -1,261 +1,157 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../utils/firebase';
-import { motion } from 'framer-motion';
-import { FaTrophy, FaMedal, FaCheckCircle, FaArrowUp, FaCrown, FaLayerGroup } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, Hash, MapPin, Sparkles, Trophy, Crown, Star, Ghost, ArrowRight, Eye } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-// --- Sub-Component: The Podium Card (Top 3) ---
-const PodiumSpot = ({ dept, rank, delay }) => {
-  const isFirst = rank === 1;
-
-  // Rank Specific Styles
+const RankBadge = ({ rank }) => {
   const styles = {
-    1: {
-      border: 'border-yellow-500/50',
-      bg: 'bg-yellow-500/10',
-      glow: 'shadow-[0_0_30px_rgba(234,179,8,0.2)]',
-      iconColor: 'text-yellow-400',
-      height: 'h-64 md:h-80',
-      scale: 1.05
-    },
-    2: {
-      border: 'border-slate-400/50',
-      bg: 'bg-slate-400/10',
-      glow: 'shadow-[0_0_30px_rgba(148,163,184,0.2)]',
-      iconColor: 'text-slate-300',
-      height: 'h-56 md:h-72',
-      scale: 1
-    },
-    3: {
-      border: 'border-orange-700/50',
-      bg: 'bg-orange-700/10',
-      glow: 'shadow-[0_0_30px_rgba(194,65,12,0.2)]',
-      iconColor: 'text-orange-400',
-      height: 'h-52 md:h-64',
-      scale: 0.95
-    }
+    1: 'bg-yellow-500 shadow-yellow-500/50',
+    2: 'bg-slate-300 shadow-slate-300/50',
+    3: 'bg-amber-600 shadow-amber-600/50',
   };
-
-  const style = styles[rank];
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.6, type: 'spring' }}
-      className={`relative flex flex-col items-center justify-end p-6 rounded-2xl border backdrop-blur-xl ${style.border} ${style.bg} ${style.glow} ${style.height} w-full md:w-1/3 transition-transform hover:scale-[1.02]`}
-    >
-      {/* Crown for #1 */}
-      {isFirst && (
-        <div className="absolute -top-8 animate-bounce">
-          <FaCrown className="text-yellow-400 text-4xl drop-shadow-[0_0_10px_rgba(234,179,8,0.8)]" />
-        </div>
-      )}
-
-      {/* Avatar / Icon Placeholder */}
-      <div className={`mb-4 p-4 rounded-full border ${style.border} bg-black/30`}>
-        <FaTrophy className={`text-3xl ${style.iconColor}`} />
-      </div>
-
-      {/* Rank Badge */}
-      <div className={`absolute top-4 right-4 text-xs font-bold px-2 py-1 rounded border ${style.border} ${style.iconColor}`}>
-        #{rank}
-      </div>
-
-      <div className="text-center z-10">
-        <h3 className="text-xl font-bold text-white mb-1 line-clamp-1">{dept.name}</h3>
-        <div className="text-sm text-[var(--muni-text-muted)] font-mono mb-3">{dept.score.toFixed(0)} pts</div>
-
-        {/* Stats Mini Grid */}
-        <div className="flex gap-3 text-xs justify-center border-t border-white/10 pt-3">
-          <div className="flex items-center gap-1 text-[#046A38]">
-            <FaCheckCircle /> {dept.resolvedCount}
-          </div>
-          <div className="flex items-center gap-1 text-[#06038D]">
-            <FaArrowUp /> {dept.upvoteCount}
-          </div>
-        </div>
-      </div>
-
-      {/* Background Gradient Fill */}
-      <div className={`absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent rounded-b-2xl pointer-events-none`} />
-    </motion.div>
+    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-black font-black text-sm shadow-lg ${styles[rank] || 'bg-white/5 border border-white/10 text-slate-400'}`}>
+      {rank}
+    </div>
   );
 };
 
-// --- Sub-Component: List Row (Rank 4+) ---
-const RankRow = ({ dept, rank, delay }) => (
-  <motion.div
-    initial={{ opacity: 0, x: -20 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ delay }}
-    className="group flex items-center justify-between p-4 bg-[var(--muni-surface)]/60 border border-white/5 rounded-xl hover:bg-white/5 hover:border-[#FF671F]/30 transition-all mb-3"
-  >
-    <div className="flex items-center gap-4">
-      <div className="w-8 h-8 flex items-center justify-center font-mono font-bold text-[var(--muni-text-muted)] bg-white/5 rounded-lg group-hover:text-[#FF671F] group-hover:bg-[#FF671F]/10 transition-colors">
-        {rank}
-      </div>
-      <div>
-        <h4 className="font-bold text-gray-200 group-hover:text-white">{dept.name}</h4>
-        <div className="text-xs text-[var(--muni-text-muted)] flex gap-3 md:hidden">
-          <span>{dept.resolvedCount} Resolved</span>
-          <span>{dept.upvoteCount} Upvotes</span>
-        </div>
-      </div>
-    </div>
-
-    {/* Stats for Desktop */}
-    <div className="hidden md:flex items-center gap-8">
-      <div className="flex flex-col items-end">
-        <span className="text-xs text-[var(--muni-text-muted)] uppercase">Resolved</span>
-        <span className="font-mono text-[#046A38]">{dept.resolvedCount}</span>
-      </div>
-      <div className="flex flex-col items-end">
-        <span className="text-xs text-[var(--muni-text-muted)] uppercase">Upvotes</span>
-        <span className="font-mono text-[#06038D]">{dept.upvoteCount}</span>
-      </div>
-      <div className="flex flex-col items-end w-24">
-        <span className="text-xs text-[var(--muni-text-muted)] uppercase">Efficiency</span>
-        <div className="w-full bg-gray-700 h-1.5 rounded-full mt-1">
-          <div
-            className="bg-gradient-to-r from-[#046A38] to-[#06038D] h-full rounded-full"
-            style={{ width: `${dept.progressPercentage}%` }}
-          />
-        </div>
-      </div>
-      <div className="flex flex-col items-end w-16">
-        <span className="text-xs text-[var(--muni-text-muted)] uppercase">Score</span>
-        <span className="font-mono font-bold text-yellow-500">{dept.score.toFixed(0)}</span>
-      </div>
-    </div>
-  </motion.div>
-);
-
 function Leaderboard() {
-  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [topMemories, setTopMemories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'issues'));
+    const q = query(collection(db, 'memories'), orderBy('upvotes', 'desc'), limit(50));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const depts = {};
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const deptName = data.department || 'Community Reports';
-        const status = data.status;
-        const upvotes = data.upvotes || 0;
-
-        if (!depts[deptName]) {
-          depts[deptName] = { resolvedCount: 0, upvoteCount: 0, totalIssues: 0 };
-        }
-
-        depts[deptName].totalIssues += 1;
-        if (status === 'resolved') depts[deptName].resolvedCount += 1;
-        depts[deptName].upvoteCount += upvotes;
-      });
-
-      const sorted = Object.entries(depts)
-        .map(([name, stats]) => ({
-          name,
-          ...stats,
-          progressPercentage: stats.totalIssues > 0 ? (stats.resolvedCount / stats.totalIssues) * 100 : 0,
-          score: (stats.resolvedCount * 50) + (stats.upvoteCount * 10) // Simple gamification formula
-        }))
-        .sort((a, b) => b.score - a.score);
-
-      setLeaderboardData(sorted);
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setTopMemories(data);
       setLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
 
   if (loading) return (
-    <div className="min-h-screen bg-[var(--muni-bg)] flex items-center justify-center">
-      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#FF671F]"></div>
+    <div className="min-h-screen flex items-center justify-center bg-[#08080c]">
+      <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#ff7ec9] border-t-transparent"></div>
     </div>
   );
 
-  const topThree = leaderboardData.slice(0, 3);
-  const restOfList = leaderboardData.slice(3);
-
   return (
-    <div className="min-h-screen bg-[var(--muni-bg)] text-[var(--muni-text-main)] font-sans selection:bg-[#FF671F]/30 pb-20">
-      <div className="h-12 md:h-16"></div> {/* Navbar Spacer */}
+    <div className="min-h-screen bg-[#08080c] text-white font-sans pb-24 overflow-x-hidden">
+      
+      {/* --- Background --- */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[600px] bg-gradient-to-b from-[#ff7ec9]/10 via-transparent to-transparent blur-[140px] pointer-events-none"></div>
 
-      <main className="max-w-5xl mx-auto px-6 pt-4">
-
+      <div className="max-w-5xl mx-auto px-6 pt-32 relative z-10">
+        
         {/* --- Header --- */}
-        <div className="text-center mb-8">
-          <motion.div
+        <div className="text-center mb-16 space-y-4">
+          <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="inline-block p-3 rounded-full bg-[#FF671F]/10 border border-[#FF671F]/30 mb-2"
+            className="inline-flex w-16 h-16 rounded-3xl bg-white/5 border border-white/10 items-center justify-center text-[#ff7ec9] shadow-2xl"
           >
-            <FaMedal className="text-3xl text-[#FF671F]" />
+            <Trophy size={32} />
           </motion.div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
-            Department <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF671F] via-white to-[#046A38]">Rankings</span>
+          <h1 className="text-5xl md:text-7xl font-bold heading-font tracking-tight">
+            Hall Of <span className="bg-gradient-to-r from-[#ff7ec9] to-[#a78bfa] bg-clip-text text-transparent italic">Spills</span>
           </h1>
-          <p className="text-[var(--muni-text-muted)] text-base md:text-lg max-w-xl mx-auto">
-            Recognizing the most responsive and effective teams in our community.
+          <p className="text-slate-400 max-w-lg mx-auto text-sm font-medium leading-relaxed">
+            These are the memories that touched the most hearts. The highest upvoted moments on the global map.
           </p>
         </div>
 
-        {/* --- Future Data Note --- */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-center mb-12 bg-[#FF671F]/5 border border-[#FF671F]/20 rounded-2xl p-6 max-w-3xl mx-auto"
-        >
-          <p className="text-[var(--muni-text-muted)] text-sm">
-            <strong className="text-[#FF671F]">Coming Soon:</strong> We are working on integrating data for <span className="text-white">MLAs, MPs, and Municipality Wards</span> to provide a comprehensive view of civic performance.
-          </p>
-          <p className="text-[var(--muni-text-muted)] text-xs mt-2">
-            Want to help us gather this data or contribute to the development? <a href="mailto:workwithdevit@gmail.com" target="_blank" className="text-[#FF671F] hover:underline">Contact us</a>.
-          </p>
-        </motion.div>
-
-        {leaderboardData.length === 0 ? (
-          <div className="text-center py-20 border border-dashed border-gray-800 rounded-3xl">
-            <FaLayerGroup className="mx-auto text-6xl text-gray-800 mb-4" />
-            <p className="text-[var(--muni-text-muted)]">No data available for ranking yet.</p>
+        {topMemories.length === 0 ? (
+          <div className="text-center py-40 glass-card rounded-[40px] border-dashed">
+             <Ghost size={64} className="text-slate-800 mx-auto mb-6" />
+             <p className="text-slate-600 font-bold uppercase tracking-widest text-xs">No one has spilled enough love yet.</p>
           </div>
         ) : (
-          <>
-            {/* --- The Podium (Top 3) --- */}
-            <div className="flex flex-col md:flex-row items-end justify-center gap-4 mb-16 min-h-[340px]">
-              {/* Rank 2 */}
-              {topThree[1] && <PodiumSpot dept={topThree[1]} rank={2} delay={0.2} />}
-
-              {/* Rank 1 */}
-              {topThree[0] && <PodiumSpot dept={topThree[0]} rank={1} delay={0.1} />}
-
-              {/* Rank 3 */}
-              {topThree[2] && <PodiumSpot dept={topThree[2]} rank={3} delay={0.3} />}
-            </div>
-
-            {/* --- The List (Rank 4+) --- */}
-            {restOfList.length > 0 && (
+          <div className="space-y-6">
+            {topMemories.map((memory, index) => (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="bg-[var(--muni-surface)]/40 backdrop-blur-xl border border-white/5 rounded-2xl p-6"
+                key={memory.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="group relative"
               >
-                <h3 className="text-xs font-bold text-[var(--muni-text-muted)] uppercase tracking-wider mb-4 pl-2">Honorable Mentions</h3>
-                <div className="flex flex-col">
-                  {restOfList.map((dept, index) => (
-                    <RankRow key={dept.name} dept={dept} rank={index + 4} delay={0.1 * index} />
-                  ))}
-                </div>
+                {/* Crown for #1 */}
+                {index === 0 && (
+                   <div className="absolute -left-3 -top-3 z-20 -rotate-12">
+                      <Crown size={32} className="text-yellow-400 drop-shadow-lg" />
+                   </div>
+                )}
+
+                <Link to={`/memory/${memory.id}`}>
+                  <div className="glass-card flex flex-col md:flex-row items-center gap-6 p-6 md:p-8 rounded-[40px] border border-white/5 hover:border-[#ff7ec9]/30 hover:bg-white/[0.04] transition-all shadow-xl group">
+                    
+                    {/* Rank & Media */}
+                    <div className="flex items-center gap-6 w-full md:w-auto">
+                        <RankBadge rank={index + 1} />
+                        <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-[32px] overflow-hidden border border-white/10 bg-black/40 flex-shrink-0">
+                           {memory.imageUrl ? (
+                             <img 
+                              src={memory.imageUrl} 
+                              alt="memory" 
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
+                            />
+                           ) : (
+                             <div className="w-full h-full flex items-center justify-center"><Ghost size={32} className="text-slate-800" /></div>
+                           )}
+                           <div className="absolute top-3 left-3 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md text-[8px] font-black uppercase text-white border border-white/10">
+                              {memory.vibe || 'Moment'}
+                           </div>
+                        </div>
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 space-y-4 text-center md:text-left">
+                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="flex items-center justify-center md:justify-start gap-3">
+                             <div className="flex items-center gap-1.5 text-[var(--spillit-primary)] font-bold text-lg">
+                                <Heart size={20} className="fill-current" />
+                                <span>{memory.upvotes || 0}</span>
+                             </div>
+                             <div className="w-1 h-1 rounded-full bg-slate-700 hidden md:block"></div>
+                             <div className="text-[10px] text-slate-500 font-mono flex items-center gap-2 uppercase tracking-widest">
+                                <Hash size={12} className="text-[#a78bfa]" /> {memory.id.slice(-8)}
+                             </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest bg-white/5 px-4 py-2 rounded-2xl border border-white/5">
+                             <MapPin size={12} className="text-[#4ade80]" /> {memory.address?.split(',')[0] || 'The Unknown'}
+                          </div>
+                       </div>
+
+                       <p className="text-lg md:text-xl text-slate-100 italic font-medium line-clamp-2 md:pr-10">
+                          &quot;{memory.caption || 'A silent memory whispers...'}&quot;
+                       </p>
+
+                       <div className="flex items-center justify-center md:justify-between px-0">
+                          <div className="flex items-center gap-3">
+                             <span className="text-[10px] font-bold uppercase tracking-widest text-[#ff7ec9]/60">Spilled On</span>
+                             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                {memory.ts ? new Date(memory.ts.seconds * 1000).toLocaleDateString() : 'N/A'}
+                             </span>
+                          </div>
+                          
+                          <div className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#ff7ec9] group-hover:translate-x-2 transition-transform">
+                             View Spill <ArrowRight size={14} />
+                          </div>
+                       </div>
+                    </div>
+
+                  </div>
+                </Link>
               </motion.div>
-            )}
-          </>
+            ))}
+          </div>
         )}
-      </main>
+
+      </div>
     </div>
   );
 }

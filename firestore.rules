@@ -2,114 +2,38 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to check for admin claim
-    function isMunicipalAdmin() {
-      return request.auth != null && request.auth.token.municipal_admin == true;
-    }
-    
-    function isOpsAdmin() {
-      // For now, allow any authenticated user to act as ops if they know the route
-      // In production, check specific UID or claim: request.auth.token.admin == true
-      return request.auth != null; 
+    // Helper function for admin access
+    function isAdmin() {
+      return request.auth != null && (request.auth.token.admin == true || request.auth.uid == 'YOUR_ADMIN_UID_HERE');
     }
 
-    // Municipal Registrations
-    match /municipal_registrations/{regId} {
-      // Allow anyone to create (public form)
+    // Memories Collection
+    match /memories/{memoryId} {
+      // Allow public discovery
+      allow read: if true;
+      // Allow anonymous spilling
       allow create: if true;
-      // Only ops can read/update
-      allow read, update: if isOpsAdmin();
+      // Allow upvoting/updates anonymously
+      allow update: if true;
+      // Only admins can delete spills
+      allow delete: if isAdmin();
     }
 
-    // Users
+    // User Profiles
     match /users/{userId} {
-      allow read: if request.auth != null && (request.auth.uid == userId || isOpsAdmin());
-      allow write: if isOpsAdmin();
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Issues
+    // Legacy Support (Temporary)
     match /issues/{issueId} {
       allow read, write: if true;
     }
 
-    // Pothole Detections
-    match /pothole_detections/{detectionId} {
-      allow read, create: if true;
-      allow update, delete: if isMunicipalAdmin() || isOpsAdmin();
-    }
-
-    // Pothole Reports (parent documents grouping multiple detections)
-    match /pothole_reports/{reportId} {
-      allow read, create: if true;
-      allow update, delete: if isMunicipalAdmin() || isOpsAdmin();
-    }
-
-    // Donors
-    match /fixit_donors/{donorId} {
-      allow create: if true;
-      allow read: if true;
-      allow update, delete: if isOpsAdmin();
-    }
-
-    // Audit Logs
-    match /audit_logs/{logId} {
-      allow create: if true;
-      allow read: if isOpsAdmin();
-    }
-
-    // ToFEI - Role-based access (Option A: role stored in tofei_users/{uid})
-    function isTofeiAuthed() {
-      return request.auth != null;
-    }
-    function hasTofeiProfile() {
-      return isTofeiAuthed() && exists(/databases/$(database)/documents/tofei_users/$(request.auth.uid));
-    }
-    function tofeiProfile() {
-      return hasTofeiProfile()
-        ? get(/databases/$(database)/documents/tofei_users/$(request.auth.uid)).data
-        : null;
-    }
-    function isSTCC() {
-      return hasTofeiProfile() && tofeiProfile().role == 'stcc';
-    }
-    function isDTCC() {
-      return hasTofeiProfile() && tofeiProfile().role == 'dtcc';
-    }
-    function isSchool() {
-      return hasTofeiProfile() && tofeiProfile().role == 'school';
-    }
-    function sameDistrict(d) {
-      return hasTofeiProfile() && (tofeiProfile().district != null) && (d == tofeiProfile().district);
-    }
-    function sameSchoolUdise(u) {
-      return hasTofeiProfile() && (tofeiProfile().schoolUdise != null) && (u == tofeiProfile().schoolUdise);
-    }
-
-    match /tofei_users/{userId} {
-      // Allow signed-in user to read their own profile (bootstrap at login)
-      allow read: if (isTofeiAuthed() && request.auth.uid == userId) || isSTCC();
-      allow create, update, delete: if isSTCC();
-    }
-
-    match /tofei_reports/{reportId} {
-      allow create: if isSchool()
-        && request.resource.data.schoolUdise == tofeiProfile().schoolUdise
-        && request.resource.data.udiseCode == tofeiProfile().schoolUdise
-        && request.resource.data.district == tofeiProfile().district;
-
-      allow read: if isSTCC()
-        || (isDTCC() && sameDistrict(resource.data.district))
-        || (isSchool() && sameSchoolUdise(resource.data.schoolUdise));
-
-      allow update: if isSTCC()
-        || (isDTCC() && sameDistrict(resource.data.district));
-
-      allow delete: if isSTCC();
-    }
-
-    match /tofei_logins/{logId} {
-      allow create: if true;
-      allow read: if isSTCC() || isOpsAdmin();
+    // Default deny for everything else
+    match /{document=**} {
+      allow read, write: if isAdmin();
     }
   }
 }
+

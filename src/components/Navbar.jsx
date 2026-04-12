@@ -1,20 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Map,
-  BarChart3,
-  Users,
+  Camera,
   LogIn,
   LogOut,
   Search,
-  HelpCircle,
   Star,
-  UserCircle,
+  CircleUser,
   Menu,
   X,
-  User as UserIcon,
-  Handshake,
   Heart,
   Flame
 } from 'lucide-react';
@@ -22,7 +18,7 @@ import {
 import { useAuth } from '../hooks/useAuth';
 
 // Helper Component for Navigation Links
-const NavItem = ({ to, icon: IconComponent, label, colorClass = "text-[var(--muni-text-muted)]", onClick }) => {
+const NavItem = ({ to, icon: IconComponent, label, onClick }) => {
   const location = useLocation();
   const isActive = to === '/'
     ? location.pathname === '/'
@@ -31,30 +27,16 @@ const NavItem = ({ to, icon: IconComponent, label, colorClass = "text-[var(--mun
   return (
     <Link to={to} onClick={onClick} className="relative group w-full md:w-auto">
       <div
-        className={`flex items-center gap-3 md:gap-2 px-4 py-3 md:py-2 rounded-xl md:rounded-full transition-all duration-300 ${
+        className={`flex items-center gap-3 md:gap-2 px-4 py-3 md:py-2 rounded-md md:rounded-full transition-all duration-300 border-2 ${
           isActive
-            ? 'text-[var(--fixit-primary)] bg-white/5'
-            : `${colorClass} hover:text-[var(--fixit-primary)] hover:bg-white/5`
+            ? 'border-accent text-accent bg-muted'
+            : 'border-transparent text-foreground hover:border-accent hover:bg-muted'
         }`}
       >
         <span className="relative z-10">
-          <IconComponent size={20} className="md:w-[18px] md:h-[18px]" />
+          <IconComponent size={20} strokeWidth={2.5} className="md:w-[18px] md:h-[18px]" />
         </span>
-        <span className="font-medium text-base md:text-sm relative z-10">{label}</span>
-
-        {/* Active/Hover Glow Effect (Desktop) */}
-        {isActive && (
-          <motion.div
-            layoutId="nav-pill"
-            className="absolute inset-0 rounded-xl md:rounded-full bg-[var(--muni-accent)]/10 border border-[var(--muni-accent)]/30 shadow-[0_0_10px_rgba(34,197,94,0.2)] hidden md:block"
-            transition={{
-              type: "spring",
-              stiffness: 350,
-              damping: 35,
-              mass: 1
-            }}
-          />
-        )}
+        <span className="font-body font-medium text-base md:text-sm relative z-10">{label}</span>
       </div>
     </Link>
   );
@@ -85,7 +67,7 @@ function Navbar() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchId) {
-      navigate(`/report/${searchId}`);
+      navigate(`/memory/${searchId}`);
       setSearchId('');
       setIsMenuOpen(false);
     }
@@ -98,26 +80,25 @@ function Navbar() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-4 md:px-6 py-3 md:py-4 pointer-events-none"
+        className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-4 md:px-6 py-3 md:py-4 pointer-events-none bg-background border-b-2 border-border"
       >
         {/* --- Left Side (Identity & Navigation) --- */}
         <div className="flex items-center gap-4 pointer-events-auto">
-          {/* Logo Identity (Mobile Only) */}
-          <div className="md:hidden bg-black/90 backdrop-blur-xl border border-[var(--muni-border)] rounded-full px-4 py-2 shadow-lg">
-            <div className="heading-font text-white tracking-[0.18em] text-xs uppercase flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-[var(--fixit-primary)]" />
+          {/* Logo Identity */}
+          <Link to="/" className="flex items-center gap-2 bg-card border-2 border-foreground rounded-full px-4 py-2 shadow-pop group hover:-translate-x-1 hover:-translate-y-1 hover:shadow-pop-hover transition-all">
+            <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Heart size={16} className="text-white fill-current" />
+            </div>
+            <div className="heading-font text-foreground tracking-wide text-sm font-bold flex items-center gap-1">
               <span>Spill It</span>
             </div>
-          </div>
+          </Link>
 
-          {/* --- Desktop Menu Pill --- */}
-          <div className="hidden md:flex bg-black/80 backdrop-blur-xl border border-[var(--muni-border)] rounded-full p-1 shadow-2xl items-center gap-1">
-            <LayoutGroup id="nav-pill-group">
-              <NavItem to="/" icon={Map} label="Feed & Map" />
-              <NavItem to="/gallery" icon={Users} label="Spills" />
-              <NavItem to="/leaderboard" icon={Star} label="Top Spillers" />
-              <NavItem to="/about" icon={UserIcon} label="About" />
-            </LayoutGroup>
+          {/* --- Desktop Menu --- */}
+          <div className="hidden lg:flex bg-card border-2 border-foreground rounded-full p-2 shadow-pop items-center gap-2">
+            <NavItem to="/" icon={Map} label="Map" />
+            <NavItem to="/gallery" icon={Camera} label="Archive" />
+            <NavItem to="/leaderboard" icon={Star} label="Hall of Fame" />
           </div>
         </div>
 
@@ -127,44 +108,44 @@ function Navbar() {
           {/* Search Bar (Desktop) */}
           <form
             onSubmit={handleSearch}
-            className="hidden md:flex relative items-center bg-white/10 backdrop-blur-md border border-white/20 rounded-full overflow-hidden transition-all duration-300 w-40 focus-within:w-64 group hover:border-[#FF671F]/50 hover:bg-white/15 hover:shadow-[0_0_20px_rgba(255,103,31,0.15)]"
+            className="hidden md:flex relative items-center bg-input border-2 border-border rounded-full overflow-hidden transition-all duration-300 w-48 focus-within:w-64"
           >
-            <button type="submit" aria-label="Search" className="p-3 text-[#FF671F] group-focus-within:text-white transition-colors z-10">
-              <Search size={18} />
+            <button type="submit" aria-label="Search" className="p-3 text-accent">
+              <Search size={18} strokeWidth={2.5} />
             </button>
             <input
               type="text"
-              placeholder="Search ID..."
+              placeholder="Search spill id..."
               value={searchId}
               onChange={(e) => setSearchId(e.target.value)}
-              className="bg-transparent border-none outline-none text-white text-sm w-full pr-4 placeholder-slate-400 h-full absolute inset-0 pl-10 focus:relative"
+              className="bg-transparent border-none outline-none text-foreground text-sm w-full pr-4 placeholder-muted-foreground h-full absolute inset-0 pl-10 focus:relative"
             />
           </form>
 
           {/* CTA + Auth Buttons (Desktop) */}
           <div className="hidden md:flex items-center gap-3">
             {/* Spill CTA */}
-            <Link to="/#report">
+            <Link to="/#spill">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-5 py-2 rounded-full bg-[var(--fixit-primary)] text-black font-semibold shadow-[0_0_24px_rgba(255,107,0,0.45)] hover:shadow-[0_0_32px_rgba(255,107,0,0.7)] transition-all heading-font tracking-[0.12em] text-xs uppercase"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-accent text-white font-bold shadow-pop hover:shadow-pop-hover transition-all heading-font text-xs uppercase tracking-widest border-2 border-foreground"
               >
                 <Flame size={16} />
-                <span>Spill Something</span>
+                <span>Spill</span>
               </motion.button>
             </Link>
 
             <AnimatePresence mode="wait">
               {currentUser ? (
-                <>
+                <div className="flex items-center gap-2">
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="hidden xl:flex items-center gap-2 bg-black/80 backdrop-blur-md border border-[var(--muni-border)] px-4 py-2 rounded-full"
+                    className="hidden xl:flex items-center gap-2 bg-muted border-2 border-border px-4 py-2 rounded-full"
                   >
-                    <UserCircle size={16} className="text-[var(--fixit-primary)]" />
-                    <span className="text-xs text-[var(--fixit-text-muted)] font-mono">
+                    <CircleUser size={16} className="text-accent" />
+                    <span className="text-xs text-foreground font-medium">
                       {currentUser.email?.split('@')[0]}
                     </span>
                   </motion.div>
@@ -173,21 +154,21 @@ function Navbar() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={handleLogout}
-                    className="bg-red-500/10 text-red-400 border border-red-500/30 p-3 rounded-full hover:bg-red-500/20 hover:shadow-[0_0_15px_rgba(239,68,68,0.3)] backdrop-blur-md transition-all"
+                    className="bg-card text-foreground border-2 border-border p-2.5 rounded-full hover:bg-red-100 hover:text-red-600 hover:border-red-400 transition-all shadow-pop"
                     title="Logout"
                   >
-                    <LogOut size={18} />
+                    <LogOut size={18} strokeWidth={2.5} />
                   </motion.button>
-                </>
+                </div>
               ) : (
                 <Link to="/login">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-2 bg-white/5 text-[var(--fixit-text-main)] border border-[var(--fixit-border)] px-4 py-2 rounded-full hover:bg-white/10 transition-all text-sm"
+                    className="flex items-center gap-2 bg-secondary text-white border-2 border-foreground px-5 py-2.5 rounded-full shadow-pop hover:shadow-pop-hover transition-all text-sm font-bold heading-font uppercase tracking-wide"
                   >
-                    <LogIn size={18} />
-                    <span className="text-sm">Login</span>
+                    <LogIn size={18} strokeWidth={2.5} />
+                    <span>Login</span>
                   </motion.button>
                 </Link>
               )}
@@ -195,9 +176,9 @@ function Navbar() {
           </div>
 
           {/* Mobile Spill CTA */}
-          <Link to="/#report" className="md:hidden">
+          <Link to="/#spill" className="md:hidden">
             <button
-              className="mr-2 px-4 py-2 rounded-full bg-[var(--fixit-primary)] text-black text-xs font-semibold heading-font tracking-[0.16em] uppercase shadow-[0_0_22px_rgba(255,107,0,0.55)] active:scale-95 transition-all"
+              className="px-5 py-2.5 rounded-full bg-accent text-white text-xs font-bold heading-font uppercase shadow-pop active:translate-x-1 active:translate-y-1 active:shadow-pop-active transition-all border-2 border-foreground"
             >
               Spill
             </button>
@@ -207,9 +188,9 @@ function Navbar() {
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-            className="md:hidden pointer-events-auto w-10 h-10 flex items-center justify-center rounded-full bg-black/90 backdrop-blur-xl border border-[var(--muni-border)] text-white shadow-lg active:scale-95 transition-all"
+            className="md:hidden pointer-events-auto w-10 h-10 flex items-center justify-center rounded-full bg-card border-2 border-foreground text-foreground shadow-pop active:shadow-pop-active transition-all"
           >
-            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            {isMenuOpen ? <X size={20} strokeWidth={2.5} /> : <Menu size={20} strokeWidth={2.5} />}
           </button>
         </div>
       </motion.nav>
@@ -221,62 +202,38 @@ function Navbar() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[900] bg-black/95 backdrop-blur-xl pt-24 px-6 pb-6 md:hidden flex flex-col overflow-y-auto"
+            transition={{ duration: 0.3, ease: "circOut" }}
+            className="fixed inset-0 z-[900] bg-background border-b-2 border-border backdrop-blur-3xl pt-24 px-6 pb-6 md:hidden flex flex-col"
           >
-            {/* Mobile Search */}
-            <form onSubmit={handleSearch} className="mb-6 relative">
-              <Search className="absolute left-4 top-3.5 text-[var(--muni-text-muted)]" size={18} />
-              <input
-                type="text"
-                placeholder="Search Spill ID..."
-                value={searchId}
-                onChange={(e) => setSearchId(e.target.value)}
-                className="w-full bg-white/5 border border-[var(--muni-border)] rounded-xl py-3 pl-12 pr-4 text-white placeholder-[var(--muni-text-muted)] focus:border-[var(--muni-accent)] focus:bg-white/10 transition-all outline-none"
-              />
-            </form>
-
             {/* Mobile Nav Links */}
-            <div className="flex flex-col gap-2 mb-8">
-              <NavItem to="/" icon={Map} label="Feed & Map" onClick={() => setIsMenuOpen(false)} />
-              <NavItem to="/gallery" icon={Users} label="Spills" onClick={() => setIsMenuOpen(false)} />
-              <NavItem to="/leaderboard" icon={Star} label="Top Spillers" onClick={() => setIsMenuOpen(false)} />
-              <NavItem to="/about" icon={UserIcon} label="About" onClick={() => setIsMenuOpen(false)} />
+            <div className="flex flex-col gap-3 mb-8">
+              <NavItem to="/" icon={Map} label="Map" onClick={() => setIsMenuOpen(false)} />
+              <NavItem to="/gallery" icon={Camera} label="Archive" onClick={() => setIsMenuOpen(false)} />
+              <NavItem to="/leaderboard" icon={Star} label="Hall of Fame" onClick={() => setIsMenuOpen(false)} />
             </div>
 
-            {/* Mobile Auth */}
-            <div className="mt-auto border-t border-[var(--muni-border)] pt-6">
+            {/* Mobile Auth/CTA */}
+            <div className="mt-auto flex flex-col gap-4 border-t-2 border-border pt-8">
               {currentUser ? (
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-3 px-2">
-                    <div className="w-10 h-10 rounded-full bg-[var(--muni-accent)]/20 flex items-center justify-center text-[var(--muni-accent)]">
-                      <UserCircle size={24} />
-                    </div>
-                    <div>
-                      <div className="text-white font-bold text-sm">Signed in as</div>
-                      <div className="text-[var(--muni-text-muted)] text-xs font-mono">{currentUser.email}</div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => { handleLogout(); setIsMenuOpen(false); }}
-                    className="w-full py-3 bg-red-500/10 text-red-400 border border-red-500/30 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all"
-                  >
-                    <LogOut size={18} /> Logout
-                  </button>
-                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full py-4 bg-red-100 text-red-600 border-2 border-red-400 rounded-lg font-bold flex items-center justify-center gap-3 heading-font"
+                >
+                  <LogOut size={20} strokeWidth={2.5} /> Logout
+                </button>
               ) : (
-                <div className="flex gap-3">
-                  <Link to="/#report" onClick={() => setIsMenuOpen(false)} className="flex-1">
-                    <button className="w-full py-3 rounded-xl bg-[var(--fixit-primary)] text-black font-semibold heading-font tracking-[0.16em] uppercase shadow-[0_0_26px_rgba(255,107,0,0.6)] active:scale-95 transition-all flex items-center justify-center gap-2">
-                      <Flame size={18} /> Spill Something
+                <>
+                  <Link to="/#spill" onClick={() => setIsMenuOpen(false)}>
+                    <button className="w-full py-4 rounded-lg bg-accent text-white font-bold heading-font text-sm uppercase tracking-widest shadow-pop border-2 border-foreground flex items-center justify-center gap-2">
+                      <Flame size={20} strokeWidth={2.5} /> Spill
                     </button>
                   </Link>
-                  <Link to="/login" onClick={() => setIsMenuOpen(false)} className="flex-1">
-                    <button className="w-full py-3 bg-white/5 border border-[var(--muni-border)] text-white rounded-xl font-semibold flex items-center justify-center gap-2 active:scale-95 transition-all text-sm">
-                      <LogIn size={18} /> Login
+                  <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                    <button className="w-full py-4 bg-secondary border-2 border-foreground text-white rounded-lg font-bold heading-font uppercase tracking-wide shadow-pop">
+                      Login
                     </button>
                   </Link>
-                </div>
+                </>
               )}
             </div>
           </motion.div>
