@@ -115,10 +115,10 @@ body::before {
   box-shadow: 4px 4px 0px 0px var(--pg-accent);
 }
 
-/* Smooth Transitions */
-* {
+/* Smooth Transitions — explicitly scoped, never on mapbox elements */
+*:not(.mapboxgl-canvas):not(.mapboxgl-canvas-container):not([class^="mapboxgl"]):not([class*=" mapboxgl"]) {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease,
-    box-shadow 0.2s ease, transform 0.2s ease;
+    box-shadow 0.2s ease;
 }
 
 /* Focus states for accessibility */
@@ -126,6 +126,32 @@ body::before {
   outline: none;
   border-color: var(--pg-accent);
   box-shadow: 4px 4px 0px 0px var(--pg-accent);
+}
+
+/* ── Mapbox canvas must always sit above body::before overlay ── */
+.mapboxgl-canvas {
+  z-index: 1 !important;
+  pointer-events: auto !important;
+}
+.mapboxgl-canvas-container {
+  z-index: 1 !important;
+  pointer-events: auto !important;
+}
+.mapboxgl-map {
+  z-index: 1 !important;
+}
+.react-map-gl,
+.mapboxgl-ctrl-group,
+.mapboxgl-ctrl-attrib {
+  z-index: 2 !important;
+  pointer-events: auto !important;
+}
+/* Kill transition on ALL mapbox internals */
+.mapboxgl-canvas,
+.mapboxgl-canvas-container,
+[class^="mapboxgl"],
+[class*=" mapboxgl"] {
+  transition: none !important;
 }
 
 /* Prevent iOS Zoom on inputs */

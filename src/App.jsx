@@ -34,26 +34,35 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-background text-foreground transition-colors duration-300 flex flex-col">
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
         <Navbar />
 
-        <div className="flex-1 pt-16">
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/memory/:id" element={<MemoryDetail />} />
-              <Route path="/gallery" element={<Gallery />} />
-              <Route path="/help" element={<Help />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Full-screen map — no pt-16, no flex wrapper, no Footer */}
+            <Route path="/" element={<Home />} />
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </div>
+            {/* All other pages get the standard padded content wrapper + Footer */}
+            <Route path="/*" element={
+              <>
+                <div className="flex-1 pt-16">
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/memory/:id" element={<MemoryDetail />} />
+                    <Route path="/gallery" element={<Gallery />} />
+                    <Route path="/help" element={<Help />} />
+                    <Route path="/leaderboard" element={<Leaderboard />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </div>
+                <Footer />
+              </>
+            } />
+          </Routes>
+        </Suspense>
 
         <Analytics />
         <ToastContainer
@@ -68,7 +77,6 @@ function App() {
           pauseOnHover
           theme="light"
         />
-        <Footer />
       </div>
     </AuthProvider>
   );
