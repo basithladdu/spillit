@@ -3,7 +3,7 @@
 /* --- Playful Geometric Design System --- */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500&display=swap');
 :root {
-  /* Color Palette */
+  /* Playful Geometric – Light theme tokens */
   --pg-bg: #FFFDF5;
   --pg-foreground: #1E293B;
   --pg-muted: #F1F5F9;
@@ -18,11 +18,42 @@
   --pg-card: #FFFFFF;
   --pg-ring: #8B5CF6;
 
+  /* Legacy dark-map tokens – used by Home.jsx + SpillMemoryModal overlays */
+  --spillit-bg: #08080c;
+  --spillit-surface: rgba(255, 255, 255, 0.05);
+  --spillit-border: rgba(255, 255, 255, 0.1);
+  --spillit-text-main: #ffffff;
+  --spillit-text-muted: #94a3b8;
+  --spillit-primary: #8B5CF6;
+  --spillit-secondary: #F472B6;
+  --spillit-accent: #34D399;
+  --spillit-glow-primary: rgba(139, 92, 246, 0.4);
+  --spillit-glow-secondary: rgba(244, 114, 182, 0.3);
+
   /* Safe Areas */
   --sat: env(safe-area-inset-top);
   --sab: env(safe-area-inset-bottom);
   --sal: env(safe-area-inset-left);
   --sar: env(safe-area-inset-right);
+}
+
+/* Dark glass card – used in map overlays */
+.glass-card {
+  background: var(--spillit-surface);
+  border: 1px solid var(--spillit-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 24px;
+}
+
+/* Feed scrollbar inside map panels */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(244, 114, 182, 0.5);
 }
 
 html,
