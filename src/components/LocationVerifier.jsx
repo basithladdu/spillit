@@ -141,7 +141,7 @@ const LocationVerifier = ({ file, onLocationVerified, className }) => {
                         draggable
                         onDragEnd={onMarkerDragEnd}
                     >
-                        <MapPin size={40} className="text-[#FF671F] drop-shadow-lg -translate-y-1/2" fill="white" />
+                        <MapPin size={40} className="text-[#e879f9] drop-shadow-lg -translate-y-1/2" fill="white" />
                     </Marker>
                 )}
 
@@ -153,7 +153,7 @@ const LocationVerifier = ({ file, onLocationVerified, className }) => {
                 <div className="absolute inset-0 z-[10] flex items-center justify-center bg-black/5 pointer-events-auto">
                     <button
                         onClick={handleUseCurrentLocation}
-                        className="bg-[#FF671F] text-white font-bold py-2 px-4 rounded-full shadow-lg shadow-orange-500/30 transform transition hover:scale-105 flex items-center gap-2 text-xs animate-bounce"
+                        className="bg-[#e879f9] text-white font-bold py-2 px-4 rounded-full shadow-lg shadow-fuchsia-500/30 transform transition hover:scale-105 flex items-center gap-2 text-xs animate-bounce"
                     >
                         <MapPin size={14} />
                         Locate Me

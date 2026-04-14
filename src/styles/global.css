@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
 
-/* CSS Variables for FixIt Theme */
+/* CSS Variables for Spillit Theme */
 :root {
   --text-color: #f7f7f7;
   --bg-color: #0d0d0d;
