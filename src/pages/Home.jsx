@@ -131,13 +131,13 @@ function Home() {
   const [showForm, setShowForm] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
-  const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/dark-v11');
+  const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/satellite-streets-v12');
 
-  // Map state - Default to a wide view
+  // Map state - Start over Europe/Asia at zoom 3 so actual landmass is visible
   const [viewState, setViewState] = useState({
-    latitude: 20,
-    longitude: 0,
-    zoom: 2
+    latitude: 30,
+    longitude: 20,
+    zoom: 2.5
   });
 
   // Onboarding State
@@ -298,6 +298,7 @@ function Home() {
           onMove={evt => setViewState(evt.viewState)}
           mapStyle={mapStyle}
           mapboxAccessToken={MAPBOX_TOKEN}
+          projection="mercator"
           style={{ width: '100%', height: '100%' }}
         >
           <NavigationControl position="bottom-left" />
