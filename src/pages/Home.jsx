@@ -19,10 +19,9 @@ import SpillMemoryModal from '../components/SpillMemoryModal';
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 const MAP_STYLES = [
-  { name: 'Midnight', id: 'mapbox://styles/mapbox/navigation-night-v1', color: 'bg-blue-900' },
   { name: 'Dark', id: 'mapbox://styles/mapbox/dark-v11', color: 'bg-gray-900' },
   { name: 'Satellite', id: 'mapbox://styles/mapbox/satellite-streets-v12', color: 'bg-green-900' },
-  { name: 'Dreamy', id: 'mapbox://styles/mapbox/light-v11', color: 'bg-pink-100' }
+  { name: 'Street', id: 'mapbox://styles/mapbox/streets-v12', color: 'bg-blue-100' }
 ];
 
 // --- Onboarding Tour Data ---
@@ -132,7 +131,7 @@ function Home() {
   const [showForm, setShowForm] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
-  const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/navigation-night-v1');
+  const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/dark-v11');
 
   // Map state - Default to a wide view
   const [viewState, setViewState] = useState({
@@ -185,42 +184,45 @@ function Home() {
     <div className="relative w-full h-screen overflow-hidden bg-[var(--spillit-bg)] text-white font-sans">
       
       {/* --- HERO OVERLAY --- */}
-      <div className="pointer-events-none hidden lg:flex flex-col gap-4 absolute inset-y-24 left-8 z-[850] max-w-lg">
-        <div className="glass-card px-8 py-8 shadow-2xl border border-white/10">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#ff7ec9] to-[#a78bfa] flex items-center justify-center shadow-lg">
-              <Heart size={20} className="text-white fill-current" />
+      <div className="pointer-events-none hidden lg:flex flex-col gap-5 absolute top-24 left-8 z-[850] max-w-md">
+        {/* Main hero card – solid dark bg so it actually reads */}
+        <div className="bg-[#08080c]/90 backdrop-blur-xl rounded-3xl px-8 py-8 shadow-2xl border border-[#ff7ec9]/20 ring-1 ring-white/5">
+          {/* Brand pill */}
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#ff7ec9]/20 to-[#a78bfa]/20 border border-[#ff7ec9]/30 rounded-full px-4 py-1.5 mb-6">
+            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#ff7ec9] to-[#a78bfa] flex items-center justify-center">
+              <Heart size={11} className="text-white fill-current" />
             </div>
-            <div className="flex flex-col">
-              <span className="heading-font text-sm tracking-widest font-bold text-white uppercase">
-                Spill It
-              </span>
-              <span className="text-[10px] text-slate-500 font-medium">Capture the magic of the map.</span>
-            </div>
+            <span className="text-[11px] font-black tracking-[0.2em] text-[#ff7ec9] uppercase">Spill It</span>
           </div>
-          
-          <h1 className="heading-font text-4xl leading-tight tracking-tight font-bold mb-4">
-            Where were you when it
-            <br />
-            <span className="bg-gradient-to-r from-[#ff7ec9] to-[#a78bfa] bg-clip-text text-transparent italic">
-              all changed?
+
+          <h1 className="heading-font text-5xl leading-[1.1] tracking-tight font-black mb-4 text-white">
+            Every place<br />
+            holds a{' '}
+            <span className="bg-gradient-to-r from-[#ff7ec9] to-[#a78bfa] bg-clip-text text-transparent">
+              secret.
             </span>
           </h1>
-          
-          <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
-            Drop your anonymous stories, memories, and secrets on the map. Let the world know what happened here.
+
+          <p className="text-slate-400 text-sm leading-relaxed">
+            Pin your anonymous memory to the exact spot it happened. No names. No judgement. Just the truth.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="glass-card px-6 py-4 flex flex-col gap-1">
-            <p className="text-[10px] uppercase tracking-widest text-[#ff7ec9] font-bold">Memories Saved</p>
-            <p className="text-3xl font-bold">{memoriesArray.length.toString().padStart(2, '0')}</p>
+        {/* Stats row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-[#08080c]/90 backdrop-blur-xl rounded-2xl px-5 py-4 border border-white/10 flex flex-col gap-1">
+            <p className="text-[10px] uppercase tracking-widest font-black text-[#ff7ec9]">Memories</p>
+            <p className="text-4xl font-black text-white tabular-nums">
+              {memoriesArray.length > 0 ? memoriesArray.length.toLocaleString() : '—'}
+            </p>
           </div>
-          <div className="glass-card px-6 py-4 flex flex-col gap-1">
-            <p className="text-[10px] uppercase tracking-widest text-[#a78bfa] font-bold">Active Spots</p>
-            <p className="text-3xl font-bold">
-              {new Set(memoriesArray.map((i) => i.address || '').filter(Boolean).map((a) => a.split(',').pop()?.trim())).size || 0}
+          <div className="bg-[#08080c]/90 backdrop-blur-xl rounded-2xl px-5 py-4 border border-white/10 flex flex-col gap-1">
+            <p className="text-[10px] uppercase tracking-widest font-black text-[#a78bfa]">Locations</p>
+            <p className="text-4xl font-black text-white tabular-nums">
+              {(() => {
+                const count = new Set(memoriesArray.map(i => i.address || '').filter(Boolean).map(a => a.split(',').pop()?.trim())).size;
+                return count > 0 ? count.toLocaleString() : '—';
+              })()}
             </p>
           </div>
         </div>
@@ -228,13 +230,27 @@ function Home() {
 
       {/* --- LIVE FEED PANEL --- */}
       <div className="hidden xl:block pointer-events-none absolute inset-y-24 right-8 z-[860] w-80">
-        <div className="glass-card h-full flex flex-col overflow-hidden border border-white/10">
-          <div className="px-6 py-5 border-b border-white/5 flex flex-col gap-1">
-            <p className="heading-font text-[10px] uppercase tracking-widest text-[#ff7ec9] font-bold">Live Spills</p>
+        <div className="bg-[#08080c]/90 backdrop-blur-xl h-full flex flex-col overflow-hidden border border-[#ff7ec9]/20 ring-1 ring-white/5 rounded-3xl shadow-2xl">
+          <div className="px-6 py-5 border-b border-white/10 flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#ff7ec9] animate-pulse" />
+              <p className="heading-font text-[11px] uppercase tracking-[0.2em] font-black text-[#ff7ec9]">Live Spills</p>
+            </div>
             <p className="text-[10px] text-slate-500">Real stories, real places, real people.</p>
           </div>
           
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 custom-scrollbar">
+            {memoriesArray.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-full gap-4 py-12 text-center">
+                <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#ff7ec9]/20 to-[#a78bfa]/20 border border-[#ff7ec9]/20 flex items-center justify-center">
+                  <Ghost size={28} className="text-[#ff7ec9]/60" />
+                </div>
+                <div>
+                  <p className="text-white font-bold text-sm mb-1">No spills yet</p>
+                  <p className="text-slate-500 text-xs leading-relaxed">Be the first to leave<br />a memory on the map.</p>
+                </div>
+              </div>
+            )}
             {memoriesArray.slice(0, 15).map((memory, index) => (
               <Link key={memory.id} to={`/memory/${memory.id}`} className="block pointer-events-auto group">
                 <motion.div
