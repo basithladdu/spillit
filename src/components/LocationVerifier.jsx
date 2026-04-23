@@ -30,7 +30,6 @@ const LocationVerifier = ({ file, onLocationVerified, className }) => {
             setAddress(addr);
             if (onLocationVerified) onLocationVerified({ lat, lng, address: addr });
         } catch (error) {
-            console.error("Geocoding error:", error);
             setAddress("Error fetching address");
         } finally {
             setLoadingAddress(false);
@@ -85,7 +84,6 @@ const LocationVerifier = ({ file, onLocationVerified, className }) => {
                     setIsLocating(false);
                 },
                 (err) => {
-                    console.error(err);
                     alert("Could not fetch location. Please enable GPS.");
                     setIsLocating(false);
                 },

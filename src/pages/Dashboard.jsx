@@ -115,7 +115,7 @@ function Dashboard() {
       setDeleteId(null);
       setSelectedMemory(null);
     } catch (error) {
-      console.error("Delete error", error);
+      // Delete error handled by UI
     }
   };
 
@@ -125,7 +125,7 @@ function Dashboard() {
       await updateDoc(doc(db, 'memories', id), { status: newStatus });
       if (selectedMemory?.id === id) setSelectedMemory(prev => ({ ...prev, status: newStatus }));
     } catch (error) {
-      console.error("Update error", error);
+      // Update error handled silently
     }
   };
 

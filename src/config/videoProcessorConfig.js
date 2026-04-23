@@ -1,29 +1,28 @@
 /**
  * Memory Processor Configuration
- * 
- * SETUP INSTRUCTIONS:
- * 1. Replace the placeholder values below with your actual credentials
- * 2. This file is used to process high-res memories and visual artifacts
+ *
+ * All sensitive values are loaded from environment variables.
+ * See .env.example for required configuration.
  */
 
 export const VIDEO_PROCESSOR_CONFIG = {
     // Cloudinary Configuration
     cloudinary: {
-        cloudName: 'spillit',                 // Your Spillit Cloudinary account
-        uploadPreset: 'spillit_unsigned',     // Your Spillit upload preset
+        cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
+        uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
     },
 
     // Backend Configuration
     backend: {
-        baseUrl: 'https://api.spillit.app',   // Your processing backend
-        apiKey: '77-spill-it-77',
+        baseUrl: import.meta.env.VITE_VIDEO_PROCESSOR_BASE_URL,
+        apiKey: import.meta.env.VITE_VIDEO_PROCESSOR_API_KEY,
     },
 
     // Processing Configuration
     processing: {
         maxFileSize: 100000000,              // 100MB
         allowedFormats: ['mp4', 'mov', 'avi', 'webm', 'gif'],
-        confidenceThreshold: 0.5,            // Accuracy threshold for vibe detection
+        confidenceThreshold: 0.5,
     }
 };
 
