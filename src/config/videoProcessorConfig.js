@@ -8,14 +8,14 @@
 export const VIDEO_PROCESSOR_CONFIG = {
     // Cloudinary Configuration
     cloudinary: {
-        cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
-        uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET,
+        cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'spillit',
+        uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'spillit_unsigned',
     },
 
     // Backend Configuration
     backend: {
-        baseUrl: import.meta.env.VITE_VIDEO_PROCESSOR_BASE_URL,
-        apiKey: import.meta.env.VITE_VIDEO_PROCESSOR_API_KEY,
+        baseUrl: import.meta.env.VITE_VIDEO_PROCESSOR_BASE_URL || 'https://api.spillit.app',
+        apiKey: import.meta.env.VITE_VIDEO_PROCESSOR_API_KEY || '77-spill-it-77',
     },
 
     // Processing Configuration
