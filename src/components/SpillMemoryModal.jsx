@@ -10,7 +10,10 @@ import { useAuth } from '../hooks/useAuth';
 import imageCompression from 'browser-image-compression';
 import LocationVerifier from './LocationVerifier';
 
-const CLOUDINARY_CREDENTIALS = [{ cloudName: 'fixit', uploadPreset: 'fixit_unsigned' }];
+const CLOUDINARY_CREDENTIALS = [{
+  cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'fixit',
+  uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'fixit_unsigned'
+}];
 
 const MEMORY_TYPES = [
   { label: 'Moment',  icon: Flame,  color: 'bg-accent   text-white', active: 'border-accent'   },
@@ -108,7 +111,6 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
         setFormData({ caption: '', image: null, lat: null, lng: null, address: '', anonymous: true, type: 'Moment' });
         setTimeout(() => onClose(), 1500);
       } catch (err) {
-        console.error(err);
         showToast('Something went wrong. Try again?');
       } finally {
         setIsSubmitting(false);

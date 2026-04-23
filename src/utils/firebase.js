@@ -5,21 +5,19 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDyTaws6Zn6F46X_mSTWQl7Axly03DNmPM",
-  authDomain: "fixit-6b215.firebaseapp.com",
-  projectId: "fixit-6b215",
-  storageBucket: "fixit-6b215.appspot.com",
-  messagingSenderId: "684763574365",
-  appId: "1:684763574365:web:f9e40fefc3b76ae7475db4"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDyTaws6Zn6F46X_mSTWQl7Axly03DNmPM",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "fixit-6b215.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "fixit-6b215",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "fixit-6b215.appspot.com",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "684763574365",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:684763574365:web:f9e40fefc3b76ae7475db4"
 };
 
 // Initialize Firebase
 let app;
 try {
   app = initializeApp(firebaseConfig);
-  console.log("Firebase initialized successfully");
 } catch (error) {
-  console.error("Firebase initialization error:", error);
   throw error;
 }
 
@@ -30,9 +28,7 @@ try {
   auth = getAuth(app);
   db = getFirestore(app);
   storage = getStorage(app);
-  console.log("Firebase services initialized successfully");
 } catch (error) {
-  console.error("Firebase services initialization error:", error);
   throw error;
 }
 

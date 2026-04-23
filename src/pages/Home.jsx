@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Map, { Marker, Popup, NavigationControl, GeolocateControl } from 'react-map-gl';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
-import { Heart, Star, Map as MapIcon, LocateFixed, Send, ArrowRight, Flame, Ghost } from 'lucide-react';
+import { Heart, Map as MapIcon, LocateFixed, ArrowRight, Flame, Ghost } from 'lucide-react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 import MemoryCard from './MemoryCard';
@@ -185,17 +185,15 @@ function Home() {
       
       {/* --- HERO OVERLAY --- */}
       <div className="pointer-events-none hidden lg:flex flex-col gap-5 absolute top-24 left-8 z-[850] max-w-md">
-        {/* Main hero card – solid dark bg so it actually reads */}
-        <div className="bg-[#08080c]/90 backdrop-blur-xl rounded-3xl px-8 py-8 shadow-2xl border border-[#ff7ec9]/20 ring-1 ring-white/5">
+        {/* Main hero card */}
+        <div className="bg-black/50 backdrop-blur-2xl rounded-2xl px-7 py-7 shadow-2xl border border-white/8">
           {/* Brand pill */}
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#ff7ec9]/20 to-[#a78bfa]/20 border border-[#ff7ec9]/30 rounded-full px-4 py-1.5 mb-6">
-            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#ff7ec9] to-[#a78bfa] flex items-center justify-center">
-              <Heart size={11} className="text-white fill-current" />
-            </div>
-            <span className="text-[11px] font-black tracking-[0.2em] text-[#ff7ec9] uppercase">Spill It</span>
+          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3.5 py-1.5 mb-5">
+            <Flame size={11} className="text-[#ff7ec9]" />
+            <span className="text-[10px] font-bold tracking-[0.2em] text-[#ff7ec9] uppercase">Spill It</span>
           </div>
 
-          <h1 className="heading-font text-5xl leading-[1.1] tracking-tight font-black mb-4 text-white">
+          <h1 className="heading-font text-4xl leading-[1.1] tracking-tight font-black mb-3 text-white">
             Every place<br />
             holds a{' '}
             <span className="bg-gradient-to-r from-[#ff7ec9] to-[#a78bfa] bg-clip-text text-transparent">
@@ -203,28 +201,25 @@ function Home() {
             </span>
           </h1>
 
-          <p className="text-slate-400 text-sm leading-relaxed">
-            Pin your anonymous memory to the exact spot it happened. No names. No judgement. Just the truth.
+          <p className="text-white/40 text-sm leading-relaxed">
+            Drop a photo. Pin the spot. Stay anonymous.
           </p>
-        </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-[#08080c]/90 backdrop-blur-xl rounded-2xl px-5 py-4 border border-white/10 flex flex-col gap-1">
-            <p className="text-[10px] uppercase tracking-widest font-black text-[#ff7ec9]">Memories</p>
-            <p className="text-4xl font-black text-white tabular-nums">
-              {memoriesArray.length > 0 ? memoriesArray.length.toLocaleString() : '—'}
-            </p>
-          </div>
-          <div className="bg-[#08080c]/90 backdrop-blur-xl rounded-2xl px-5 py-4 border border-white/10 flex flex-col gap-1">
-            <p className="text-[10px] uppercase tracking-widest font-black text-[#a78bfa]">Locations</p>
-            <p className="text-4xl font-black text-white tabular-nums">
-              {(() => {
-                const count = new Set(memoriesArray.map(i => i.address || '').filter(Boolean).map(a => a.split(',').pop()?.trim())).size;
-                return count > 0 ? count.toLocaleString() : '—';
-              })()}
-            </p>
-          </div>
+          {memoriesArray.length > 0 && (
+            <div className="mt-5 pt-5 border-t border-white/8 flex items-center gap-6">
+              <div>
+                <p className="text-2xl font-black text-white tabular-nums">{memoriesArray.length.toLocaleString()}</p>
+                <p className="text-[10px] text-white/30 uppercase tracking-widest font-semibold mt-0.5">Spills</p>
+              </div>
+              <div className="w-px h-8 bg-white/10" />
+              <div>
+                <p className="text-2xl font-black text-white tabular-nums">
+                  {new Set(memoriesArray.map(i => i.address?.split(',').pop()?.trim()).filter(Boolean)).size.toLocaleString()}
+                </p>
+                <p className="text-[10px] text-white/30 uppercase tracking-widest font-semibold mt-0.5">Cities</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

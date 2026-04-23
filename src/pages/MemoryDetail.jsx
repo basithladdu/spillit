@@ -57,7 +57,7 @@ function MemoryDetail() {
           }
         }
       } catch (error) {
-        console.error("Error fetching memory:", error);
+        // Error fetching memory handled by UI state
       } finally {
         setLoading(false);
       }
@@ -93,7 +93,7 @@ function MemoryDetail() {
         setHasUpvoted(true);
       }
     } catch (error) {
-      console.error("Upvote failed:", error);
+      // Upvote failed silently
     } finally {
       setIsUpvoting(false);
     }

@@ -16,7 +16,7 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
                     url: url,
                 });
             } catch (err) {
-                console.error("Share failed:", err);
+                // Share failed silently
             }
         } else {
             navigator.clipboard.writeText(url);

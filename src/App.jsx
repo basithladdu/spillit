@@ -25,8 +25,8 @@ import "./App.css";
 
 // Loading Component
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen bg-background">
-    <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+  <div className="flex items-center justify-center min-h-screen bg-[#08080c]">
+    <div className="w-8 h-8 rounded-full border-2 border-[#ff7ec9]/30 border-t-[#ff7ec9] animate-spin" />
   </div>
 );
 
@@ -34,7 +34,7 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <div className="min-h-screen bg-[#08080c] text-white flex flex-col">
         <Navbar />
 
         <Suspense fallback={<PageLoader />}>
