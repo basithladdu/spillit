@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Hash, MapPin, Sparkles, Trophy, Crown, Star, Ghost, ArrowRight, Eye } from 'lucide-react';
+import { Heart, Hash, MapPin, Sparkles, Trophy, Crown, Star, Ghost, ArrowRight, Eye, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const RankBadge = ({ rank }) => {
