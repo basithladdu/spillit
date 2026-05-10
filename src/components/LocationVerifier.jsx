@@ -126,6 +126,10 @@ const LocationVerifier = ({ file, onLocationVerified, className }) => {
             <Map
                 {...viewState}
                 onMove={evt => setViewState(evt.viewState)}
+                onClick={evt => {
+                    const { lng, lat } = evt.lngLat;
+                    updateLocation(lat, lng);
+                }}
                 style={{ width: '100%', height: '100%' }}
                 mapStyle={mapStyle}
                 mapboxAccessToken={MAPBOX_TOKEN}
@@ -148,10 +152,10 @@ const LocationVerifier = ({ file, onLocationVerified, className }) => {
 
             {/* --- "Locate Me" Button (Tiny Pill) --- */}
             {!marker && !isLocating && (
-                <div className="absolute inset-0 z-[10] flex items-center justify-center bg-black/5 pointer-events-auto">
+                <div className="absolute inset-0 z-[10] flex items-center justify-center bg-black/5 pointer-events-none">
                     <button
                         onClick={handleUseCurrentLocation}
-                        className="bg-[#e879f9] text-white font-bold py-2 px-4 rounded-full shadow-lg shadow-fuchsia-500/30 transform transition hover:scale-105 flex items-center gap-2 text-xs animate-bounce"
+                        className="bg-[#e879f9] text-white font-bold py-2 px-4 rounded-full shadow-lg shadow-fuchsia-500/30 transform transition hover:scale-105 flex items-center gap-2 text-xs animate-bounce pointer-events-auto"
                     >
                         <MapPin size={14} />
                         Locate Me
