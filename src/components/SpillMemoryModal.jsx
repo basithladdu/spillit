@@ -163,6 +163,8 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                 <LocationVerifier
                   file={formData.image}
                   onLocationVerified={handleLocationVerified}
+                  initialLat={formData.lat}
+                  initialLng={formData.lng}
                 />
                 {/* label */}
                 <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-background border-2 border-foreground rounded-full px-3 py-1 shadow-pop pointer-events-none">

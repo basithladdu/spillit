@@ -20,13 +20,14 @@ const MemoryDetail = lazy(() => import("./pages/MemoryDetail"));
 const Gallery = lazy(() => import("./pages/Gallery"));
 const Help = lazy(() => import("./pages/Help"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Profile = lazy(() => import("./pages/Profile"));
 
 import "./App.css";
 
 // Loading Component
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen bg-[#08080c]">
-    <div className="w-8 h-8 rounded-full border-2 border-[#ff7ec9]/30 border-t-[#ff7ec9] animate-spin" />
+  <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="w-8 h-8 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
   </div>
 );
 
@@ -34,7 +35,7 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-[#08080c] text-white flex flex-col">
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
         <Navbar />
 
         <Suspense fallback={<PageLoader />}>
@@ -55,6 +56,7 @@ function App() {
                     <Route path="/leaderboard" element={<Leaderboard />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </div>

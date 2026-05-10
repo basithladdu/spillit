@@ -67,7 +67,7 @@ function Gallery() {
     const fetchMemories = async () => {
       const { data, error } = await supabase
         .from('memories')
-        .select('*')
+        .select('*, profiles(username)')
         .order('created_at', { ascending: false });
       
       if (!error && data) {
@@ -244,9 +244,18 @@ function Gallery() {
                      </div>
                   </div>
 
-                  <p className="text-base text-foreground font-bold line-clamp-3 leading-relaxed italic">
+                  <p className="text-base text-foreground font-bold line-clamp-2 leading-relaxed italic">
                     &quot;{memory.caption || 'A silent memory whispered into the map...'}&quot;
                   </p>
+
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-muted border border-foreground flex items-center justify-center text-accent">
+                      <User size={12} strokeWidth={3} />
+                    </div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      {memory.profiles?.username ? `@${memory.profiles.username}` : 'Anonymous'}
+                    </span>
+                  </div>
 
                   <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase">

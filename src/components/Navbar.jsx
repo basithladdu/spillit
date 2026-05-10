@@ -66,12 +66,12 @@ function Navbar() {
         <div className="flex items-center gap-2">
           {currentUser ? (
             <div className="hidden md:flex items-center gap-2">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border-2 border-foreground shadow-pop">
-                <CircleUser size={13} className="text-[#ff7ec9]" />
-                <span className="text-[11px] text-foreground font-bold uppercase tracking-tight">
+              <Link to="/profile" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border-2 border-foreground shadow-pop hover:bg-muted transition-all">
+                <CircleUser size={13} className="text-accent" />
+                <span className="text-[11px] text-foreground font-black uppercase tracking-tight">
                   {currentUser.email?.split('@')[0]}
                 </span>
-              </div>
+              </Link>
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-slate-500 hover:text-red-500 font-bold uppercase transition-all"
@@ -107,43 +107,48 @@ function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[900] bg-[#FFF5F9] pt-14 flex flex-col md:hidden"
+            className="fixed inset-0 z-[900] bg-background pt-14 flex flex-col md:hidden border-b-2 border-border"
           >
-            <div className="flex flex-col p-6 gap-1">
+            <div className="flex flex-col p-4 gap-1">
               {NAV_LINKS.map(({ to, icon: Icon, label }) => (
                 <Link
                   key={to}
                   to={to}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${
+                  className={`flex items-center gap-4 px-5 py-4 rounded-xl transition-all ${
                     isActive(to)
-                      ? 'bg-white/10 text-white'
-                      : 'text-white/50 hover:text-white hover:bg-white/5'
+                      ? 'bg-accent text-white border-2 border-foreground shadow-pop'
+                      : 'text-foreground hover:bg-muted border-2 border-transparent'
                   }`}
                 >
-                  <Icon size={18} strokeWidth={2} />
-                  <span className="font-semibold text-base">{label}</span>
+                  <Icon size={20} strokeWidth={2.5} />
+                  <span className="heading-font font-bold text-base uppercase tracking-wide">{label}</span>
                 </Link>
               ))}
             </div>
 
-            <div className="mt-auto p-6 border-t border-white/10 flex flex-col gap-3">
+            <div className="mt-auto p-4 border-t-2 border-border flex flex-col gap-3">
               {currentUser ? (
-                <button
-                  onClick={handleLogout}
-                  className="w-full py-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 font-semibold flex items-center justify-center gap-3"
-                >
-                  <LogOut size={18} strokeWidth={2} /> Sign Out
-                </button>
+                <>
+                  <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="w-full py-4 rounded-full bg-card border-2 border-foreground text-foreground font-bold heading-font uppercase tracking-widest flex items-center justify-center gap-3 shadow-pop">
+                    <CircleUser size={18} strokeWidth={2.5} /> Profile
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full py-4 rounded-full bg-muted border-2 border-border text-muted-foreground font-bold heading-font uppercase tracking-widest flex items-center justify-center gap-3"
+                  >
+                    <LogOut size={18} strokeWidth={2.5} /> Sign Out
+                  </button>
+                </>
               ) : (
                 <>
                   <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                    <button className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-semibold">
+                    <button className="w-full py-4 rounded-full bg-card border-2 border-foreground text-foreground font-bold heading-font uppercase tracking-widest shadow-pop">
                       Login
                     </button>
                   </Link>
                   <Link to="/register" onClick={() => setIsMenuOpen(false)}>
-                    <button className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#ff7ec9] to-[#a78bfa] text-white font-bold shadow-lg shadow-pink-500/20">
+                    <button className="w-full py-4 rounded-full bg-secondary border-2 border-foreground text-white font-bold heading-font uppercase tracking-widest shadow-pop">
                       Create Account
                     </button>
                   </Link>

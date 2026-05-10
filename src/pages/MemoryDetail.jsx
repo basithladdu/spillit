@@ -34,7 +34,7 @@ function MemoryDetail() {
       try {
         const { data, error } = await supabase
           .from('memories')
-          .select('*')
+          .select('*, profiles(username, avatar_url)')
           .eq('id', id)
           .single();
         
@@ -48,7 +48,7 @@ function MemoryDetail() {
           // Fetch nearby spills (simplified)
           const { data: nearby } = await supabase
             .from('memories')
-            .select('*')
+            .select('*, profiles(username)')
             .neq('id', id)
             .limit(4);
             
@@ -188,12 +188,18 @@ function MemoryDetail() {
               className="bg-white border-2 border-foreground rounded-[32px] p-6 md:p-10 shadow-pop"
             >
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-[var(--spillit-primary)] border border-white/10">
-                  <User size={24} />
+                <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-accent border-2 border-foreground shadow-pop overflow-hidden">
+                  {memory.profiles?.avatar_url ? (
+                    <img src={memory.profiles.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={24} />
+                  )}
                 </div>
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Shared By</p>
-                  <p className="text-base font-black text-foreground">Anonymous Spiller</p>
+                  <p className="text-base font-black text-foreground">
+                    {memory.profiles?.username ? `@${memory.profiles.username}` : 'Anonymous Spiller'}
+                  </p>
                 </div>
                 <div className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full border-2 border-foreground shadow-pop hidden sm:flex">
                   <Calendar size={12} className="text-accent" />
@@ -288,6 +294,9 @@ function MemoryDetail() {
                             </div>
                             <div className="min-w-0">
                                 <p className="text-[10px] text-foreground font-bold italic truncate pr-4"> &quot;{m.caption}&quot;</p>
+                                <p className="text-[8px] text-slate-400 font-black uppercase mt-0.5">
+                                  {m.profiles?.username ? `@${m.profiles.username}` : 'Anonymous'}
+                                </p>
                             </div>
                         </Link>
                     ))}

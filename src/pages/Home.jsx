@@ -1,372 +1,294 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { supabase } from '../utils/supabase';
 import { Link } from 'react-router-dom';
-
 import { AnimatePresence, motion } from 'framer-motion';
-import Map, { Marker, Popup, NavigationControl, GeolocateControl } from 'react-map-gl';
+import Map, { Marker, Popup, NavigationControl } from 'react-map-gl';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
-import { Heart, Map as MapIcon, LocateFixed, ArrowRight, Flame, Ghost } from 'lucide-react';
+import { Heart, LocateFixed, Flame, Ghost, Map as MapIcon, ChevronUp } from 'lucide-react';
 import 'mapbox-gl/dist/mapbox-gl.css';
-
 import MemoryCard from './MemoryCard';
 import SpillMemoryModal from '../components/SpillMemoryModal';
 
-// --- Configuration ---
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
-const MAP_STYLES = [
-  { name: 'Dark', id: 'mapbox://styles/mapbox/dark-v11', color: 'bg-gray-900' },
-  { name: 'Satellite', id: 'mapbox://styles/mapbox/satellite-streets-v12', color: 'bg-green-900' },
-  { name: 'Street', id: 'mapbox://styles/mapbox/streets-v12', color: 'bg-blue-100' }
-];
+const TYPE_COLORS = {
+  Moment: '#8B5CF6',
+  Crush:  '#F472B6',
+  Secret: '#1E293B',
+  Laugh:  '#FBBF24',
+};
 
-// --- Onboarding Tour Data ---
-const TOUR_STEPS = [
-  {
-    title: "Welcome to Spill It",
-    content: "The world is a map of memories. Share yours anonymously with a photo and a story.",
-    action: "Start",
-    placement: 'center'
-  },
-  {
-    title: "Spill a Memory",
-    content: "Take a photo of where it happened and share what you felt. We'll pin it to the exact spot.",
-    action: "Next",
-    targetRefKey: 'reportBtn',
-    placement: 'top'
-  },
-  {
-    title: "Explore the Feed",
-    content: "See real-time memories from around the world. Upvote the stories that touch you.",
-    action: "Next",
-    targetId: 'navbar-root',
-    placement: 'bottom'
-  },
-  {
-    title: "The Memory Map",
-    content: "Wander through the map to discover hidden secrets and memories pinned by others.",
-    action: "Next",
-    targetId: 'map-root',
-    placement: 'center'
-  },
-  {
-    title: "Start Spilling",
-    content: "Ready to leave your mark? Spill your first memory now.",
-    action: "Spill Something",
-    placement: 'center'
-  }
-];
-
-// --- Onboarding Component ---
-const OnboardingTour = ({ onComplete, targetRefs, setShowForm }) => {
-  const [step, setStep] = useState(0);
-  const currentStepData = TOUR_STEPS[step];
-
-  const handleNext = () => {
-    if (step < TOUR_STEPS.length - 1) {
-      setStep(step + 1);
-    } else {
-      onComplete();
-      if (currentStepData.action === "Spill Something") {
-        setShowForm(true);
-      }
-    }
-  };
-
-  const handleSkip = () => onComplete();
-
+/* ── Standalone map pin – NO Framer Motion, NO transforms ── */
+const MemoryPin = ({ memory, onClick, isSelected }) => {
+  const color = TYPE_COLORS[memory.type] || '#8B5CF6';
   return (
-    <div className="fixed inset-0 z-[3000] pointer-events-none">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm pointer-events-auto" />
-
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-auto p-4">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: -20 }}
-          className="bg-[#0f0f13] border border-white/10 p-8 rounded-[32px] shadow-2xl flex flex-col gap-6 w-full max-w-sm relative z-[3002] text-center"
-        >
-          <div>
-            <h3 className="text-2xl font-bold text-white mb-3 heading-font">{currentStepData.title}</h3>
-            <p className="text-sm text-slate-400 leading-relaxed">{currentStepData.content}</p>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={handleNext}
-              className="w-full bg-gradient-to-r from-[#ff7ec9] to-[#a78bfa] text-white text-sm font-bold py-3.5 rounded-2xl shadow-xl shadow-pink-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              {currentStepData.action} <ArrowRight size={16} />
-            </button>
-            <button
-              onClick={handleSkip}
-              className="text-xs font-medium text-slate-500 hover:text-white transition-colors py-2"
-            >
-              Skip
-            </button>
-          </div>
-
-          <div className="flex justify-center gap-2">
-            {TOUR_STEPS.map((_, i) => (
-              <div key={i} className={`h-1 rounded-full transition-all duration-300 ${i === step ? 'w-8 bg-[#ff7ec9]' : 'w-2 bg-white/10'}`} />
-            ))}
-          </div>
-        </motion.div>
+    <button
+      onClick={onClick}
+      aria-label={`Memory: ${memory.caption || memory.type || 'Spill'}`}
+      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+    >
+      <div style={{ position: 'relative', width: 36, height: 44 }}>
+        {/* Pin drop shape */}
+        <svg width="36" height="44" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M18 0C8.06 0 0 8.06 0 18C0 30 18 44 18 44C18 44 36 30 36 18C36 8.06 27.94 0 18 0Z"
+            fill={color}
+            stroke="#1E293B"
+            strokeWidth="2"
+          />
+          <circle cx="18" cy="17" r="7" fill="white" opacity="0.9" />
+        </svg>
+        {/* Pulse ring when selected */}
+        {isSelected && (
+          <span style={{
+            position: 'absolute', inset: 0,
+            borderRadius: '50%',
+            background: color,
+            opacity: 0.25,
+            animation: 'ping 1s cubic-bezier(0,0,0.2,1) infinite',
+          }} />
+        )}
       </div>
+    </button>
+  );
+};
+
+/* ── Onboarding ── */
+const TOUR_STEPS = [
+  { title: 'Welcome to Spill It', content: 'The world is a map of memories. Share yours anonymously.', action: 'Start' },
+  { title: 'Spill a Memory', content: 'Take a photo of where it happened and share what you felt.', action: 'Next' },
+  { title: 'Explore the Map', content: 'Tap any pin to read what happened there.', action: 'Next' },
+  { title: 'Start Spilling', content: 'Ready to leave your mark? Spill your first memory now.', action: 'Spill Something' },
+];
+
+const OnboardingTour = ({ onComplete, setShowForm }) => {
+  const [step, setStep] = useState(0);
+  const cur = TOUR_STEPS[step];
+  const handleNext = () => {
+    if (step < TOUR_STEPS.length - 1) { setStep(step + 1); return; }
+    onComplete();
+    if (cur.action === 'Spill Something') setShowForm(true);
+  };
+  return (
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-foreground/70 backdrop-blur-sm" onClick={onComplete} />
+      <motion.div
+        key={step}
+        initial={{ opacity: 0, scale: 0.9, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="bg-card border-2 border-foreground rounded-2xl p-8 shadow-pop w-full max-w-sm relative z-10 text-center"
+      >
+        <h3 className="heading-font text-2xl font-bold text-foreground mb-3">{cur.title}</h3>
+        <p className="text-muted-foreground text-sm leading-relaxed mb-6">{cur.content}</p>
+        <button
+          onClick={handleNext}
+          className="w-full bg-accent text-white border-2 border-foreground rounded-full py-3.5 font-bold heading-font uppercase tracking-widest text-sm shadow-pop hover:shadow-pop-hover"
+        >
+          {cur.action}
+        </button>
+        <button onClick={onComplete} className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors py-2 block w-full">
+          Skip
+        </button>
+        <div className="flex justify-center gap-2 mt-4">
+          {TOUR_STEPS.map((_, i) => (
+            <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === step ? 'w-8 bg-accent' : 'w-2 bg-border'}`} />
+          ))}
+        </div>
+      </motion.div>
     </div>
   );
 };
 
+/* ── Main ── */
 function Home() {
-  const reportBtnRef = useRef(null);
   const [allMemories, setAllMemories] = useState({});
   const [selectedMemory, setSelectedMemory] = useState(null);
-
-  // UI State
   const [showForm, setShowForm] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
-  const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/satellite-streets-v12');
-
-  // Map state - Start over Europe/Asia at zoom 3 so actual landmass is visible
-  const [viewState, setViewState] = useState({
-    latitude: 30,
-    longitude: 20,
-    zoom: 2.5
-  });
-
-  // Onboarding State
   const [showTour, setShowTour] = useState(false);
+  const [showFeed, setShowFeed] = useState(false); // mobile feed sheet
+  const [mapStyle] = useState('mapbox://styles/mapbox/dark-v11');
+  const [viewState, setViewState] = useState({ latitude: 25, longitude: 15, zoom: 2 });
 
-  // Check for first visit
   useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem('spillit_has_seen_onboarding');
-    if (!hasSeenOnboarding) {
-      setShowTour(true);
-    }
+    if (!localStorage.getItem('spillit_onboarded')) setShowTour(true);
   }, []);
 
-  const handleTourComplete = () => {
-    setShowTour(false);
-    localStorage.setItem('spillit_has_seen_onboarding', 'true');
-  };
-
-  // --- Data & Markers ---
   useEffect(() => {
-    // 1. Initial fetch
-    const fetchMemories = async () => {
-      const { data, error } = await supabase
+    const fetch = async () => {
+      const { data } = await supabase
         .from('memories')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(50);
-      
-      if (!error && data) {
-        const memoriesMap = {};
-        data.forEach(m => memoriesMap[m.id] = m);
-        setAllMemories(memoriesMap);
+        .limit(100);
+      if (data) {
+        const map = {};
+        data.forEach(m => { map[m.id] = m; });
+        setAllMemories(map);
       }
     };
-
-    fetchMemories();
-
-    // 2. Real-time subscription
-    const channel = supabase
-      .channel('public:memories')
-      .on('postgres_changes', { event: '*', table: 'memories', schema: 'public' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setAllMemories(prev => ({ ...prev, [payload.new.id]: payload.new }));
-        } else if (payload.eventType === 'UPDATE') {
-          setAllMemories(prev => ({ ...prev, [payload.new.id]: payload.new }));
-        } else if (payload.eventType === 'DELETE') {
-          setAllMemories(prev => {
-            const next = { ...prev };
-            delete next[payload.old.id];
-            return next;
-          });
+    fetch();
+    const ch = supabase
+      .channel('home:memories')
+      .on('postgres_changes', { event: '*', table: 'memories', schema: 'public' }, p => {
+        if (p.eventType === 'INSERT' || p.eventType === 'UPDATE') {
+          setAllMemories(prev => ({ ...prev, [p.new.id]: p.new }));
+        } else if (p.eventType === 'DELETE') {
+          setAllMemories(prev => { const n = { ...prev }; delete n[p.old.id]; return n; });
         }
       })
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => supabase.removeChannel(ch);
   }, []);
 
-  const handleReportSuccess = (data) => {
-    setSummaryData(data);
-    setShowSummary(true);
-  };
-
-  const memoriesArray = useMemo(
-    () =>
-      Object.entries(allMemories)
-        .map(([id, memory]) => ({ id, ...memory }))
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+  const memories = useMemo(() =>
+    Object.values(allMemories).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
     [allMemories]
   );
 
+  const flyToUser = useCallback(() => {
+    navigator.geolocation?.getCurrentPosition(p => {
+      setViewState(v => ({ ...v, latitude: p.coords.latitude, longitude: p.coords.longitude, zoom: 14 }));
+    });
+  }, []);
+
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-[#FFF5F9] text-foreground font-sans">
-      
-      {/* --- HERO OVERLAY --- */}
-      <div className="pointer-events-none hidden lg:flex flex-col gap-5 absolute top-24 left-8 z-[850] max-w-md">
-        {/* Main hero card */}
-        <div className="bg-white border-2 border-foreground rounded-[32px] px-7 py-7 shadow-pop">
-          {/* Brand pill */}
-          <div className="inline-flex items-center gap-2 bg-muted border-2 border-foreground rounded-full px-3.5 py-1.5 mb-5 shadow-pop">
+    <div className="relative w-full h-screen overflow-hidden bg-[#08080c]">
+
+      {/* ── Desktop hero panel (top-left) ── */}
+      <div className="pointer-events-none hidden lg:flex flex-col gap-4 absolute top-20 left-6 z-[850] max-w-xs">
+        <div className="bg-card border-2 border-foreground rounded-2xl px-6 py-6 shadow-pop">
+          <div className="inline-flex items-center gap-2 bg-muted border-2 border-foreground rounded-full px-3 py-1 mb-4 shadow-pop">
             <Flame size={11} className="text-accent" strokeWidth={3} />
-            <span className="text-[10px] font-black tracking-[0.2em] text-foreground uppercase">Spill It</span>
+            <span className="heading-font text-[10px] font-bold tracking-widest text-foreground uppercase">Spill It</span>
           </div>
-
-          <h1 className="heading-font text-4xl leading-[1.1] tracking-tight font-black mb-3 text-foreground">
-            Every place<br />
-            holds a{' '}
-            <span className="text-accent italic">
-              secret.
-            </span>
+          <h1 className="heading-font text-3xl font-bold leading-tight text-foreground mb-2">
+            Every place holds a <span className="text-accent italic">secret.</span>
           </h1>
-
-          <p className="text-slate-400 text-sm font-bold leading-relaxed">
-            Drop a photo. Pin the spot. Stay anonymous.
-          </p>
-
-          {memoriesArray.length > 0 && (
-            <div className="mt-5 pt-5 border-t-2 border-foreground flex items-center gap-6">
+          <p className="text-muted-foreground text-xs leading-relaxed">Drop a photo. Pin the spot. Stay anonymous.</p>
+          {memories.length > 0 && (
+            <div className="mt-4 pt-4 border-t-2 border-border flex gap-6">
               <div>
-                <p className="text-2xl font-black text-foreground tabular-nums">{memoriesArray.length.toLocaleString()}</p>
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black mt-0.5">Spills</p>
+                <p className="heading-font text-2xl font-bold text-foreground">{memories.length}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Spills</p>
               </div>
-              <div className="w-px h-8 bg-foreground/10" />
+              <div className="w-px bg-border" />
               <div>
-                <p className="text-2xl font-black text-foreground tabular-nums">
-                  {new Set(memoriesArray.map(i => i.address?.split(',').pop()?.trim()).filter(Boolean)).size.toLocaleString()}
+                <p className="heading-font text-2xl font-bold text-foreground">
+                  {new Set(memories.map(m => m.address?.split(',').pop()?.trim()).filter(Boolean)).size}
                 </p>
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black mt-0.5">Cities</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Cities</p>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* --- LIVE FEED PANEL --- */}
-      <div className="hidden xl:block pointer-events-none absolute inset-y-24 right-8 z-[860] w-80">
-        <div className="bg-white h-full flex flex-col overflow-hidden border-2 border-foreground rounded-[32px] shadow-pop">
-          <div className="px-6 py-5 border-b-2 border-foreground flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-              <p className="heading-font text-[11px] uppercase tracking-[0.2em] font-black text-foreground">Live Spills</p>
+      {/* ── Desktop live feed (right) ── */}
+      <div className="hidden xl:flex pointer-events-none absolute top-20 bottom-6 right-6 z-[850] w-72 flex-col">
+        <div className="bg-card border-2 border-foreground rounded-2xl shadow-pop h-full flex flex-col overflow-hidden">
+          <div className="px-5 py-4 border-b-2 border-border shrink-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="w-2 h-2 rounded-full bg-quaternary animate-pulse" />
+              <p className="heading-font text-xs font-bold uppercase tracking-widest text-foreground">Live Spills</p>
             </div>
-            <p className="text-[10px] text-slate-400 font-bold uppercase">Real stories, real places.</p>
+            <p className="text-[10px] text-muted-foreground">Real stories, real places.</p>
           </div>
-          
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 custom-scrollbar">
-            {memoriesArray.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full gap-4 py-12 text-center">
-                <div className="w-16 h-16 rounded-[24px] bg-muted border-2 border-foreground shadow-pop flex items-center justify-center">
-                  <Ghost size={28} className="text-slate-300" />
-                </div>
-                <div>
-                  <p className="text-foreground font-black text-sm mb-1 uppercase tracking-tight">No spills yet</p>
-                  <p className="text-slate-400 text-[10px] font-bold">Be the first to leave<br />a memory on the map.</p>
-                </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
+            {memories.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center py-8 gap-3">
+                <Ghost size={32} className="text-muted-foreground" strokeWidth={1.5} />
+                <p className="text-xs text-muted-foreground">No spills yet. Be first!</p>
               </div>
-            )}
-            {memoriesArray.slice(0, 15).map((memory, index) => (
-              <Link key={memory.id} to={`/memory/${memory.id}`} className="block pointer-events-auto group">
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="rounded-[24px] overflow-hidden border-2 border-foreground bg-white hover:bg-muted transition-all shadow-pop hover:-translate-x-1"
-                >
-                  {memory.image_url && (
-                    <div className="relative h-32 w-full overflow-hidden border-b-2 border-foreground">
-                      <img
-                        src={getOptimizedImageUrl(memory.image_url, 400)}
-                        alt="memory"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-white border-2 border-foreground text-[8px] font-black text-foreground uppercase tracking-tighter">
-                        {memory.type || 'Memory'}
-                      </div>
+            ) : memories.slice(0, 20).map((m, i) => (
+              <Link key={m.id} to={`/memory/${m.id}`} className="block pointer-events-auto group">
+                <div className="rounded-xl border-2 border-border hover:border-foreground bg-muted hover:bg-card transition-all overflow-hidden">
+                  {m.image_url && (
+                    <div className="h-24 overflow-hidden border-b border-border">
+                      <img src={getOptimizedImageUrl(m.image_url, 300)} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     </div>
                   )}
-                  <div className="p-4 space-y-2">
-                    <p className="text-[11px] text-foreground font-bold line-clamp-2 leading-relaxed italic">
-                      &quot;{memory.caption || memory.desc || 'A silent memory...'}&quot;
+                  <div className="p-3">
+                    <p className="text-xs text-foreground font-medium line-clamp-2 italic mb-1.5">
+                      "{m.caption || 'A silent memory...'}"
                     </p>
-                    <div className="flex items-center justify-between text-[9px] text-slate-400 font-black uppercase">
-                      <div className="flex items-center gap-1 truncate max-w-[120px]">
-                        <MapIcon size={10} strokeWidth={3} /> {memory.address?.split(',')[0] || 'A secret spot'}
-                      </div>
-                      <div className="flex items-center gap-1 text-accent">
-                        <Heart size={10} className="fill-current" strokeWidth={3} /> {memory.upvotes || 0}
-                      </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] text-muted-foreground uppercase tracking-wide">{m.type || 'Moment'}</span>
+                      <span className="text-[9px] text-secondary flex items-center gap-1">
+                        <Heart size={9} className="fill-current" /> {m.upvotes || 0}
+                      </span>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               </Link>
             ))}
           </div>
         </div>
       </div>
 
-      {/* --- THE MAP --- */}
-      <div id="map-root" className="w-full h-full">
+      {/* ── THE MAP ── */}
+      <div id="map-root" className="absolute inset-0">
         <Map
           {...viewState}
-          onMove={evt => setViewState(evt.viewState)}
+          onMove={e => setViewState(e.viewState)}
           mapStyle={mapStyle}
           mapboxAccessToken={MAPBOX_TOKEN}
-          projection="mercator"
           style={{ width: '100%', height: '100%' }}
         >
-          <NavigationControl position="bottom-left" />
-          <GeolocateControl position="bottom-left" />
+          <NavigationControl position="bottom-left" showCompass={false} />
 
-          {memoriesArray.map((memory) => (
-            <Marker
-              key={memory.id}
-              latitude={Number(memory.lat)}
-              longitude={Number(memory.lng)}
-              anchor="center"
-              onClick={e => {
-                e.originalEvent.stopPropagation();
-                setSelectedMemory(memory);
-              }}
-            >
-              <motion.div 
-                whileHover={{ scale: 1.2 }}
-                className="cursor-pointer"
+          {memories.map(m => {
+            const lat = Number(m.lat);
+            const lng = Number(m.lng);
+            if (!lat || !lng || isNaN(lat) || isNaN(lng)) return null;
+            return (
+              <Marker
+                key={m.id}
+                latitude={lat}
+                longitude={lng}
+                anchor="bottom"
+                onClick={e => { e.originalEvent.stopPropagation(); setSelectedMemory(m); }}
               >
-                <div role="img" aria-label="marker" className="relative group">
-                   <div className="w-3 h-3 rounded-full bg-white shadow-lg border-2 border-[#ff7ec9]" />
-                   <div className="absolute inset-0 rounded-full animate-ping bg-[#ff7ec9]/40" />
-                </div>
-              </motion.div>
-            </Marker>
-          ))}
+                <MemoryPin
+                  memory={m}
+                  isSelected={selectedMemory?.id === m.id}
+                  onClick={() => setSelectedMemory(m)}
+                />
+              </Marker>
+            );
+          })}
 
           {selectedMemory && (
             <Popup
               latitude={Number(selectedMemory.lat)}
               longitude={Number(selectedMemory.lng)}
               anchor="bottom"
+              offset={48}
               onClose={() => setSelectedMemory(null)}
               closeButton={false}
-              maxWidth="280px"
-              className="memory-popup"
-              offset={15}
+              maxWidth="260px"
             >
-              <div className="bg-white border-2 border-foreground overflow-hidden shadow-pop p-0 rounded-[24px]">
+              <div className="bg-card border-2 border-foreground rounded-xl overflow-hidden shadow-pop">
                 {selectedMemory.image_url && (
-                  <img src={getOptimizedImageUrl(selectedMemory.image_url, 300)} className="w-full h-32 object-cover border-b-2 border-foreground" alt="memory" />
+                  <img
+                    src={getOptimizedImageUrl(selectedMemory.image_url, 300)}
+                    className="w-full h-28 object-cover border-b-2 border-foreground"
+                    alt="memory"
+                  />
                 )}
-                <div className="p-4">
-                  <p className="text-xs text-foreground font-bold mb-3 italic leading-relaxed">&quot;{selectedMemory.caption || selectedMemory.desc}&quot;</p>
-                  <Link to={`/memory/${selectedMemory.id}`} className="block w-full text-center py-2 rounded-xl bg-accent text-white text-[10px] font-black uppercase tracking-widest border-2 border-foreground shadow-pop">
+                <div className="p-3">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground block mb-1">
+                    {selectedMemory.type || 'Moment'}
+                  </span>
+                  <p className="text-xs text-foreground font-medium italic line-clamp-2 mb-3">
+                    "{selectedMemory.caption || selectedMemory.desc || ''}"
+                  </p>
+                  <Link
+                    to={`/memory/${selectedMemory.id}`}
+                    className="block w-full text-center py-2 rounded-full bg-accent text-white text-[10px] font-bold uppercase tracking-widest border-2 border-foreground shadow-pop"
+                  >
                     See Memory
                   </Link>
                 </div>
@@ -376,47 +298,123 @@ function Home() {
         </Map>
       </div>
 
-      {/* --- HUD CONTROLS --- */}
-      <div className="fixed bottom-8 right-8 z-[900] flex flex-col gap-4 items-end pointer-events-auto">
-        <motion.button
-          whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-          onClick={() => {
-            navigator.geolocation.getCurrentPosition(pos => {
-              setViewState({
-                ...viewState,
-                latitude: pos.coords.latitude,
-                longitude: pos.coords.longitude,
-                zoom: 16,
-                transitionDuration: 1000
-              });
-            });
-          }}
-          className="w-12 h-12 rounded-full bg-white border-2 border-foreground flex items-center justify-center text-accent shadow-pop"
+      {/* ── Mobile top bar ── */}
+      <div className="lg:hidden absolute top-16 left-0 right-0 z-[840] px-4 pt-2 flex items-center justify-between gap-3 pointer-events-none">
+        <div className="bg-card border-2 border-foreground rounded-full px-4 py-2 shadow-pop flex items-center gap-2 pointer-events-auto">
+          <Flame size={12} className="text-accent" strokeWidth={3} />
+          <span className="heading-font text-xs font-bold text-foreground uppercase tracking-wide">
+            {memories.length} Spills
+          </span>
+        </div>
+        <button
+          onClick={() => setShowFeed(true)}
+          className="bg-card border-2 border-foreground rounded-full px-4 py-2 shadow-pop flex items-center gap-2 text-foreground pointer-events-auto"
         >
-          <LocateFixed size={20} strokeWidth={3} />
-        </motion.button>
-
-        <motion.button
-          ref={reportBtnRef}
-          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-3 px-8 py-4 bg-accent text-white rounded-full font-black border-2 border-foreground heading-font uppercase tracking-widest text-sm shadow-pop hover:shadow-pop-hover hover:-translate-y-0.5 active:translate-y-0.5"
-        >
-          <Flame size={20} strokeWidth={3} />
-          <span>Spill Something</span>
-        </motion.button>
+          <MapIcon size={12} strokeWidth={2.5} />
+          <span className="heading-font text-xs font-bold uppercase tracking-wide">Live Feed</span>
+        </button>
       </div>
 
+      {/* ── HUD: locate + spill buttons ── */}
+      <div
+        className="fixed z-[900] flex flex-col items-end gap-3 pointer-events-auto"
+        style={{
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
+          right: 20,
+        }}
+      >
+        {/* Locate Me */}
+        <button
+          onClick={flyToUser}
+          className="w-12 h-12 rounded-full bg-card border-2 border-foreground flex items-center justify-center text-accent shadow-pop hover:shadow-pop-hover active:shadow-pop-active hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all"
+          aria-label="Locate me"
+        >
+          <LocateFixed size={20} strokeWidth={2.5} />
+        </button>
+
+        {/* Spill CTA */}
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2.5 px-6 py-3.5 bg-accent text-white rounded-full border-2 border-foreground heading-font font-bold uppercase tracking-widest text-sm shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active transition-all min-h-[48px]"
+        >
+          <Flame size={18} strokeWidth={2.5} />
+          <span className="hidden sm:inline">Spill Something</span>
+          <span className="sm:hidden">Spill</span>
+        </button>
+      </div>
+
+      {/* ── Mobile feed bottom sheet ── */}
       <AnimatePresence>
-        {showTour && <OnboardingTour onComplete={handleTourComplete} targetRefs={{ reportBtn: reportBtnRef }} setShowForm={setShowForm} />}
+        {showFeed && (
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+            className="fixed inset-x-0 bottom-0 z-[950] bg-card border-t-2 border-foreground rounded-t-2xl shadow-pop xl:hidden"
+            style={{ maxHeight: '70dvh' }}
+          >
+            {/* drag handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-border" />
+            </div>
+            <div className="px-4 pb-2 flex items-center justify-between border-b-2 border-border">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-quaternary animate-pulse" />
+                <p className="heading-font text-sm font-bold uppercase tracking-widest text-foreground">Live Spills</p>
+              </div>
+              <button
+                onClick={() => setShowFeed(false)}
+                className="w-8 h-8 rounded-full border-2 border-foreground flex items-center justify-center text-foreground shadow-pop"
+              >
+                <ChevronUp size={14} strokeWidth={2.5} />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-3 space-y-3 custom-scrollbar" style={{ maxHeight: 'calc(70dvh - 80px)' }}>
+              {memories.length === 0 ? (
+                <div className="text-center py-12">
+                  <Ghost size={32} className="text-muted-foreground mx-auto mb-3" strokeWidth={1.5} />
+                  <p className="text-sm text-muted-foreground">No spills yet. Be the first!</p>
+                </div>
+              ) : memories.slice(0, 30).map(m => (
+                <Link key={m.id} to={`/memory/${m.id}`} onClick={() => setShowFeed(false)} className="block group">
+                  <div className="rounded-xl border-2 border-border hover:border-foreground bg-muted hover:bg-background transition-all flex gap-3 p-3">
+                    {m.image_url && (
+                      <img src={getOptimizedImageUrl(m.image_url, 120)} alt="" className="w-16 h-16 rounded-lg object-cover border-2 border-border shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{m.type || 'Moment'}</span>
+                      <p className="text-xs text-foreground font-medium italic line-clamp-2 mt-0.5">"{m.caption || 'A silent memory...'}"</p>
+                      <div className="flex items-center gap-1 mt-1 text-[9px] text-secondary">
+                        <Heart size={9} className="fill-current" /> {m.upvotes || 0}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
-      <SpillMemoryModal show={showForm} onClose={() => setShowForm(false)} onSuccess={handleReportSuccess} />
+      {/* ── Modals ── */}
+      <AnimatePresence>
+        {showTour && (
+          <OnboardingTour
+            onComplete={() => { setShowTour(false); localStorage.setItem('spillit_onboarded', '1'); }}
+            setShowForm={setShowForm}
+          />
+        )}
+      </AnimatePresence>
+
+      <SpillMemoryModal show={showForm} onClose={() => setShowForm(false)} onSuccess={d => { setSummaryData(d); setShowSummary(true); }} />
       {showSummary && <MemoryCard summaryData={summaryData} setShowSummary={setShowSummary} />}
 
+      {/* Popup style override */}
       <style>{`
-        .mapboxgl-popup-content { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
-        .mapboxgl-popup-tip { border-top-color: rgba(255,255,255,0.1) !important; }
+        .mapboxgl-popup-content { background: transparent !important; box-shadow: none !important; padding: 0 !important; border: none !important; }
+        .mapboxgl-popup-tip { display: none !important; }
+        @keyframes ping { 75%,100%{transform:scale(2);opacity:0} }
       `}</style>
     </div>
   );

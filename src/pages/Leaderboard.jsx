@@ -25,7 +25,7 @@ function Leaderboard() {
     const fetchTopMemories = async () => {
       const { data, error } = await supabase
         .from('memories')
-        .select('*')
+        .select('*, profiles(username, avatar_url)')
         .order('upvotes', { ascending: false })
         .limit(50);
       
@@ -128,13 +128,22 @@ function Leaderboard() {
                     <div className="flex-1 space-y-4 text-center md:text-left">
                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                           <div className="flex items-center justify-center md:justify-start gap-3">
-                             <div className="flex items-center gap-1.5 text-secondary font-bold text-lg">
-                                <Heart size={20} className="fill-current" />
+                             <div className="flex items-center gap-1.5 text-accent font-black text-lg">
+                                <Heart size={20} className="fill-current" strokeWidth={3} />
                                 <span>{memory.upvotes || 0}</span>
                              </div>
-                             <div className="w-1 h-1 rounded-full bg-slate-700 hidden md:block"></div>
-                             <div className="text-[10px] text-slate-500 font-mono flex items-center gap-2 uppercase tracking-widest">
-                                <Hash size={12} className="text-[#a78bfa]" /> {memory.id.slice(-8)}
+                             <div className="w-1 h-1 rounded-full bg-foreground/10 hidden md:block"></div>
+                             <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 rounded-lg bg-muted border border-foreground flex items-center justify-center text-accent">
+                                   {memory.profiles?.avatar_url ? (
+                                     <img src={memory.profiles.avatar_url} alt="p" className="w-full h-full object-cover rounded-lg" />
+                                   ) : (
+                                     <User size={12} strokeWidth={3} />
+                                   )}
+                                </div>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                  {memory.profiles?.username ? `@${memory.profiles.username}` : 'Anonymous'}
+                                </span>
                              </div>
                           </div>
                           

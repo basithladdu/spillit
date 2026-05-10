@@ -3,19 +3,27 @@ import Map, { Marker, NavigationControl, GeolocateControl } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import axios from 'axios';
 import EXIF from 'exif-js';
-import { MapPin, Navigation, Layers, Loader2 } from 'lucide-react';
+import { MapPin, Navigation, Layers, Loader2, Heart } from 'lucide-react';
 
 // --- Configuration ---
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
-const LocationVerifier = ({ file, onLocationVerified, className }) => {
+const LocationVerifier = ({ file, onLocationVerified, className, initialLat, initialLng }) => {
     const [viewState, setViewState] = useState({
-        latitude: 20.5937,
-        longitude: 78.9629,
-        zoom: 4
+        latitude: initialLat || 20.5937,
+        longitude: initialLng || 78.9629,
+        zoom: initialLat ? 16 : 4
     });
-    const [marker, setMarker] = useState(null); // { lat, lng }
+    const [marker, setMarker] = useState(null);
     const [address, setAddress] = useState('');
+
+    // Sync with parent props
+    useEffect(() => {
+        if (initialLat && initialLng && (!marker || marker.lat !== initialLat)) {
+            setMarker({ lat: initialLat, lng: initialLng });
+            setViewState(prev => ({ ...prev, latitude: initialLat, longitude: initialLng, zoom: 16 }));
+        }
+    }, [initialLat, initialLng]);
     const [loadingAddress, setLoadingAddress] = useState(false);
     const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/streets-v12');
     const [isLocating, setIsLocating] = useState(false);
@@ -143,7 +151,14 @@ const LocationVerifier = ({ file, onLocationVerified, className }) => {
                         draggable
                         onDragEnd={onMarkerDragEnd}
                     >
-                        <MapPin size={40} className="text-[#e879f9] drop-shadow-lg -translate-y-1/2" fill="white" />
+                        <div className="relative group cursor-grab active:cursor-grabbing">
+                          {/* Inner Heart */}
+                          <div className="w-12 h-12 bg-accent border-4 border-foreground rounded-full flex items-center justify-center shadow-pop animate-bounce">
+                            <Heart size={24} className="text-white fill-current" strokeWidth={3} />
+                          </div>
+                          {/* Pointy Tip */}
+                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-foreground rotate-45" />
+                        </div>
                     </Marker>
                 )}
 
