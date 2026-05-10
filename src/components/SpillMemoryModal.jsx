@@ -144,7 +144,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-foreground/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-[#000000] opacity-80"
               onClick={onClose}
             />
 
@@ -154,7 +154,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-              className="relative w-full md:max-w-4xl bg-background border-t-2 md:border-2 border-foreground rounded-t-3xl md:rounded-2xl shadow-pop overflow-hidden flex flex-col md:flex-row"
+              className="relative w-full md:max-w-4xl bg-[#FFF5F9] border-t-2 md:border-2 border-foreground rounded-t-3xl md:rounded-2xl shadow-pop overflow-hidden flex flex-col md:flex-row"
               style={{ maxHeight: '95dvh' }}
             >
 
@@ -177,12 +177,12 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
               <div className="w-full md:w-1/2 flex flex-col overflow-hidden">
 
                 {/* header */}
-                <div className="px-6 py-5 border-b-2 border-foreground flex items-start justify-between shrink-0 bg-background">
+                <div className="px-6 py-5 border-b-2 border-foreground flex items-start justify-between shrink-0 bg-[#FFF5F9]">
                   <div>
-                    <h2 className="heading-font text-2xl font-bold text-foreground leading-tight">
+                    <h2 className="heading-font text-2xl font-black text-foreground leading-tight">
                       Spill a Memory
                     </h2>
-                    <p className="text-muted-foreground text-sm mt-0.5">
+                    <p className="text-slate-500 text-sm mt-0.5 font-bold">
                       Where did it happen?
                     </p>
                   </div>
@@ -227,9 +227,9 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                           </div>
                         </>
                       ) : (
-                        <div className="flex flex-col items-center gap-2 text-muted-foreground group-hover:text-accent transition-colors">
-                          <Camera className="w-8 h-8 group-hover:scale-110 transition-transform" strokeWidth={2.5} />
-                          <span className="heading-font text-xs font-bold uppercase tracking-widest">
+                        <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-accent transition-colors">
+                          <Camera className="w-8 h-8 group-hover:scale-110 transition-transform text-foreground" strokeWidth={2.5} />
+                          <span className="heading-font text-xs font-bold uppercase tracking-widest text-foreground">
                             Add a photo
                           </span>
                         </div>
@@ -261,10 +261,10 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                               : 'border-border hover:border-muted-foreground'
                             }`}
                         >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${formData.type === label ? color : 'bg-muted text-muted-foreground'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${formData.type === label ? color : 'bg-muted text-slate-400'}`}>
                             <Icon className="w-4 h-4" strokeWidth={2.5} />
                           </div>
-                          <span className="heading-font text-[10px] font-bold uppercase tracking-wide text-foreground">
+                          <span className="heading-font text-[10px] font-black uppercase tracking-wide text-foreground">
                             {label}
                           </span>
                         </button>
@@ -282,7 +282,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                       onChange={e => setFormData(p => ({ ...p, caption: e.target.value }))}
                       placeholder="What happened here? Be as honest as you want..."
                       rows={4}
-                      className="w-full bg-input border-2 border-border rounded-xl px-4 py-3 text-foreground text-sm placeholder-muted-foreground resize-none outline-none focus:border-accent focus:shadow-focus transition-all"
+                      className="w-full bg-white border-2 border-foreground rounded-xl px-4 py-3 text-foreground text-sm placeholder-slate-400 resize-none outline-none focus:border-accent focus:shadow-focus transition-all font-medium"
                     />
                   </div>
 
@@ -305,10 +305,10 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                       }
                     </div>
                     <div className="text-left flex-1">
-                      <p className="heading-font text-sm font-bold text-foreground">
+                      <p className="heading-font text-sm font-black text-foreground">
                         {formData.anonymous ? 'Anonymous' : 'Public'}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-slate-500 font-bold">
                         {formData.anonymous
                           ? 'Your identity stays hidden'
                           : 'Your username will be shown'
@@ -328,7 +328,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                 </form>
 
                 {/* ── sticky submit ── */}
-                <div className="shrink-0 px-6 pb-6 pt-4 border-t-2 border-border bg-background">
+                <div className="shrink-0 px-6 pb-6 pt-4 border-t-2 border-border bg-[#FFF5F9]">
                   <button
                     onClick={handleSubmit}
                     disabled={isSubmitting}

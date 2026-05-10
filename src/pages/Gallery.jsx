@@ -22,13 +22,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 const StatBox = ({ label, value, icon, accentColor }) => (
   <motion.div
     whileHover={{ y: -5 }}
-    className="p-6 bg-[#0f0f13] border border-white/5 rounded-[32px] overflow-hidden relative group transition-all"
+    className="p-6 bg-white border-2 border-foreground rounded-[32px] overflow-hidden relative group transition-all shadow-pop"
   >
     <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/5 rounded-full blur-2xl group-hover:bg-[#ff7ec9]/10 transition-all"></div>
     <div className="relative z-10 flex flex-col gap-2">
-      <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">{label}</p>
+      <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-400">{label}</p>
       <div className="flex items-end justify-between">
-        <h3 className="text-4xl font-black heading-font text-white">{value}</h3>
+        <h3 className="text-4xl font-black heading-font text-foreground">{value}</h3>
         <div className="text-2xl p-3 bg-white/5 rounded-2xl group-hover:text-[#ff7ec9] transition-colors" style={{ color: accentColor }}>
           {icon}
         </div>
@@ -43,7 +43,7 @@ const FilterSelect = ({ label, value, onChange, options }) => (
     <select
       value={value}
       onChange={onChange}
-      className="w-full text-xs font-bold bg-[#0f0f13] text-white border border-white/5 rounded-2xl px-5 py-4 outline-none focus:border-[#ff7ec9]/50 transition-all appearance-none cursor-pointer"
+      className="w-full text-xs font-black bg-white text-foreground border-2 border-foreground rounded-2xl px-5 py-4 outline-none focus:border-accent focus:shadow-focus transition-all appearance-none cursor-pointer shadow-pop"
     >
       {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
     </select>
@@ -106,16 +106,16 @@ function Gallery() {
   const currentData = filteredMemories.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#08080c]">
-      <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#ff7ec9] border-t-transparent shadow-[0_0_20px_rgba(255,126,201,0.2)]"></div>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#08080c] text-white font-sans pb-24 overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground pb-24 overflow-x-hidden">
       
-      {/* Background Decor */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[600px] bg-gradient-to-b from-[#ff7ec9]/5 via-transparent to-transparent blur-[120px] pointer-events-none"></div>
+        {/* Background Decor */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[600px] bg-gradient-to-b from-secondary/5 via-transparent to-transparent blur-[120px] pointer-events-none"></div>
 
       <div className="relative pt-32 px-6 max-w-7xl mx-auto z-10">
         
@@ -126,8 +126,8 @@ function Gallery() {
                <Sparkles size={20} className="text-[#ff7ec9] animate-pulse" />
                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">The Collection</span>
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-none heading-font">
-              The Memory <span className="bg-gradient-to-r from-[#ff7ec9] to-[#a78bfa] bg-clip-text text-transparent italic">Archive</span>
+            <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-none heading-font text-foreground">
+              Memory <span className="text-accent italic">Archive</span>
             </h1>
             <p className="text-sm md:text-base max-w-xl text-slate-400 font-medium leading-relaxed pl-6 border-l-2 border-[#ff7ec9]/30">
               A curated tapestry of anonymous human moments, pinned forever to the spots where they happened.
@@ -142,7 +142,7 @@ function Gallery() {
               placeholder="Search memories..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full md:w-96 pl-16 pr-8 py-5 rounded-[40px] bg-[#0f0f13] border border-white/5 focus:border-[#ff7ec9]/30 text-sm font-medium outline-none transition-all shadow-2xl"
+              className="w-full md:w-96 pl-16 pr-8 py-5 rounded-full bg-white border-2 border-foreground focus:border-accent text-sm font-black outline-none transition-all shadow-pop focus:shadow-focus text-foreground placeholder-slate-400"
             />
           </div>
         </div>
@@ -155,17 +155,17 @@ function Gallery() {
         </div>
 
         {/* Filters */}
-        <div className="p-8 bg-[#0f0f13] border border-white/5 rounded-[40px] shadow-2xl mb-12">
+        <div className="p-8 bg-white border-2 border-foreground rounded-[40px] shadow-pop mb-12">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-3">
-              <Filter className="text-[#ff7ec9]" size={18} />
-              <span className="text-xs font-bold uppercase tracking-widest text-white">Curate View</span>
+              <Filter className="text-secondary" size={18} strokeWidth={2.5} />
+              <span className="heading-font text-xs font-bold uppercase tracking-widest text-foreground">Curate View</span>
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="px-6 py-2.5 rounded-2xl bg-white/5 border border-white/5 text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all"
+              className="px-6 py-2.5 rounded-full bg-muted border-2 border-foreground text-[10px] font-bold uppercase tracking-widest hover:bg-accent hover:text-white hover:border-accent transition-all heading-font shadow-pop"
             >
-              {showFilters ? 'Hide' : 'Options'}
+              {showFilters ? 'Hide' : 'Filters'}
             </button>
           </div>
 
@@ -196,10 +196,10 @@ function Gallery() {
 
         {/* Gallery Grid */}
         {currentData.length === 0 ? (
-          <div className="text-center py-32 bg-[#0f0f13] border border-white/5 rounded-[40px] shadow-2xl">
-            <Ghost className="text-slate-800 mx-auto mb-6" size={64} />
-            <h3 className="text-2xl font-bold mb-2 heading-font text-white">Nothing Spilled Yet</h3>
-            <p className="text-slate-500 font-medium italic">This archive is currently empty.</p>
+          <div className="text-center py-32 bg-card border-2 border-foreground rounded-2xl shadow-pop">
+            <Ghost className="text-muted-foreground mx-auto mb-6" size={64} strokeWidth={1.5} />
+            <h3 className="heading-font text-2xl font-bold mb-2 text-foreground">Nothing Spilled Yet</h3>
+            <p className="text-muted-foreground italic">This archive is currently empty.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -209,7 +209,7 @@ function Gallery() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="group flex flex-col bg-[#0f0f13] border border-white/5 rounded-[40px] overflow-hidden hover:border-[#ff7ec9]/30 transition-all shadow-xl"
+                className="group flex flex-col bg-white border-2 border-foreground rounded-[40px] overflow-hidden hover:border-accent transition-all shadow-pop hover:-translate-y-1"
               >
                 {/* Photo */}
                 <div className="relative h-64 overflow-hidden">
@@ -244,7 +244,7 @@ function Gallery() {
                      </div>
                   </div>
 
-                  <p className="text-base text-slate-200 line-clamp-3 leading-relaxed italic">
+                  <p className="text-base text-foreground font-bold line-clamp-3 leading-relaxed italic">
                     &quot;{memory.caption || 'A silent memory whispered into the map...'}&quot;
                   </p>
 
@@ -256,9 +256,9 @@ function Gallery() {
 
                     <Link
                       to={`/memory/${memory.id}`}
-                      className="px-6 py-2.5 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-[#ff7ec9] hover:text-white transition-all flex items-center gap-2 shadow-lg"
+                      className="px-6 py-2.5 bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-full border-2 border-foreground hover:shadow-pop transition-all flex items-center gap-2"
                     >
-                      Enter <Eye size={12} />
+                      Enter <Eye size={12} strokeWidth={3} />
                     </Link>
                   </div>
                 </div>
@@ -269,23 +269,23 @@ function Gallery() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center mt-20 gap-4">
+          <div className="flex justify-center mt-20 gap-4 items-center">
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="w-14 h-14 rounded-2xl bg-[#0f0f13] border border-white/5 flex items-center justify-center text-white disabled:opacity-30 hover:border-[#ff7ec9] transition-all"
+              className="w-12 h-12 rounded-full bg-card border-2 border-foreground flex items-center justify-center text-foreground disabled:opacity-30 shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={20} strokeWidth={2.5} />
             </button>
-            <div className="flex items-center px-8 font-black text-sm uppercase tracking-widest heading-font">
+            <div className="heading-font font-bold text-sm uppercase tracking-widest text-foreground px-4">
               {currentPage} / {totalPages}
             </div>
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="w-14 h-14 rounded-2xl bg-[#0f0f13] border border-white/5 flex items-center justify-center text-white disabled:opacity-30 hover:border-[#ff7ec9] transition-all"
+              className="w-12 h-12 rounded-full bg-card border-2 border-foreground flex items-center justify-center text-foreground disabled:opacity-30 shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
             >
-              <ChevronRight size={20} />
+              <ChevronRight size={20} strokeWidth={2.5} />
             </button>
           </div>
         )}

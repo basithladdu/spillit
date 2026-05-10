@@ -32,14 +32,14 @@ function Navbar() {
         initial={{ y: -64, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-5 md:px-8 h-14 bg-black/60 backdrop-blur-xl border-b border-white/10"
+        className="fixed top-0 left-0 right-0 z-[1000] flex items-center justify-between px-5 md:px-8 h-14 bg-[#FFF5F9] border-b-2 border-foreground"
       >
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 shrink-0">
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#ff7ec9] to-[#a78bfa] flex items-center justify-center shadow-lg shadow-pink-500/30">
             <Flame size={13} className="text-white" />
           </div>
-          <span className="heading-font text-white font-black text-sm tracking-wider uppercase">
+          <span className="heading-font text-foreground font-black text-sm tracking-wider uppercase">
             Spill It
           </span>
         </Link>
@@ -50,10 +50,10 @@ function Navbar() {
             <Link
               key={to}
               to={to}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
                 isActive(to)
-                  ? 'bg-white/10 text-white'
-                  : 'text-white/50 hover:text-white hover:bg-white/5'
+                  ? 'bg-accent text-white shadow-pop'
+                  : 'text-foreground hover:bg-muted'
               }`}
             >
               <Icon size={13} strokeWidth={2} />
@@ -66,24 +66,24 @@ function Navbar() {
         <div className="flex items-center gap-2">
           {currentUser ? (
             <div className="hidden md:flex items-center gap-2">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border-2 border-foreground shadow-pop">
                 <CircleUser size={13} className="text-[#ff7ec9]" />
-                <span className="text-[11px] text-white/70 font-medium">
+                <span className="text-[11px] text-foreground font-bold uppercase tracking-tight">
                   {currentUser.email?.split('@')[0]}
                 </span>
               </div>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-white/50 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-slate-500 hover:text-red-500 font-bold uppercase transition-all"
               >
-                <LogOut size={13} strokeWidth={2} />
+                <LogOut size={13} strokeWidth={2.5} />
                 <span className="hidden lg:inline">Out</span>
               </button>
             </div>
           ) : (
             <Link to="/login" className="hidden md:block">
-              <button className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-white/60 hover:text-white hover:bg-white/5 transition-all">
-                <LogIn size={13} strokeWidth={2} />
+              <button className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-foreground hover:bg-muted transition-all uppercase tracking-widest border-2 border-foreground shadow-pop hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active">
+                <LogIn size={13} strokeWidth={2.5} />
                 Login
               </button>
             </Link>
@@ -92,9 +92,9 @@ function Navbar() {
           {/* Mobile toggle */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden w-8 h-8 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white transition-all"
+            className="md:hidden w-8 h-8 flex items-center justify-center rounded-full bg-white border-2 border-foreground text-foreground shadow-pop transition-all"
           >
-            {isMenuOpen ? <X size={15} /> : <Menu size={15} />}
+            {isMenuOpen ? <X size={15} strokeWidth={2.5} /> : <Menu size={15} strokeWidth={2.5} />}
           </button>
         </div>
       </motion.nav>
@@ -107,7 +107,7 @@ function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[900] bg-black/95 backdrop-blur-2xl pt-14 flex flex-col md:hidden"
+            className="fixed inset-0 z-[900] bg-[#FFF5F9] pt-14 flex flex-col md:hidden"
           >
             <div className="flex flex-col p-6 gap-1">
               {NAV_LINKS.map(({ to, icon: Icon, label }) => (

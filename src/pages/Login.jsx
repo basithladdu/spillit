@@ -14,145 +14,140 @@ function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (currentUser) {
-      navigate('/');
-    }
+    if (currentUser) navigate('/');
   }, [currentUser, navigate]);
 
   const clearError = (field) => {
-    if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
-    if (errors.general) setErrors(prev => ({ ...prev, general: '' }));
+    if (errors[field]) setErrors(p => ({ ...p, [field]: '' }));
+    if (errors.general) setErrors(p => ({ ...p, general: '' }));
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
-
     try {
       await login(email, password);
     } catch (error) {
       setLoading(false);
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         setErrors({ general: 'Invalid email or password.' });
       } else if (error.code === 'auth/invalid-email') {
         setErrors({ email: 'Please enter a valid email address.' });
       } else if (error.code === 'auth/too-many-requests') {
         setErrors({ general: 'Too many attempts. Try again later.' });
       } else {
-        setErrors({ general: `Login failed: ${error.message}` });
+        setErrors({ general: 'Login failed. Please try again.' });
       }
     }
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[var(--spillit-bg)] relative overflow-hidden p-6 font-sans">
+    <div className="min-h-screen w-full flex items-center justify-center bg-background relative overflow-hidden p-6">
 
-      {/* --- Background Elements --- */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[var(--spillit-primary)]/10 rounded-full blur-[120px] pointer-events-none"></div>
+      {/* Decorative blobs */}
+      <div className="pointer-events-none absolute top-10 left-10 w-40 h-40 bg-tertiary rounded-full opacity-30 blur-2xl" />
+      <div className="pointer-events-none absolute bottom-10 right-10 w-56 h-56 bg-secondary rounded-full opacity-20 blur-3xl" />
+      <div className="pointer-events-none absolute top-1/2 left-1/4 w-24 h-24 bg-accent rounded-full opacity-10 blur-xl" />
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        initial={{ opacity: 0, y: 24, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
         className="w-full max-w-md relative z-10"
       >
-        {/* --- Glass Card --- */}
-        <div className="bg-[var(--spillit-surface)] backdrop-blur-3xl border border-white/5 rounded-[40px] shadow-2xl p-10 overflow-hidden relative">
-
-          {/* Decor Line */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--spillit-primary)] via-[var(--spillit-secondary)] to-[var(--spillit-primary)] opacity-50"></div>
+        {/* Card */}
+        <div className="bg-card border-2 border-foreground rounded-2xl shadow-pop p-10">
 
           {/* Header */}
           <div className="text-center mb-10">
-            <div className="w-20 h-20 rounded-[32px] bg-gradient-to-br from-[var(--spillit-primary)] to-[var(--spillit-secondary)] flex items-center justify-center text-white mx-auto mb-6 shadow-xl shadow-[var(--spillit-primary)]/20 transition-transform hover:scale-110">
-              <Heart size={32} fill="currentColor" />
+            <div className="w-20 h-20 rounded-full bg-accent border-2 border-foreground flex items-center justify-center text-white mx-auto mb-6 shadow-pop">
+              <Heart size={32} strokeWidth={2.5} fill="currentColor" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2 tracking-tight heading-font uppercase">
-              Welcome Back
-            </h1>
-            <p className="text-[var(--spillit-text-muted)] text-sm">Sign in to Spill It.</p>
+            <h1 className="heading-font text-4xl font-bold text-foreground mb-2">Welcome Back</h1>
+            <p className="text-muted-foreground text-sm">Sign in to Spill It.</p>
           </div>
 
           {/* Error Banner */}
           {errors.general && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-              className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 text-red-400 text-xs font-bold"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mb-6 p-4 rounded-xl bg-red-50 border-2 border-red-400 flex items-center gap-3 text-red-700 text-sm font-bold"
             >
-              <AlertCircle size={16} />
+              <AlertCircle size={16} className="shrink-0" />
               {errors.general}
             </motion.div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-5">
 
-            {/* Email Field */}
+            {/* Email */}
             <div className="space-y-2">
-              <label htmlFor="email" className="text-[10px] font-bold text-[var(--spillit-text-muted)] uppercase tracking-[0.2em] ml-2">Email</label>
-              <div className="relative group">
-                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--spillit-text-muted)] group-focus-within:text-[var(--spillit-primary)] transition-colors" size={18} />
+              <label htmlFor="email" className="heading-font text-xs font-bold uppercase tracking-widest text-foreground">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} strokeWidth={2.5} />
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
-                  className={`w-full bg-white/5 border ${errors.email ? 'border-red-500' : 'border-white/5'} rounded-2xl py-4 pl-14 pr-4 text-white placeholder-slate-600 outline-none focus:border-[var(--spillit-primary)]/50 transition-all`}
+                  className={`w-full bg-input border-2 ${errors.email ? 'border-red-400' : 'border-border'} rounded-xl py-3.5 pl-12 pr-4 text-foreground placeholder-muted-foreground outline-none focus:border-accent focus:shadow-focus transition-all`}
                   placeholder="name@email.com"
                   required
                 />
               </div>
-              {errors.email && <p className="text-red-400 text-[10px] ml-2 font-bold">{errors.email}</p>}
+              {errors.email && <p className="text-red-500 text-xs font-bold">{errors.email}</p>}
             </div>
 
-            {/* Password Field */}
+            {/* Password */}
             <div className="space-y-2">
-              <label htmlFor="password" className="text-[10px] font-bold text-[var(--spillit-text-muted)] uppercase tracking-[0.2em] ml-2">Password</label>
-              <div className="relative group">
-                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-[var(--spillit-text-muted)] group-focus-within:text-[var(--spillit-primary)] transition-colors" size={18} />
+              <label htmlFor="password" className="heading-font text-xs font-bold uppercase tracking-widest text-foreground">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} strokeWidth={2.5} />
                 <input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
-                  className="w-full bg-white/5 border border-white/5 rounded-2xl py-4 pl-14 pr-14 text-white placeholder-slate-600 outline-none focus:border-[var(--spillit-primary)]/50 transition-all"
+                  className="w-full bg-input border-2 border-border rounded-xl py-3.5 pl-12 pr-12 text-foreground placeholder-muted-foreground outline-none focus:border-accent focus:shadow-focus transition-all"
                   placeholder="••••••••"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-5 top-1/2 -translate-y-1/2 text-[var(--spillit-text-muted)] hover:text-white transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}
                 </button>
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-4 py-4 rounded-2xl bg-gradient-to-r from-[var(--spillit-primary)] to-[var(--spillit-secondary)] text-white font-bold shadow-xl shadow-[var(--spillit-primary)]/20 transition-all hover:scale-[1.02] active:scale-0.98 disabled:opacity-50 flex items-center justify-center gap-3 heading-font uppercase tracking-widest"
+              className="w-full mt-2 py-4 rounded-full bg-accent text-white border-2 border-foreground font-bold shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active disabled:opacity-50 flex items-center justify-center gap-3 heading-font uppercase tracking-widest transition-all"
             >
-              {loading ? (
-                <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>Enter Spill It <ArrowRight size={18} /></>
-              )}
+              {loading
+                ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                : <><span>Enter Spill It</span><ArrowRight size={18} strokeWidth={2.5} /></>
+              }
             </button>
           </form>
 
-          {/* Footer Link */}
-          <div className="text-center mt-10">
-             <p className="text-[var(--spillit-text-muted)] text-sm">
-                New here?{' '}
-                <Link to="/register" className="text-[var(--spillit-primary)] hover:underline font-bold transition-all">
-                Create an account
-                </Link>
-            </p>
-          </div>
-
+          {/* Footer */}
+          <p className="text-center mt-8 text-muted-foreground text-sm">
+            New here?{' '}
+            <Link to="/register" className="text-accent font-bold hover:underline">
+              Create an account
+            </Link>
+          </p>
         </div>
       </motion.div>
     </div>

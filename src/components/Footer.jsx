@@ -1,55 +1,44 @@
 import React from 'react';
-import { Heart, Globe, Sparkles } from 'lucide-react';
+import { Heart, Globe, Instagram } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 function Footer() {
   return (
-    <footer className="mt-20 border-t border-white/5 bg-[#08080c]/80 backdrop-blur-2xl py-12">
-      <div className="max-w-6xl mx-auto px-6 flex flex-col items-center gap-8">
-        
+    <footer className="border-t-2 border-border bg-muted py-12">
+      <div className="max-w-6xl mx-auto px-6 flex flex-col items-center gap-6">
+
         {/* Brand */}
-        <div className="flex flex-col items-center gap-2">
-           <div className="flex items-center gap-3">
-              <Sparkles size={16} className="text-[#ff7ec9]" />
-              <span className="heading-font tracking-[0.4em] uppercase text-sm font-black text-white">
-                Spill It
-              </span>
-           </div>
-           <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em] italic">
-             &copy; {new Date().getFullYear()} — Digital artifacts of the human soul.
-           </p>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-accent border-2 border-foreground flex items-center justify-center shadow-pop">
+            <Heart size={14} className="text-white fill-current" strokeWidth={2.5} />
+          </div>
+          <span className="heading-font font-bold text-foreground tracking-wide uppercase">
+            Spill It
+          </span>
         </div>
 
         {/* Links */}
-        <div className="flex flex-wrap justify-center items-center gap-x-8 gap-y-4 text-[10px] font-black uppercase tracking-widest text-slate-500">
-          <span className="flex items-center gap-2">
-            Built with <Heart size={12} className="text-[#ff7ec9] fill-current" /> globally
-          </span>
-          <span className="hidden md:block w-1.5 h-1.5 rounded-full bg-white/5"></span>
+        <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 text-sm text-muted-foreground font-medium">
+          <Link to="/about" className="hover:text-accent transition-colors">About</Link>
+          <span className="w-1 h-1 rounded-full bg-border" />
+          <Link to="/gallery" className="hover:text-accent transition-colors">Archive</Link>
+          <span className="w-1 h-1 rounded-full bg-border" />
+          <Link to="/leaderboard" className="hover:text-accent transition-colors">Hall of Fame</Link>
+          <span className="w-1 h-1 rounded-full bg-border" />
           <a
-            href="https:instagram.com/devit.company"
+            href="https://instagram.com/devit.company"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-[#ff7ec9] transition-colors"
+            className="hover:text-secondary transition-colors flex items-center gap-1"
           >
-            Powered by Devit
-          </a>
-          <span className="hidden md:block w-1.5 h-1.5 rounded-full bg-white/5"></span>
-          <a
-            href="https://support.google.com/maps"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-[#ff7ec9] transition-colors flex items-center gap-2"
-          >
-            <Globe size={12} /> Map Data
+            <Instagram size={14} strokeWidth={2.5} /> Devit
           </a>
         </div>
 
-        {/* Tagline */}
-        <div className="mt-4 pt-8 border-t border-white/5 w-full text-center">
-           <p className="text-[9px] text-slate-700 italic font-medium leading-relaxed max-w-sm mx-auto">
-             Spill It is an anonymous platform for sharing location-based memories. Every point on earth has a story. What's yours?
-           </p>
-        </div>
+        {/* Copyright */}
+        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+          Built with <Heart size={11} className="text-secondary fill-current" /> globally &mdash; &copy; {new Date().getFullYear()} Spill It
+        </p>
       </div>
     </footer>
   );

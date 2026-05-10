@@ -132,15 +132,15 @@ function MemoryDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--spillit-bg)] text-white pb-20">
+    <div className="min-h-screen bg-[#FFF5F9] text-foreground pb-20">
       {/* Top Banner / Image */}
-      <div className="relative h-[50vh] md:h-[70vh] w-full overflow-hidden">
+      <div className="relative h-[35vh] md:h-[60vh] w-full overflow-hidden">
         <img 
           src={getOptimizedImageUrl(memory.image_url, 1920)} 
           className="w-full h-full object-cover" 
           alt="Memory" 
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--spillit-bg)] via-transparent to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#FFF5F9] via-transparent to-black/20" />
         
         {/* Top Controls */}
         <div className="absolute top-8 left-4 right-4 md:left-8 md:right-8 flex justify-between items-center z-10">
@@ -168,10 +168,9 @@ function MemoryDetail() {
         </div>
 
         {/* Floating Memory ID */}
-        <div className="absolute bottom-8 left-4 md:left-8 z-10">
+        <div className="absolute bottom-6 left-4 md:left-8 z-10">
           <div 
-            className="px-6 py-2 rounded-full border border-white/20 backdrop-blur-xl text-[10px] font-bold uppercase tracking-[0.3em] shadow-2xl"
-            style={{ backgroundColor: `${memory.colorChoice || 'var(--spillit-primary)'}44` }}
+            className="px-4 py-1.5 rounded-full border-2 border-foreground bg-white text-[9px] font-black uppercase tracking-[0.2em] shadow-pop text-foreground"
           >
             Memory #{memory.id.slice(-8).toUpperCase()}
           </div>
@@ -179,62 +178,61 @@ function MemoryDetail() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 md:px-8 -mt-20 md:-mt-32 relative z-20">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-4xl mx-auto px-4 md:px-8 -mt-10 md:-mt-20 relative z-20">
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
           
-          {/* Detailed Info (Left) */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="glass-card p-8 md:p-12 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] border-white/5"
+              className="bg-white border-2 border-foreground rounded-[32px] p-6 md:p-10 shadow-pop"
             >
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-[var(--spillit-primary)] border border-white/10">
                   <User size={24} />
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">Shared By</p>
-                  <p className="text-lg font-bold">Anonymous Spiller</p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">Shared By</p>
+                  <p className="text-base font-black text-foreground">Anonymous Spiller</p>
                 </div>
-                <div className="ml-auto flex items-center gap-2 px-4 py-2 bg-white/5 rounded-2xl border border-white/5">
-                  <Calendar size={14} className="text-slate-500" />
-                  <span className="text-xs font-medium text-slate-300">
-                    {memory.created_at ? new Date(memory.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown Date'}
+                <div className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full border-2 border-foreground shadow-pop hidden sm:flex">
+                  <Calendar size={12} className="text-accent" />
+                  <span className="text-[10px] font-bold text-foreground uppercase tracking-wider">
+                    {memory.created_at ? new Date(memory.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown'}
                   </span>
                 </div>
               </div>
 
-              <h1 className="text-2xl md:text-3xl font-bold leading-relaxed italic heading-font text-white mb-8">
+              <h1 className="text-xl md:text-2xl font-bold leading-relaxed italic heading-font text-foreground mb-8">
                 &quot;{memory.caption || 'No description provided.'}&quot;
               </h1>
 
-              <div className="p-6 bg-white/5 rounded-3xl border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-[var(--spillit-primary)]/10 flex items-center justify-center text-[var(--spillit-primary)]">
-                    <MapPin size={20} />
+              <div className="p-5 bg-muted rounded-2xl border-2 border-foreground flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center text-white border-2 border-foreground shadow-pop">
+                    <MapPin size={18} />
                   </div>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Location</p>
-                    <p className="text-sm font-medium">{memory.address || "Unknown Spot"}</p>
+                  <div className="min-w-0">
+                    <p className="text-[9px] uppercase tracking-widest text-slate-400 font-black">Location</p>
+                    <p className="text-xs font-bold truncate pr-4 text-foreground">{memory.address || "Unknown Spot"}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <button 
                     onClick={handleUpvote}
                     disabled={isUpvoting}
-                    className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-bold transition-all ${
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-black text-xs uppercase tracking-widest border-2 border-foreground shadow-pop transition-all ${
                       hasUpvoted 
-                        ? 'bg-[var(--spillit-primary)] text-white shadow-lg shadow-[var(--spillit-primary)]/20' 
-                        : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10'
+                        ? 'bg-accent text-white' 
+                        : 'bg-white text-foreground hover:bg-muted'
                     }`}
                   >
-                    <Heart size={20} fill={hasUpvoted ? "currentColor" : "none"} />
+                    <Heart size={16} fill={hasUpvoted ? "currentColor" : "none"} strokeWidth={3} />
                     <span>{memory.upvotes || 0}</span>
                   </button>
-                  <button className="p-4 bg-white/5 border border-white/10 rounded-2xl text-slate-300 hover:bg-white/10 transition-all">
-                    <Flag size={18} />
+                  <button className="p-2.5 bg-white border-2 border-foreground rounded-full text-foreground hover:bg-muted shadow-pop transition-all">
+                    <Flag size={16} strokeWidth={3} />
                   </button>
                 </div>
               </div>
@@ -276,26 +274,25 @@ function MemoryDetail() {
                 </div>
             </div>
 
-            <div className="glass-card p-6 border-white/5 overflow-hidden">
-                <h3 className="heading-font text-xs uppercase tracking-[0.3em] text-slate-500 mb-4 px-2">Recent Spills</h3>
-                <div className="space-y-3">
+            <div className="bg-white border-2 border-foreground rounded-[32px] p-6 shadow-pop overflow-hidden">
+                <h3 className="heading-font text-[10px] uppercase tracking-[0.3em] text-slate-400 mb-4 px-2">Recent Spills</h3>
+                <div className="space-y-2">
                     {nearbyMemories.map((m, i) => (
                         <Link 
                             key={m.id} 
                             to={`/memory/${m.id}`}
-                            className="flex items-center gap-3 p-3 rounded-2xl hover:bg-white/5 transition-all group"
+                            className="flex items-center gap-3 p-2 rounded-2xl hover:bg-muted transition-all group"
                         >
-                            <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0">
+                            <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border-2 border-foreground shadow-pop">
                                 <img src={getOptimizedImageUrl(m.image_url, 100)} className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="spill" />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-xs text-white italic truncate pr-4"> &quot;{m.caption}&quot;</p>
-                                <p className="text-[10px] text-slate-500 mt-0.5 truncate">{m.address?.split(',')[0]}</p>
+                                <p className="text-[10px] text-foreground font-bold italic truncate pr-4"> &quot;{m.caption}&quot;</p>
                             </div>
                         </Link>
                     ))}
-                    <Link to="/gallery" className="flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[var(--spillit-primary)] pt-2 hover:opacity-80 transition-opacity">
-                        View All <ArrowRight size={12} />
+                    <Link to="/gallery" className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-accent pt-4 hover:opacity-80 transition-opacity">
+                        View All Spills <ArrowRight size={12} strokeWidth={3} />
                     </Link>
                 </div>
             </div>

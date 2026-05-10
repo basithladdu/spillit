@@ -208,42 +208,42 @@ function Home() {
   );
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-[var(--spillit-bg)] text-white font-sans">
+    <div className="relative w-full h-screen overflow-hidden bg-[#FFF5F9] text-foreground font-sans">
       
       {/* --- HERO OVERLAY --- */}
       <div className="pointer-events-none hidden lg:flex flex-col gap-5 absolute top-24 left-8 z-[850] max-w-md">
         {/* Main hero card */}
-        <div className="bg-black/50 backdrop-blur-2xl rounded-2xl px-7 py-7 shadow-2xl border border-white/8">
+        <div className="bg-white border-2 border-foreground rounded-[32px] px-7 py-7 shadow-pop">
           {/* Brand pill */}
-          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3.5 py-1.5 mb-5">
-            <Flame size={11} className="text-[#ff7ec9]" />
-            <span className="text-[10px] font-bold tracking-[0.2em] text-[#ff7ec9] uppercase">Spill It</span>
+          <div className="inline-flex items-center gap-2 bg-muted border-2 border-foreground rounded-full px-3.5 py-1.5 mb-5 shadow-pop">
+            <Flame size={11} className="text-accent" strokeWidth={3} />
+            <span className="text-[10px] font-black tracking-[0.2em] text-foreground uppercase">Spill It</span>
           </div>
 
-          <h1 className="heading-font text-4xl leading-[1.1] tracking-tight font-black mb-3 text-white">
+          <h1 className="heading-font text-4xl leading-[1.1] tracking-tight font-black mb-3 text-foreground">
             Every place<br />
             holds a{' '}
-            <span className="bg-gradient-to-r from-[#ff7ec9] to-[#a78bfa] bg-clip-text text-transparent">
+            <span className="text-accent italic">
               secret.
             </span>
           </h1>
 
-          <p className="text-white/40 text-sm leading-relaxed">
+          <p className="text-slate-400 text-sm font-bold leading-relaxed">
             Drop a photo. Pin the spot. Stay anonymous.
           </p>
 
           {memoriesArray.length > 0 && (
-            <div className="mt-5 pt-5 border-t border-white/8 flex items-center gap-6">
+            <div className="mt-5 pt-5 border-t-2 border-foreground flex items-center gap-6">
               <div>
-                <p className="text-2xl font-black text-white tabular-nums">{memoriesArray.length.toLocaleString()}</p>
-                <p className="text-[10px] text-white/30 uppercase tracking-widest font-semibold mt-0.5">Spills</p>
+                <p className="text-2xl font-black text-foreground tabular-nums">{memoriesArray.length.toLocaleString()}</p>
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black mt-0.5">Spills</p>
               </div>
-              <div className="w-px h-8 bg-white/10" />
+              <div className="w-px h-8 bg-foreground/10" />
               <div>
-                <p className="text-2xl font-black text-white tabular-nums">
+                <p className="text-2xl font-black text-foreground tabular-nums">
                   {new Set(memoriesArray.map(i => i.address?.split(',').pop()?.trim()).filter(Boolean)).size.toLocaleString()}
                 </p>
-                <p className="text-[10px] text-white/30 uppercase tracking-widest font-semibold mt-0.5">Cities</p>
+                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-black mt-0.5">Cities</p>
               </div>
             </div>
           )}
@@ -252,24 +252,24 @@ function Home() {
 
       {/* --- LIVE FEED PANEL --- */}
       <div className="hidden xl:block pointer-events-none absolute inset-y-24 right-8 z-[860] w-80">
-        <div className="bg-[#08080c]/90 backdrop-blur-xl h-full flex flex-col overflow-hidden border border-[#ff7ec9]/20 ring-1 ring-white/5 rounded-3xl shadow-2xl">
-          <div className="px-6 py-5 border-b border-white/10 flex flex-col gap-1">
+        <div className="bg-white h-full flex flex-col overflow-hidden border-2 border-foreground rounded-[32px] shadow-pop">
+          <div className="px-6 py-5 border-b-2 border-foreground flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#ff7ec9] animate-pulse" />
-              <p className="heading-font text-[11px] uppercase tracking-[0.2em] font-black text-[#ff7ec9]">Live Spills</p>
+              <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <p className="heading-font text-[11px] uppercase tracking-[0.2em] font-black text-foreground">Live Spills</p>
             </div>
-            <p className="text-[10px] text-slate-500">Real stories, real places, real people.</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase">Real stories, real places.</p>
           </div>
           
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 custom-scrollbar">
             {memoriesArray.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full gap-4 py-12 text-center">
-                <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#ff7ec9]/20 to-[#a78bfa]/20 border border-[#ff7ec9]/20 flex items-center justify-center">
-                  <Ghost size={28} className="text-[#ff7ec9]/60" />
+                <div className="w-16 h-16 rounded-[24px] bg-muted border-2 border-foreground shadow-pop flex items-center justify-center">
+                  <Ghost size={28} className="text-slate-300" />
                 </div>
                 <div>
-                  <p className="text-white font-bold text-sm mb-1">No spills yet</p>
-                  <p className="text-slate-500 text-xs leading-relaxed">Be the first to leave<br />a memory on the map.</p>
+                  <p className="text-foreground font-black text-sm mb-1 uppercase tracking-tight">No spills yet</p>
+                  <p className="text-slate-400 text-[10px] font-bold">Be the first to leave<br />a memory on the map.</p>
                 </div>
               </div>
             )}
@@ -279,30 +279,30 @@ function Home() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="rounded-2xl overflow-hidden border border-white/5 bg-white/[0.02] hover:border-[#ff7ec9]/30 hover:bg-white/[0.05] transition-all"
+                  className="rounded-[24px] overflow-hidden border-2 border-foreground bg-white hover:bg-muted transition-all shadow-pop hover:-translate-x-1"
                 >
-                  {memory.imageUrl && (
-                    <div className="relative h-32 w-full overflow-hidden">
+                  {memory.image_url && (
+                    <div className="relative h-32 w-full overflow-hidden border-b-2 border-foreground">
                       <img
                         src={getOptimizedImageUrl(memory.image_url, 400)}
                         alt="memory"
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
-                      <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md text-[9px] font-bold text-white border border-white/10 uppercase tracking-tighter">
-                        {memory.vibe || 'Memory'}
+                      <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-white border-2 border-foreground text-[8px] font-black text-foreground uppercase tracking-tighter">
+                        {memory.type || 'Memory'}
                       </div>
                     </div>
                   )}
                   <div className="p-4 space-y-2">
-                    <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed italic">
+                    <p className="text-[11px] text-foreground font-bold line-clamp-2 leading-relaxed italic">
                       &quot;{memory.caption || memory.desc || 'A silent memory...'}&quot;
                     </p>
-                    <div className="flex items-center justify-between text-[10px] text-slate-500">
+                    <div className="flex items-center justify-between text-[9px] text-slate-400 font-black uppercase">
                       <div className="flex items-center gap-1 truncate max-w-[120px]">
-                        <MapIcon size={10} /> {memory.address?.split(',')[0] || 'A secret spot'}
+                        <MapIcon size={10} strokeWidth={3} /> {memory.address?.split(',')[0] || 'A secret spot'}
                       </div>
-                      <div className="flex items-center gap-1 text-[#ff7ec9]">
-                        <Heart size={10} className="fill-current" /> {memory.upvotes || 0}
+                      <div className="flex items-center gap-1 text-accent">
+                        <Heart size={10} className="fill-current" strokeWidth={3} /> {memory.upvotes || 0}
                       </div>
                     </div>
                   </div>
@@ -360,13 +360,13 @@ function Home() {
               className="memory-popup"
               offset={15}
             >
-              <div className="glass-card bg-[#08080c] border border-white/10 overflow-hidden shadow-2xl p-0">
+              <div className="bg-white border-2 border-foreground overflow-hidden shadow-pop p-0 rounded-[24px]">
                 {selectedMemory.image_url && (
-                  <img src={getOptimizedImageUrl(selectedMemory.image_url, 300)} className="w-full h-32 object-cover border-b border-white/10" alt="memory" />
+                  <img src={getOptimizedImageUrl(selectedMemory.image_url, 300)} className="w-full h-32 object-cover border-b-2 border-foreground" alt="memory" />
                 )}
                 <div className="p-4">
-                  <p className="text-xs text-slate-300 mb-3 italic leading-relaxed">&quot;{selectedMemory.caption || selectedMemory.desc}&quot;</p>
-                  <Link to={`/memory/${selectedMemory.id}`} className="block w-full text-center py-2 rounded-xl bg-gradient-to-r from-[#ff7ec9] to-[#a78bfa] text-white text-[10px] font-bold uppercase tracking-widest shadow-lg">
+                  <p className="text-xs text-foreground font-bold mb-3 italic leading-relaxed">&quot;{selectedMemory.caption || selectedMemory.desc}&quot;</p>
+                  <Link to={`/memory/${selectedMemory.id}`} className="block w-full text-center py-2 rounded-xl bg-accent text-white text-[10px] font-black uppercase tracking-widest border-2 border-foreground shadow-pop">
                     See Memory
                   </Link>
                 </div>
@@ -391,18 +391,18 @@ function Home() {
               });
             });
           }}
-          className="w-12 h-12 rounded-full bg-black/80 backdrop-blur-xl border border-white/10 flex items-center justify-center text-[#ff7ec9] shadow-2xl"
+          className="w-12 h-12 rounded-full bg-white border-2 border-foreground flex items-center justify-center text-accent shadow-pop"
         >
-          <LocateFixed size={20} />
+          <LocateFixed size={20} strokeWidth={3} />
         </motion.button>
 
         <motion.button
           ref={reportBtnRef}
           whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#ff7ec9] to-[#a78bfa] text-white rounded-full font-bold shadow-2xl shadow-pink-500/40 border border-white/20 heading-font uppercase tracking-widest text-sm"
+          className="flex items-center gap-3 px-8 py-4 bg-accent text-white rounded-full font-black border-2 border-foreground heading-font uppercase tracking-widest text-sm shadow-pop hover:shadow-pop-hover hover:-translate-y-0.5 active:translate-y-0.5"
         >
-          <Flame size={20} />
+          <Flame size={20} strokeWidth={3} />
           <span>Spill Something</span>
         </motion.button>
       </div>
