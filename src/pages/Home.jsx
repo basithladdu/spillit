@@ -11,43 +11,67 @@ import SpillMemoryModal from '../components/SpillMemoryModal';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
+const MAP_STYLE = 'mapbox://styles/mapbox/streets-v12';
+
 const TYPE_COLORS = {
   Moment: '#8B5CF6',
   Crush:  '#F472B6',
-  Secret: '#1E293B',
-  Laugh:  '#FBBF24',
+  Secret: '#374151',
+  Laugh:  '#D97706',
 };
 
-/* ── Standalone map pin – NO Framer Motion, NO transforms ── */
+/* ── Standalone map pin – no Framer Motion, no CSS transforms ── */
 const MemoryPin = ({ memory, onClick, isSelected }) => {
   const color = TYPE_COLORS[memory.type] || '#8B5CF6';
   return (
     <button
       onClick={onClick}
       aria-label={`Memory: ${memory.caption || memory.type || 'Spill'}`}
-      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'block' }}
     >
-      <div style={{ position: 'relative', width: 36, height: 44 }}>
-        {/* Pin drop shape */}
-        <svg width="36" height="44" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <div style={{ position: 'relative', width: 40, height: 52 }}>
+        {/* Outer pulse ring (always visible for discoverability) */}
+        <div style={{
+          position: 'absolute',
+          top: '50%', left: '50%',
+          transform: 'translate(-50%, -60%)',
+          width: isSelected ? 52 : 42,
+          height: isSelected ? 52 : 42,
+          borderRadius: '50%',
+          background: color,
+          opacity: isSelected ? 0.25 : 0.15,
+          transition: 'all 0.2s ease',
+        }} />
+        {/* Pin SVG */}
+        <svg
+          width="40" height="52"
+          viewBox="0 0 40 52"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ display: 'block', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))' }}
+        >
+          {/* White backing for contrast on any map */}
           <path
-            d="M18 0C8.06 0 0 8.06 0 18C0 30 18 44 18 44C18 44 36 30 36 18C36 8.06 27.94 0 18 0Z"
+            d="M20 1C10.06 1 2 9.06 2 19C2 32 20 51 20 51C20 51 38 32 38 19C38 9.06 29.94 1 20 1Z"
+            fill="white"
+          />
+          {/* Colored fill */}
+          <path
+            d="M20 3C11.16 3 4 10.16 4 19C4 30 20 49 20 49C20 49 36 30 36 19C36 10.16 28.84 3 20 3Z"
             fill={color}
+          />
+          {/* Dark border */}
+          <path
+            d="M20 1C10.06 1 2 9.06 2 19C2 32 20 51 20 51C20 51 38 32 38 19C38 9.06 29.94 1 20 1Z"
+            fill="none"
             stroke="#1E293B"
             strokeWidth="2"
           />
-          <circle cx="18" cy="17" r="7" fill="white" opacity="0.9" />
+          {/* White inner dot */}
+          <circle cx="20" cy="18" r="7" fill="white" opacity="0.95" />
+          {/* Colored inner dot center */}
+          <circle cx="20" cy="18" r="4" fill={color} opacity="0.6" />
         </svg>
-        {/* Pulse ring when selected */}
-        {isSelected && (
-          <span style={{
-            position: 'absolute', inset: 0,
-            borderRadius: '50%',
-            background: color,
-            opacity: 0.25,
-            animation: 'ping 1s cubic-bezier(0,0,0.2,1) infinite',
-          }} />
-        )}
       </div>
     </button>
   );
@@ -109,7 +133,6 @@ function Home() {
   const [summaryData, setSummaryData] = useState(null);
   const [showTour, setShowTour] = useState(false);
   const [showFeed, setShowFeed] = useState(false); // mobile feed sheet
-  const [mapStyle] = useState('mapbox://styles/mapbox/dark-v11');
   const [viewState, setViewState] = useState({ latitude: 25, longitude: 15, zoom: 2 });
 
   useEffect(() => {
@@ -150,8 +173,15 @@ function Home() {
 
   const flyToUser = useCallback(() => {
     navigator.geolocation?.getCurrentPosition(p => {
-      setViewState(v => ({ ...v, latitude: p.coords.latitude, longitude: p.coords.longitude, zoom: 14 }));
-    });
+      // Stay at current zoom if already close-in, otherwise zoom to 10
+      // Never jump past zoom 12 — keeps surrounding markers visible
+      setViewState(v => ({
+        ...v,
+        latitude: p.coords.latitude,
+        longitude: p.coords.longitude,
+        zoom: Math.min(Math.max(v.zoom, 10), 12),
+      }));
+    }, () => {}, { enableHighAccuracy: true, timeout: 8000 });
   }, []);
 
   return (
@@ -233,7 +263,7 @@ function Home() {
         <Map
           {...viewState}
           onMove={e => setViewState(e.viewState)}
-          mapStyle={mapStyle}
+          mapStyle={MAP_STYLE}
           mapboxAccessToken={MAPBOX_TOKEN}
           style={{ width: '100%', height: '100%' }}
         >
@@ -242,7 +272,7 @@ function Home() {
           {memories.map(m => {
             const lat = Number(m.lat);
             const lng = Number(m.lng);
-            if (!lat || !lng || isNaN(lat) || isNaN(lng)) return null;
+            if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return null;
             return (
               <Marker
                 key={m.id}
@@ -410,10 +440,9 @@ function Home() {
       <SpillMemoryModal show={showForm} onClose={() => setShowForm(false)} onSuccess={d => { setSummaryData(d); setShowSummary(true); }} />
       {showSummary && <MemoryCard summaryData={summaryData} setShowSummary={setShowSummary} />}
 
-      {/* Popup style override */}
       <style>{`
         .mapboxgl-popup-content { background: transparent !important; box-shadow: none !important; padding: 0 !important; border: none !important; }
-        .mapboxgl-popup-tip { display: none !important; }
+        .mapboxgl-popup-tip { border-top-color: #1E293B !important; }
         @keyframes ping { 75%,100%{transform:scale(2);opacity:0} }
       `}</style>
     </div>
