@@ -328,7 +328,7 @@ function Home() {
         </Map>
       </div>
 
-      {/* ── Mobile top bar ── */}
+      {/* ── Mobile top bar (spill count + feed) ── */}
       <div className="lg:hidden absolute top-16 left-0 right-0 z-[840] px-4 pt-2 flex items-center justify-between gap-3 pointer-events-none">
         <div className="bg-card border-2 border-foreground rounded-full px-4 py-2 shadow-pop flex items-center gap-2 pointer-events-auto">
           <Flame size={12} className="text-accent" strokeWidth={3} />
@@ -345,31 +345,48 @@ function Home() {
         </button>
       </div>
 
-      {/* ── HUD: locate + spill buttons ── */}
+      {/* ── MOBILE bottom action bar ── always visible, full-width, above safe area ── */}
       <div
-        className="fixed z-[900] flex flex-col items-end gap-3 pointer-events-auto"
-        style={{
-          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
-          right: 20,
-        }}
+        className="lg:hidden fixed inset-x-0 z-[900] flex items-center gap-3 px-4 py-3 bg-card border-t-2 border-foreground pointer-events-auto"
+        style={{ bottom: 0, paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
       >
         {/* Locate Me */}
         <button
           onClick={flyToUser}
-          className="w-12 h-12 rounded-full bg-card border-2 border-foreground flex items-center justify-center text-accent shadow-pop hover:shadow-pop-hover active:shadow-pop-active hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 transition-all"
+          className="w-14 h-14 rounded-full bg-muted border-2 border-foreground flex items-center justify-center text-accent shadow-pop active:shadow-pop-active active:translate-x-0.5 active:translate-y-0.5 shrink-0"
+          aria-label="Locate me"
+        >
+          <LocateFixed size={22} strokeWidth={2.5} />
+        </button>
+
+        {/* Spill CTA — takes remaining width */}
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex-1 flex items-center justify-center gap-3 py-4 bg-accent text-white rounded-full border-2 border-foreground heading-font font-bold uppercase tracking-widest text-base shadow-pop active:shadow-pop-active active:translate-x-0.5 active:translate-y-0.5"
+        >
+          <Flame size={22} strokeWidth={2.5} />
+          Spill Something
+        </button>
+      </div>
+
+      {/* ── DESKTOP HUD (bottom-right floating) ── */}
+      <div
+        className="hidden lg:flex fixed z-[900] flex-col items-end gap-3 pointer-events-auto"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)', right: 24 }}
+      >
+        <button
+          onClick={flyToUser}
+          className="w-12 h-12 rounded-full bg-card border-2 border-foreground flex items-center justify-center text-accent shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:shadow-pop-active transition-all"
           aria-label="Locate me"
         >
           <LocateFixed size={20} strokeWidth={2.5} />
         </button>
-
-        {/* Spill CTA */}
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2.5 px-6 py-3.5 bg-accent text-white rounded-full border-2 border-foreground heading-font font-bold uppercase tracking-widest text-sm shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active transition-all min-h-[48px]"
+          className="flex items-center gap-2.5 px-7 py-4 bg-accent text-white rounded-full border-2 border-foreground heading-font font-bold uppercase tracking-widest text-sm shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:shadow-pop-active transition-all"
         >
           <Flame size={18} strokeWidth={2.5} />
-          <span className="hidden sm:inline">Spill Something</span>
-          <span className="sm:hidden">Spill</span>
+          Spill Something
         </button>
       </div>
 
@@ -381,8 +398,11 @@ function Home() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            className="fixed inset-x-0 bottom-0 z-[950] bg-card border-t-2 border-foreground rounded-t-2xl shadow-pop xl:hidden"
-            style={{ maxHeight: '70dvh' }}
+            className="fixed inset-x-0 z-[950] bg-card border-t-2 border-foreground rounded-t-2xl shadow-pop xl:hidden"
+            style={{
+              bottom: 'calc(env(safe-area-inset-bottom, 0px) + 76px)',
+              maxHeight: '60dvh',
+            }}
           >
             {/* drag handle */}
             <div className="flex justify-center pt-3 pb-1">
