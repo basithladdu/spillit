@@ -68,35 +68,39 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
-    if (!formData.image) return showToast('Snap a photo first!');
     if (!formData.lat || !formData.lng) return showToast('We need to know the spot!');
+    if (!formData.caption.trim()) return showToast('Write something — even one word!');
 
     setIsSubmitting(true);
     try {
-      let imageFile = formData.image;
-      try {
-        imageFile = await imageCompression(formData.image, {
-          maxSizeMB: 0.15, maxWidthOrHeight: 1280, useWebWorker: true,
-        });
-      } catch (_) { /* compression optional */ }
-
-      // 1. Upload to Supabase Storage (bucket: images)
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = `spills/${fileName}`;
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('images')
-        .upload(filePath, imageFile);
-
-      if (uploadError) throw uploadError;
-
-      // Get Public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('images')
-        .getPublicUrl(filePath);
-
       const { lat, lng, address, anonymous, caption, type } = formData;
+      let publicUrl = null;
+
+      // 1. Upload image to Supabase Storage only if one was provided
+      if (formData.image) {
+        let imageFile = formData.image;
+        try {
+          imageFile = await imageCompression(formData.image, {
+            maxSizeMB: 0.15, maxWidthOrHeight: 1280, useWebWorker: true,
+          });
+        } catch (_) { /* compression optional */ }
+
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+        const filePath = `spills/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('images')
+          .upload(filePath, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl: url } } = supabase.storage
+          .from('images')
+          .getPublicUrl(filePath);
+
+        publicUrl = url;
+      }
 
       // 2. Insert into Supabase Table: memories
       const { data: newDoc, error: insertError } = await supabase
@@ -154,7 +158,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-              className="relative w-full md:max-w-4xl bg-[#FFF5F9] border-t-2 md:border-2 border-foreground rounded-t-3xl md:rounded-2xl shadow-pop overflow-hidden flex flex-col md:flex-row"
+              className="relative w-full md:max-w-4xl bg-background border-t-2 md:border-2 border-foreground rounded-t-3xl md:rounded-2xl shadow-pop overflow-hidden flex flex-col md:flex-row"
               style={{ maxHeight: '95dvh' }}
             >
 
@@ -179,7 +183,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
               <div className="w-full md:w-1/2 flex flex-col overflow-hidden">
 
                 {/* header */}
-                <div className="px-6 py-5 border-b-2 border-foreground flex items-start justify-between shrink-0 bg-[#FFF5F9]">
+                <div className="px-6 py-5 border-b-2 border-foreground flex items-start justify-between shrink-0 bg-background">
                   <div>
                     <h2 className="heading-font text-2xl font-black text-foreground leading-tight">
                       Spill a Memory
@@ -202,13 +206,24 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                   className="flex-1 overflow-y-auto px-6 py-6 space-y-5"
                 >
 
-                  {/* ── Photo upload ── */}
+                  {/* ── Photo upload (optional) ── */}
                   <div>
-                    <label className="heading-font text-xs font-bold uppercase tracking-widest text-foreground block mb-2">
-                      Photo <span className="text-secondary">*</span>
-                    </label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="heading-font text-xs font-bold uppercase tracking-widest text-foreground">
+                        Photo <span className="text-muted-foreground font-normal normal-case tracking-normal">(optional)</span>
+                      </label>
+                      {formData.image && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData(p => ({ ...p, image: null }))}
+                          className="text-[10px] font-bold text-red-500 hover:underline uppercase tracking-wide"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
                     <label
-                      className={`relative flex flex-col items-center justify-center w-full h-36 rounded-xl border-2 border-dashed cursor-pointer overflow-hidden transition-all group
+                      className={`relative flex flex-col items-center justify-center w-full h-32 rounded-xl border-2 border-dashed cursor-pointer overflow-hidden transition-all group
                         ${formData.image
                           ? 'border-accent bg-accent/5'
                           : 'border-border hover:border-accent hover:bg-muted'
@@ -224,16 +239,17 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                           <div className="relative z-10 flex items-center gap-2 bg-background border-2 border-accent rounded-full px-4 py-1.5 shadow-pop">
                             <CircleCheck className="w-4 h-4 text-accent" strokeWidth={2.5} />
                             <span className="heading-font text-xs font-bold text-foreground uppercase tracking-wide">
-                              Photo ready
+                              Photo added
                             </span>
                           </div>
                         </>
                       ) : (
-                        <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-accent transition-colors">
-                          <Camera className="w-8 h-8 group-hover:scale-110 transition-transform text-foreground" strokeWidth={2.5} />
-                          <span className="heading-font text-xs font-bold uppercase tracking-widest text-foreground">
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground group-hover:text-accent transition-colors">
+                          <Camera className="w-7 h-7 group-hover:scale-110 transition-transform" strokeWidth={2.5} />
+                          <span className="heading-font text-xs font-bold uppercase tracking-widest">
                             Add a photo
                           </span>
+                          <span className="text-[10px] text-muted-foreground">tap to upload or skip</span>
                         </div>
                       )}
                       <input
@@ -241,7 +257,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                         accept="image/*"
                         capture="environment"
                         className="hidden"
-                        onChange={e => setFormData(p => ({ ...p, image: e.target.files[0] }))}
+                        onChange={e => setFormData(p => ({ ...p, image: e.target.files[0] ?? null }))}
                       />
                     </label>
                   </div>
