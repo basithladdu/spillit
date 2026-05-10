@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, orderBy, query, deleteDoc, doc, updateDoc, limit } from 'firebase/firestore';
-import { db } from '../utils/firebase';
+import { supabase } from '../utils/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import {
@@ -87,31 +86,51 @@ function Dashboard() {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    // collection name is 'memories'
-    const q = query(collection(db, 'memories'), orderBy('ts', 'desc'), limit(200));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = [];
-      const vibeCounts = {};
-      const statusCounts = {};
+    const fetchMemories = async () => {
+      const { data, error } = await supabase
+        .from('memories')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      
+      if (!error && data) {
+        const vibeCounts = {};
+        const statusCounts = {};
 
-      snapshot.forEach((docSnap) => {
-        const item = { id: docSnap.id, ...docSnap.data() };
-        data.push(item);
-        vibeCounts[item.colorChoice || 'default'] = (vibeCounts[item.colorChoice || 'default'] || 0) + 1;
-        statusCounts[item.status || 'live'] = (statusCounts[item.status || 'live'] || 0) + 1;
-      });
+        data.forEach((item) => {
+          vibeCounts[item.colorChoice || 'default'] = (vibeCounts[item.colorChoice || 'default'] || 0) + 1;
+          statusCounts[item.status || 'live'] = (statusCounts[item.status || 'live'] || 0) + 1;
+        });
 
-      setMemories(data);
-      setStats({ total: data.length, byVibe: vibeCounts, byStatus: statusCounts });
+        setMemories(data);
+        setStats({ total: data.length, byVibe: vibeCounts, byStatus: statusCounts });
+      }
       setLoading(false);
-    });
-    return () => unsubscribe();
+    };
+
+    fetchMemories();
+
+    const channel = supabase
+      .channel('dashboard_changes')
+      .on('postgres_changes', { event: '*', table: 'memories', schema: 'public' }, () => {
+        fetchMemories();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      await deleteDoc(doc(db, 'memories', deleteId));
+      const { error } = await supabase
+        .from('memories')
+        .delete()
+        .eq('id', deleteId);
+      
+      if (error) throw error;
       setDeleteId(null);
       setSelectedMemory(null);
     } catch (error) {
@@ -122,7 +141,12 @@ function Dashboard() {
   const handleArchiveToggle = async (id, currentStatus) => {
     const newStatus = (currentStatus === 'archived') ? 'live' : 'archived';
     try {
-      await updateDoc(doc(db, 'memories', id), { status: newStatus });
+      const { error } = await supabase
+        .from('memories')
+        .update({ status: newStatus })
+        .eq('id', id);
+      
+      if (error) throw error;
       if (selectedMemory?.id === id) setSelectedMemory(prev => ({ ...prev, status: newStatus }));
     } catch (error) {
       // Update error handled silently
@@ -142,9 +166,9 @@ function Dashboard() {
     const matchesVibe = filters.vibe === 'All' || item.colorChoice === filters.vibe;
     return matchesSearch && matchesStatus && matchesVibe;
   }).sort((a, b) => {
-    if (sortConfig.key === 'ts') {
-      const timeA = a.ts?.toMillis?.() || 0;
-      const timeB = b.ts?.toMillis?.() || 0;
+    if (sortConfig.key === 'created_at' || sortConfig.key === 'ts') {
+      const timeA = new Date(a.created_at || a.ts).getTime();
+      const timeB = new Date(b.created_at || b.ts).getTime();
       return sortConfig.direction === 'asc' ? timeA - timeB : timeB - timeA;
     }
     const valA = a[sortConfig.key] || '';
@@ -160,8 +184,8 @@ function Dashboard() {
       Caption: item.caption,
       Upvotes: item.upvotes || 0,
       Address: item.address,
-      Date: item.ts ? new Date(item.ts.toMillis()).toLocaleString() : 'N/A',
-      Image: item.imageUrl
+      Date: item.created_at ? new Date(item.created_at).toLocaleString() : 'N/A',
+      Image: item.image_url
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -298,7 +322,7 @@ function Dashboard() {
                         <td className="p-6">
                            <div className="flex items-center gap-4">
                               <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-white/10">
-                                 <img src={getOptimizedImageUrl(memory.imageUrl, 100)} className="w-full h-full object-cover" alt="thumb" />
+                                 <img src={getOptimizedImageUrl(memory.image_url, 100)} className="w-full h-full object-cover" alt="thumb" />
                               </div>
                               <div className="min-w-0">
                                  <p className="text-white font-bold truncate max-w-xs italic mb-1">&quot;{memory.caption}&quot;</p>
@@ -319,7 +343,7 @@ function Dashboard() {
                            </div>
                         </td>
                         <td className="p-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                           {memory.ts ? new Date(memory.ts.toMillis()).toLocaleDateString() : 'N/A'}
+                           {memory.created_at ? new Date(memory.created_at).toLocaleDateString() : 'N/A'}
                         </td>
                         <td className="p-6 text-right">
                            <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
@@ -352,7 +376,7 @@ function Dashboard() {
              >
                 {/* Media Left */}
                 <div className="w-full md:w-3/5 relative bg-black">
-                   <img src={selectedMemory.imageUrl} className="w-full h-full object-cover" alt="Memory" />
+                   <img src={selectedMemory.image_url} className="w-full h-full object-cover" alt="Memory" />
                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
                    <div className="absolute bottom-10 left-10 right-10 flex justify-between items-end">
                       <div className="space-y-4">
@@ -405,7 +429,7 @@ function Dashboard() {
                    </div>
 
                    <div className="pt-10 mt-auto border-t border-white/5">
-                      <p className="text-[9px] text-slate-600 font-black uppercase tracking-widest text-center">Spilled On {selectedMemory.ts ? new Date(selectedMemory.ts.toMillis()).toLocaleString() : 'N/A'}</p>
+                      <p className="text-[9px] text-slate-600 font-black uppercase tracking-widest text-center">Spilled On {selectedMemory.created_at ? new Date(selectedMemory.created_at).toLocaleString() : 'N/A'}</p>
                    </div>
                 </div>
              </motion.div>

@@ -1,32 +1,32 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500&display=swap');
 @import "tailwindcss";
 :root {
-  /* Playful Geometric – Light theme tokens */
-  --pg-bg: #FFFDF5;
-  --pg-foreground: #1E293B;
-  --pg-muted: #F1F5F9;
-  --pg-muted-foreground: #64748B;
-  --pg-accent: #8B5CF6;
+  /* Cutesy Pastel Design System */
+  --pg-bg: #FFF5F9; /* Soft Pinkish White */
+  --pg-foreground: #4A4A68; /* Soft Navy */
+  --pg-muted: #F8F9FE;
+  --pg-muted-foreground: #A0A0C0;
+  --pg-accent: #FF85B3; /* Bubbly Pink */
   --pg-accent-foreground: #FFFFFF;
-  --pg-secondary: #F472B6;
-  --pg-tertiary: #FBBF24;
-  --pg-quaternary: #34D399;
-  --pg-border: #E2E8F0;
+  --pg-secondary: #B19CFF; /* Lavender */
+  --pg-tertiary: #FFD275; /* Sunny Yellow */
+  --pg-quaternary: #7EE7CE; /* Mint */
+  --pg-border: #FFD6E8;
   --pg-input: #FFFFFF;
   --pg-card: #FFFFFF;
-  --pg-ring: #8B5CF6;
+  --pg-ring: #FF85B3;
 
-  /* Legacy dark-map tokens – used by Home.jsx + SpillMemoryModal overlays */
-  --spillit-bg: #08080c;
-  --spillit-surface: rgba(255, 255, 255, 0.05);
-  --spillit-border: rgba(255, 255, 255, 0.1);
-  --spillit-text-main: #ffffff;
-  --spillit-text-muted: #94a3b8;
-  --spillit-primary: #8B5CF6;
-  --spillit-secondary: #F472B6;
-  --spillit-accent: #34D399;
-  --spillit-glow-primary: rgba(139, 92, 246, 0.4);
-  --spillit-glow-secondary: rgba(244, 114, 182, 0.3);
+  /* Glass Effects */
+  --spillit-bg: #FFF5F9;
+  --spillit-surface: rgba(255, 255, 255, 0.7);
+  --spillit-border: rgba(255, 133, 179, 0.2);
+  --spillit-text-main: #4A4A68;
+  --spillit-text-muted: #8E8EA8;
+  --spillit-primary: #FF85B3;
+  --spillit-secondary: #B19CFF;
+  --spillit-accent: #7EE7CE;
+  --spillit-glow-primary: rgba(255, 133, 179, 0.2);
+  --spillit-glow-secondary: rgba(177, 156, 255, 0.2);
 
   /* Safe Areas */
   --sat: env(safe-area-inset-top);

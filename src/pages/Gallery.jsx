@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
-import { db } from '../utils/firebase';
+import { supabase } from '../utils/supabase';
 import { 
   Heart, 
   MapPin, 
@@ -65,14 +64,30 @@ function Gallery() {
 
   // Data Fetching
   useEffect(() => {
-    // collection name is 'memories'
-    const q = query(collection(db, 'memories'), orderBy('ts', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setMemories(data);
+    const fetchMemories = async () => {
+      const { data, error } = await supabase
+        .from('memories')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (!error && data) {
+        setMemories(data);
+      }
       setLoading(false);
-    });
-    return () => unsubscribe();
+    };
+
+    fetchMemories();
+
+    const channel = supabase
+      .channel('gallery_changes')
+      .on('postgres_changes', { event: '*', table: 'memories', schema: 'public' }, () => {
+        fetchMemories();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Filtering Logic
@@ -81,7 +96,7 @@ function Gallery() {
     const matchesVibe = filters.vibe === 'All' || m.type === filters.vibe;
     return matchesSearch && matchesVibe;
   }).sort((a, b) => {
-    if (filters.sortBy === 'Newest First') return (b.ts?.toMillis?.() || 0) - (a.ts?.toMillis?.() || 0);
+    if (filters.sortBy === 'Newest First') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     if (filters.sortBy === 'Most Loved') return (b.upvotes || 0) - (a.upvotes || 0);
     return 0;
   });
@@ -198,9 +213,9 @@ function Gallery() {
               >
                 {/* Photo */}
                 <div className="relative h-64 overflow-hidden">
-                  {memory.imageUrl ? (
+                  {memory.image_url ? (
                     <img
-                      src={memory.imageUrl}
+                      src={memory.image_url}
                       alt="memory"
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                     />
@@ -236,7 +251,7 @@ function Gallery() {
                   <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase">
                       <Calendar size={12} className="text-[#ff7ec9]" />
-                      {memory.ts ? new Date(memory.ts.seconds * 1000).toLocaleDateString() : 'Hidden Date'}
+                      {memory.created_at ? new Date(memory.created_at).toLocaleDateString() : 'Hidden Date'}
                     </div>
 
                     <Link

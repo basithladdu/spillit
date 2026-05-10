@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
-import { db } from '../utils/firebase';
+import { supabase } from '../utils/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Hash, MapPin, Sparkles, Trophy, Crown, Star, Ghost, ArrowRight, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -23,13 +22,32 @@ function Leaderboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'memories'), orderBy('upvotes', 'desc'), limit(50));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setTopMemories(data);
+    const fetchTopMemories = async () => {
+      const { data, error } = await supabase
+        .from('memories')
+        .select('*')
+        .order('upvotes', { ascending: false })
+        .limit(50);
+      
+      if (!error && data) {
+        setTopMemories(data);
+      }
       setLoading(false);
-    });
-    return () => unsubscribe();
+    };
+
+    fetchTopMemories();
+
+    // Optional: Real-time updates for leaderboard
+    const channel = supabase
+      .channel('leaderboard_changes')
+      .on('postgres_changes', { event: '*', table: 'memories', schema: 'public' }, () => {
+        fetchTopMemories();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   if (loading) return (
@@ -92,9 +110,9 @@ function Leaderboard() {
                     <div className="flex items-center gap-6 w-full md:w-auto">
                         <RankBadge rank={index + 1} />
                         <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-[32px] overflow-hidden border border-white/10 bg-black/40 flex-shrink-0">
-                           {memory.imageUrl ? (
+                           {memory.image_url ? (
                              <img 
-                              src={memory.imageUrl} 
+                              src={memory.image_url} 
                               alt="memory" 
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
                             />
@@ -133,9 +151,9 @@ function Leaderboard() {
                        <div className="flex items-center justify-center md:justify-between px-0">
                           <div className="flex items-center gap-3">
                              <span className="text-[10px] font-bold uppercase tracking-widest text-[#ff7ec9]/60">Spilled On</span>
-                             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                {memory.ts ? new Date(memory.ts.seconds * 1000).toLocaleDateString() : 'N/A'}
-                             </span>
+                              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                 {memory.created_at ? new Date(memory.created_at).toLocaleDateString() : 'N/A'}
+                              </span>
                           </div>
                           
                           <div className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#ff7ec9] group-hover:translate-x-2 transition-transform">

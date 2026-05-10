@@ -1,15 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup
-} from 'firebase/auth';
-import { auth, db } from '../utils/firebase';
+import { supabase } from '../utils/supabase';
 import { AuthContext } from '../context/AuthContext';
-import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 
 export function useAuth() {
   const context = useContext(AuthContext);
@@ -27,38 +18,50 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   // Register user with email/password
-  function register(email, password) {
-    return createUserWithEmailAndPassword(auth, email, password);
+  async function register(email, password) {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) throw error;
+    return data;
   }
 
   // Login user with email/password
-  function login(email, password) {
-    // Basic Validation to prevent Firebase 400 for malformed emails
-    if (!email || !email.includes('@')) {
-      return Promise.reject({ code: 'auth/invalid-email', message: 'Invalid email format' });
-    }
-
-    return signInWithEmailAndPassword(auth, email, password);
+  async function login(email, password) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return data;
   }
 
   // Login with Google
-  function signInWithGoogle() {
-    const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
+  async function signInWithGoogle() {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+    });
+    if (error) throw error;
+    return data;
   }
 
   // Logout user
-  function logout() {
+  async function logout() {
     localStorage.removeItem('spillit_user');
     setCurrentUser(null);
-    return signOut(auth);
+    return supabase.auth.signOut();
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setCurrentUser(user);
-        localStorage.setItem('spillit_user', JSON.stringify(user));
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setCurrentUser(session.user);
+        localStorage.setItem('spillit_user', JSON.stringify(session.user));
+      }
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setCurrentUser(session.user);
+        localStorage.setItem('spillit_user', JSON.stringify(session.user));
       } else {
         localStorage.removeItem('spillit_user');
         setCurrentUser(null);
@@ -66,7 +69,7 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
 
-    return unsubscribe;
+    return () => subscription.unsubscribe();
   }, []);
 
   const value = {

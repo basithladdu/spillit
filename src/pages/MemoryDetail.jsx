@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { doc, getDoc, updateDoc, increment, arrayUnion, arrayRemove, collection, query, where, limit, getDocs } from 'firebase/firestore';
-import { db } from '../utils/firebase';
+import { supabase } from '../utils/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -33,28 +32,27 @@ function MemoryDetail() {
   useEffect(() => {
     const fetchMemory = async () => {
       try {
-        const docRef = doc(db, 'memories', id);
-        const docSnap = await getDoc(docRef);
+        const { data, error } = await supabase
+          .from('memories')
+          .select('*')
+          .eq('id', id)
+          .single();
         
-        if (docSnap.exists()) {
-          const data = { id: docSnap.id, ...docSnap.data() };
+        if (data) {
           setMemory(data);
           
-          if (currentUser && data.upvotedBy?.includes(currentUser.uid)) {
+          if (currentUser && data.upvoted_by?.includes(currentUser.id)) {
             setHasUpvoted(true);
           }
 
-          // Fetch nearby or related spills (simplified: just latest for now)
-          const q = query(collection(db, 'memories'), limit(4));
-          const snap = await getDocs(q);
-          setNearbyMemories(snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => m.id !== id));
-        } else {
-          // Try old 'issues' collection just in case
-          const oldRef = doc(db, 'issues', id);
-          const oldSnap = await getDoc(oldRef);
-          if (oldSnap.exists()) {
-            setMemory({ id: oldSnap.id, ...oldSnap.data() });
-          }
+          // Fetch nearby spills (simplified)
+          const { data: nearby } = await supabase
+            .from('memories')
+            .select('*')
+            .neq('id', id)
+            .limit(4);
+            
+          if (nearby) setNearbyMemories(nearby);
         }
       } catch (error) {
         // Error fetching memory handled by UI state
@@ -74,24 +72,32 @@ function MemoryDetail() {
     if (isUpvoting) return;
 
     setIsUpvoting(true);
-    const docRef = doc(db, 'memories', id);
 
     try {
+      const upvotedBy = memory.upvoted_by || [];
+      let newUpvotedBy;
+      let newUpvotes;
+
       if (hasUpvoted) {
-        await updateDoc(docRef, {
-          upvotes: increment(-1),
-          upvotedBy: arrayRemove(currentUser.uid)
-        });
-        setMemory(prev => ({ ...prev, upvotes: prev.upvotes - 1 }));
-        setHasUpvoted(false);
+        newUpvotedBy = upvotedBy.filter(uid => uid !== currentUser.id);
+        newUpvotes = (memory.upvotes || 0) - 1;
       } else {
-        await updateDoc(docRef, {
-          upvotes: increment(1),
-          upvotedBy: arrayUnion(currentUser.uid)
-        });
-        setMemory(prev => ({ ...prev, upvotes: prev.upvotes + 1 }));
-        setHasUpvoted(true);
+        newUpvotedBy = [...upvotedBy, currentUser.id];
+        newUpvotes = (memory.upvotes || 0) + 1;
       }
+
+      const { error } = await supabase
+        .from('memories')
+        .update({ 
+          upvotes: newUpvotes,
+          upvoted_by: newUpvotedBy
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setMemory(prev => ({ ...prev, upvotes: newUpvotes, upvoted_by: newUpvotedBy }));
+      setHasUpvoted(!hasUpvoted);
     } catch (error) {
       // Upvote failed silently
     } finally {
@@ -130,7 +136,7 @@ function MemoryDetail() {
       {/* Top Banner / Image */}
       <div className="relative h-[50vh] md:h-[70vh] w-full overflow-hidden">
         <img 
-          src={getOptimizedImageUrl(memory.imageUrl, 1920)} 
+          src={getOptimizedImageUrl(memory.image_url, 1920)} 
           className="w-full h-full object-cover" 
           alt="Memory" 
         />
@@ -194,7 +200,7 @@ function MemoryDetail() {
                 <div className="ml-auto flex items-center gap-2 px-4 py-2 bg-white/5 rounded-2xl border border-white/5">
                   <Calendar size={14} className="text-slate-500" />
                   <span className="text-xs font-medium text-slate-300">
-                    {memory.ts?.toMillis ? new Date(memory.ts.toMillis()).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown Date'}
+                    {memory.created_at ? new Date(memory.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown Date'}
                   </span>
                 </div>
               </div>
@@ -280,7 +286,7 @@ function MemoryDetail() {
                             className="flex items-center gap-3 p-3 rounded-2xl hover:bg-white/5 transition-all group"
                         >
                             <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0">
-                                <img src={getOptimizedImageUrl(m.imageUrl, 100)} className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="spill" />
+                                <img src={getOptimizedImageUrl(m.image_url, 100)} className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt="spill" />
                             </div>
                             <div className="min-w-0">
                                 <p className="text-xs text-white italic truncate pr-4"> &quot;{m.caption}&quot;</p>

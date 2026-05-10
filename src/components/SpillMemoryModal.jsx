@@ -4,16 +4,10 @@ import {
   X, Send, Camera, CircleCheck, MapPin, Ghost, User,
   Flame, Heart, Star, Laugh, Lock, CircleX, Sparkles
 } from 'lucide-react';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from '../utils/firebase';
+import { supabase } from '../utils/supabase';
 import { useAuth } from '../hooks/useAuth';
 import imageCompression from 'browser-image-compression';
 import LocationVerifier from './LocationVerifier';
-
-const CLOUDINARY_CREDENTIALS = [{
-  cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'fixit',
-  uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'fixit_unsigned'
-}];
 
 const MEMORY_TYPES = [
   { label: 'Moment',  icon: Flame,  color: 'bg-accent   text-white', active: 'border-accent'   },
@@ -71,14 +65,6 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
   const handleLocationVerified = ({ lat, lng, address }) =>
     setFormData(p => ({ ...p, lat, lng, address }));
 
-  const uploadToCloudinary = async (file) => {
-    const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CREDENTIALS[0].cloudName}/upload`;
-    const form = new FormData();
-    form.append('file', file);
-    form.append('upload_preset', CLOUDINARY_CREDENTIALS[0].uploadPreset);
-    const res = await fetch(url, { method: 'POST', body: form });
-    return (await res.json()).secure_url;
-  };
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
@@ -86,36 +72,60 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
     if (!formData.lat || !formData.lng) return showToast('We need to know the spot!');
 
     setIsSubmitting(true);
-    setTimeout(async () => {
+    try {
+      let imageFile = formData.image;
       try {
-        let imageFile = formData.image;
-        try {
-          imageFile = await imageCompression(formData.image, {
-            maxSizeMB: 0.15, maxWidthOrHeight: 1280, useWebWorker: true,
-          });
-        } catch (_) { /* compression optional */ }
-
-        const imgUrl = await uploadToCloudinary(imageFile);
-        const { lat, lng, address, anonymous, caption, type } = formData;
-
-        const newDoc = await addDoc(collection(db, 'memories'), {
-          caption, type, lat, lng, address,
-          imageUrl: imgUrl,
-          ts: serverTimestamp(),
-          userId: anonymous || !currentUser ? 'anonymous' : currentUser.uid,
-          upvotes: 0,
+        imageFile = await imageCompression(formData.image, {
+          maxSizeMB: 0.15, maxWidthOrHeight: 1280, useWebWorker: true,
         });
+      } catch (_) { /* compression optional */ }
 
-        showToast('Memory pinned! 📍', 'success');
-        onSuccess({ id: newDoc.id, ...formData, imageUrl: imgUrl });
-        setFormData({ caption: '', image: null, lat: null, lng: null, address: '', anonymous: true, type: 'Moment' });
-        setTimeout(() => onClose(), 1500);
-      } catch (err) {
-        showToast('Something went wrong. Try again?');
-      } finally {
-        setIsSubmitting(false);
-      }
-    }, 100);
+      // 1. Upload to Supabase Storage (bucket: images)
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `spills/${fileName}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, imageFile);
+
+      if (uploadError) throw uploadError;
+
+      // Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+
+      const { lat, lng, address, anonymous, caption, type } = formData;
+
+      // 2. Insert into Supabase Table: memories
+      const { data: newDoc, error: insertError } = await supabase
+        .from('memories')
+        .insert([{
+          caption,
+          type,
+          lat,
+          lng,
+          address,
+          image_url: publicUrl,
+          user_id: anonymous || !currentUser ? null : currentUser.id,
+          upvotes: 0,
+        }])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      showToast('Memory pinned! 📍', 'success');
+      onSuccess({ id: newDoc.id, ...formData, imageUrl: publicUrl });
+      setFormData({ caption: '', image: null, lat: null, lng: null, address: '', anonymous: true, type: 'Moment' });
+      setTimeout(() => onClose(), 1500);
+    } catch (err) {
+      console.error('Supabase Error:', err);
+      showToast(err.message || 'Something went wrong. Try again?');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const selectedType = MEMORY_TYPES.find(t => t.label === formData.type);

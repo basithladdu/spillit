@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import {
-  collection, onSnapshot,
-  orderBy, query, limit
-} from 'firebase/firestore';
-import { db } from '../utils/firebase';
+import { supabase } from '../utils/supabase';
 import { Link } from 'react-router-dom';
 
 import { AnimatePresence, motion } from 'framer-motion';
@@ -158,13 +154,44 @@ function Home() {
 
   // --- Data & Markers ---
   useEffect(() => {
-    const q = query(collection(db, 'memories'), orderBy('ts', 'desc'), limit(50));
-    const unsubscribe = onSnapshot(q, (snap) => {
-      const memories = {};
-      snap.forEach(d => memories[d.id] = { id: d.id, ...d.data() });
-      setAllMemories(memories);
-    });
-    return () => unsubscribe();
+    // 1. Initial fetch
+    const fetchMemories = async () => {
+      const { data, error } = await supabase
+        .from('memories')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
+      if (!error && data) {
+        const memoriesMap = {};
+        data.forEach(m => memoriesMap[m.id] = m);
+        setAllMemories(memoriesMap);
+      }
+    };
+
+    fetchMemories();
+
+    // 2. Real-time subscription
+    const channel = supabase
+      .channel('public:memories')
+      .on('postgres_changes', { event: '*', table: 'memories', schema: 'public' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setAllMemories(prev => ({ ...prev, [payload.new.id]: payload.new }));
+        } else if (payload.eventType === 'UPDATE') {
+          setAllMemories(prev => ({ ...prev, [payload.new.id]: payload.new }));
+        } else if (payload.eventType === 'DELETE') {
+          setAllMemories(prev => {
+            const next = { ...prev };
+            delete next[payload.old.id];
+            return next;
+          });
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleReportSuccess = (data) => {
@@ -176,7 +203,7 @@ function Home() {
     () =>
       Object.entries(allMemories)
         .map(([id, memory]) => ({ id, ...memory }))
-        .sort((a, b) => (b.ts?.toMillis?.() || 0) - (a.ts?.toMillis?.() || 0)),
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
     [allMemories]
   );
 
@@ -257,7 +284,7 @@ function Home() {
                   {memory.imageUrl && (
                     <div className="relative h-32 w-full overflow-hidden">
                       <img
-                        src={getOptimizedImageUrl(memory.imageUrl, 400)}
+                        src={getOptimizedImageUrl(memory.image_url, 400)}
                         alt="memory"
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
@@ -334,8 +361,8 @@ function Home() {
               offset={15}
             >
               <div className="glass-card bg-[#08080c] border border-white/10 overflow-hidden shadow-2xl p-0">
-                {selectedMemory.imageUrl && (
-                  <img src={getOptimizedImageUrl(selectedMemory.imageUrl, 300)} className="w-full h-32 object-cover border-b border-white/10" alt="memory" />
+                {selectedMemory.image_url && (
+                  <img src={getOptimizedImageUrl(selectedMemory.image_url, 300)} className="w-full h-32 object-cover border-b border-white/10" alt="memory" />
                 )}
                 <div className="p-4">
                   <p className="text-xs text-slate-300 mb-3 italic leading-relaxed">&quot;{selectedMemory.caption || selectedMemory.desc}&quot;</p>
