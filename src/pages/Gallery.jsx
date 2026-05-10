@@ -67,7 +67,7 @@ function Gallery() {
     const fetchMemories = async () => {
       const { data, error } = await supabase
         .from('memories')
-        .select('*, profiles(username)')
+        .select('*')
         .order('created_at', { ascending: false });
       
       if (!error && data) {
@@ -253,7 +253,7 @@ function Gallery() {
                       <User size={12} strokeWidth={3} />
                     </div>
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                      {memory.profiles?.username ? `@${memory.profiles.username}` : 'Anonymous'}
+                      Anonymous
                     </span>
                   </div>
 

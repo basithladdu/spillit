@@ -25,7 +25,7 @@ function Leaderboard() {
     const fetchTopMemories = async () => {
       const { data, error } = await supabase
         .from('memories')
-        .select('*, profiles(username, avatar_url)')
+        .select('*')
         .order('upvotes', { ascending: false })
         .limit(50);
       
@@ -135,14 +135,10 @@ function Leaderboard() {
                              <div className="w-1 h-1 rounded-full bg-foreground/10 hidden md:block"></div>
                              <div className="flex items-center gap-2">
                                 <div className="w-6 h-6 rounded-lg bg-muted border border-foreground flex items-center justify-center text-accent">
-                                   {memory.profiles?.avatar_url ? (
-                                     <img src={memory.profiles.avatar_url} alt="p" className="w-full h-full object-cover rounded-lg" />
-                                   ) : (
-                                     <User size={12} strokeWidth={3} />
-                                   )}
+                                   <User size={12} strokeWidth={3} />
                                 </div>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                  {memory.profiles?.username ? `@${memory.profiles.username}` : 'Anonymous'}
+                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                  Anonymous
                                 </span>
                              </div>
                           </div>
