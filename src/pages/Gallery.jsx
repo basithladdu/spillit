@@ -14,7 +14,8 @@ import {
   Flame,
   Star,
   Eye,
-  Hash
+  Hash,
+  User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
