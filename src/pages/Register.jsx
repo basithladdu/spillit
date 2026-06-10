@@ -33,11 +33,12 @@ function Register() {
       await register(email, password);
     } catch (error) {
       setLoading(false);
-      if (error.code === 'auth/email-already-in-use') {
+      const message = error?.message?.toLowerCase() ?? '';
+      if (message.includes('already registered') || message.includes('already in use')) {
         setErrors({ email: 'This email is already in use.' });
-      } else if (error.code === 'auth/invalid-email') {
+      } else if (message.includes('invalid email')) {
         setErrors({ email: 'Please enter a valid email address.' });
-      } else if (error.code === 'auth/weak-password') {
+      } else if (message.includes('password') && (message.includes('weak') || message.includes('short'))) {
         setErrors({ password: 'Password is too weak.' });
       } else {
         setErrors({ general: 'Registration failed. Please try again.' });
@@ -73,6 +74,7 @@ function Register() {
           {/* Error Banner */}
           {errors.general && (
             <motion.div
+              role="alert"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               className="mb-6 p-4 rounded-xl bg-red-50 border-2 border-red-400 flex items-center gap-3 text-red-700 text-sm font-bold"

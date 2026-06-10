@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
 import { useAuth } from '../hooks/useAuth';
-import { motion } from 'framer-motion';
-import { User, AtSign, Mail, Save, AlertCircle, CheckCircle2, Camera } from 'lucide-react';
+import { User, AtSign, Mail, Save, Camera } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 function Profile() {
@@ -21,7 +20,7 @@ function Profile() {
       if (!currentUser) return;
       
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', currentUser.id)
@@ -72,8 +71,8 @@ function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-background" role="status" aria-label="Loading profile">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" aria-hidden />
       </div>
     );
   }
@@ -96,8 +95,8 @@ function Profile() {
                 ) : (
                   <User size={40} className="text-slate-300" />
                 )}
-                <button className="absolute inset-0 bg-black/40 rounded-[22px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                  <Camera size={20} />
+                <button type="button" aria-label="Change avatar (coming soon)" disabled className="absolute inset-0 flex items-center justify-center rounded-[22px] bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  <Camera size={20} aria-hidden />
                 </button>
               </div>
             </div>
@@ -107,10 +106,11 @@ function Profile() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Username */}
               <div className="space-y-2">
-                <label className="heading-font text-xs font-black uppercase tracking-[0.2em] text-foreground flex items-center gap-2">
-                  <AtSign size={14} className="text-accent" /> Username
+                <label htmlFor="profile-username" className="heading-font text-xs font-black uppercase tracking-[0.2em] text-foreground flex items-center gap-2">
+                  <AtSign size={14} className="text-accent" aria-hidden /> Username
                 </label>
                 <input
+                  id="profile-username"
                   type="text"
                   value={profile.username}
                   onChange={(e) => setProfile({ ...profile, username: e.target.value })}
@@ -123,10 +123,11 @@ function Profile() {
 
               {/* Full Name */}
               <div className="space-y-2">
-                <label className="heading-font text-xs font-black uppercase tracking-[0.2em] text-foreground">
+                <label htmlFor="profile-display-name" className="heading-font text-xs font-black uppercase tracking-[0.2em] text-foreground">
                   Display Name
                 </label>
                 <input
+                  id="profile-display-name"
                   type="text"
                   value={profile.full_name}
                   onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
@@ -138,10 +139,11 @@ function Profile() {
 
             {/* Bio */}
             <div className="space-y-2">
-              <label className="heading-font text-xs font-black uppercase tracking-[0.2em] text-foreground">
+              <label htmlFor="profile-bio" className="heading-font text-xs font-black uppercase tracking-[0.2em] text-foreground">
                 Bio
               </label>
               <textarea
+                id="profile-bio"
                 value={profile.bio}
                 onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                 placeholder="Spilling secrets since..."

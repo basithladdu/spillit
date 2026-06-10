@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import {
   X, Send, Camera, CircleCheck, MapPin, Ghost, User,
-  Flame, Heart, Star, Laugh, Lock, CircleX, Sparkles
+  Flame, Heart, Laugh, Lock, CircleX, Sparkles
 } from 'lucide-react';
 import { supabase } from '../utils/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -18,7 +18,7 @@ const MEMORY_TYPES = [
 
 /* ── small inline toast ── */
 const Toast = ({ message, type, onClose }) => (
-  <motion.div
+  <Motion.div
     initial={{ opacity: 0, y: -24, scale: 0.9 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, y: -24, scale: 0.9 }}
@@ -35,11 +35,11 @@ const Toast = ({ message, type, onClose }) => (
         : <Sparkles className="w-5 h-5 text-quaternary shrink-0" />
       }
       <span className="flex-1">{message}</span>
-      <button onClick={onClose} className="shrink-0 hover:opacity-60 transition-opacity">
+      <button type="button" onClick={onClose} aria-label="Dismiss notification" className="shrink-0 hover:opacity-60 transition-opacity">
         <X className="w-4 h-4" />
       </button>
     </div>
-  </motion.div>
+  </Motion.div>
 );
 
 /* ── main modal ── */
@@ -83,7 +83,9 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
           imageFile = await imageCompression(formData.image, {
             maxSizeMB: 0.15, maxWidthOrHeight: 1280, useWebWorker: true,
           });
-        } catch (_) { /* compression optional */ }
+        } catch {
+          /* compression optional */
+        }
 
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
@@ -132,8 +134,6 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
     }
   };
 
-  const selectedType = MEMORY_TYPES.find(t => t.label === formData.type);
-
   return (
     <>
       <AnimatePresence>
@@ -143,17 +143,20 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
       <AnimatePresence>
         {show && (
           <div className="fixed inset-0 z-[2000] flex items-end md:items-center justify-center md:p-6">
-            {/* backdrop */}
-            <motion.div
+            <Motion.button
+              type="button"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-[#000000] opacity-80"
+              aria-label="Close spill form"
+              className="absolute inset-0 bg-black/80"
               onClick={onClose}
             />
 
-            {/* sheet */}
-            <motion.div
+            <Motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="spill-modal-title"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -185,7 +188,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                 {/* header */}
                 <div className="px-6 py-5 border-b-2 border-foreground flex items-start justify-between shrink-0 bg-background">
                   <div>
-                    <h2 className="heading-font text-2xl font-black text-foreground leading-tight">
+                    <h2 id="spill-modal-title" className="heading-font text-2xl font-black text-foreground leading-tight">
                       Spill a Memory
                     </h2>
                     <p className="text-slate-500 text-sm mt-0.5 font-bold">
@@ -193,7 +196,9 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                     </p>
                   </div>
                   <button
+                    type="button"
                     onClick={onClose}
+                    aria-label="Close"
                     className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-foreground text-foreground hover:bg-secondary hover:text-white hover:-translate-x-0.5 hover:-translate-y-0.5 shadow-pop hover:shadow-pop-hover active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active transition-all"
                   >
                     <X className="w-4 h-4" strokeWidth={2.5} />
@@ -268,7 +273,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                       What kind?
                     </label>
                     <div className="grid grid-cols-4 gap-2">
-                      {MEMORY_TYPES.map(({ label, icon: Icon, color, active }) => (
+                      {MEMORY_TYPES.map(({ label, icon, color, active }) => (
                         <button
                           key={label}
                           type="button"
@@ -280,7 +285,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                             }`}
                         >
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center ${formData.type === label ? color : 'bg-muted text-slate-400'}`}>
-                            <Icon className="w-4 h-4" strokeWidth={2.5} />
+                            {React.createElement(icon, { className: 'w-4 h-4', strokeWidth: 2.5 })}
                           </div>
                           <span className="heading-font text-[10px] font-black uppercase tracking-wide text-foreground">
                             {label}
@@ -348,8 +353,10 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                 {/* ── sticky submit ── */}
                 <div className="shrink-0 px-6 pb-6 pt-4 border-t-2 border-border bg-[#FFF5F9]">
                   <button
+                    type="submit"
                     onClick={handleSubmit}
                     disabled={isSubmitting}
+                    aria-busy={isSubmitting}
                     className="w-full flex items-center justify-center gap-3 py-4 rounded-full bg-accent text-white border-2 border-foreground heading-font font-bold text-sm uppercase tracking-widest shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting
@@ -359,7 +366,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </Motion.div>
           </div>
         )}
       </AnimatePresence>

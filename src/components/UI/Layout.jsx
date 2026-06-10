@@ -131,7 +131,7 @@ export const PricingSection = ({ plans, className = "" }) => (
       {plans.map((plan, idx) => (
         <div
           key={idx}
-          className={`transform transition-transform duration-300 ${
+          className={`relative transform transition-transform duration-300 ${
             plan.featured ? "scale-110 -mt-4" : ""
           }`}
         >
@@ -200,6 +200,14 @@ export const Grid = ({ columns = 3, children, className = "" }) => (
 /**
  * Stack layout (vertical or horizontal)
  */
+const STACK_GAPS = {
+  2: "gap-2",
+  3: "gap-3",
+  4: "gap-4",
+  6: "gap-6",
+  8: "gap-8",
+};
+
 export const Stack = ({
   direction = "vertical",
   gap = 4,
@@ -207,7 +215,7 @@ export const Stack = ({
   className = "",
 }) => (
   <div
-    className={`flex ${direction === "horizontal" ? "flex-row" : "flex-col"} gap-${gap} ${className}`}
+    className={`flex ${direction === "horizontal" ? "flex-row" : "flex-col"} ${STACK_GAPS[gap] ?? "gap-4"} ${className}`}
   >
     {children}
   </div>

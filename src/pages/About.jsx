@@ -63,7 +63,7 @@ const About = () => {
               { icon: Camera, label: 'Snap', desc: 'Capture the scene exactly as it is.', color: 'bg-accent' },
               { icon: MapPin, label: 'Pin', desc: 'Drop it on the map. Let your story live at that exact point in space.', color: 'bg-secondary' },
               { icon: Ghost, label: 'Spill', desc: 'Write what you felt. Share it anonymously with the world.', color: 'bg-quaternary' },
-            ].map(({ icon: Icon, label, desc, color }, i) => (
+            ].map(({ icon: Icon, label, desc, color }) => (
               <div key={label} className="bg-card border-2 border-foreground rounded-2xl p-8 text-center shadow-sticker flex flex-col items-center gap-4">
                 <div className={`w-14 h-14 rounded-full ${color} border-2 border-foreground flex items-center justify-center shadow-pop`}>
                   <Icon size={24} className="text-white" strokeWidth={2.5} />

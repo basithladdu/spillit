@@ -3,9 +3,10 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
+import { toast } from 'react-toastify';
 import {
-  Heart, MapPin, Share2, Calendar, User,
-  ChevronLeft, ArrowRight, Copy, Ghost, Flame, Lock, Laugh
+  Heart, MapPin, Calendar, User,
+  ChevronLeft, ArrowRight, Copy, Ghost,
 } from 'lucide-react';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 
@@ -56,7 +57,11 @@ function MemoryDetail() {
   }, [id, currentUser]);
 
   const handleUpvote = async () => {
-    if (!currentUser) { alert('Please login to upvote!'); return; }
+    if (!currentUser) {
+      toast.info('Sign in to upvote memories.');
+      navigate('/login');
+      return;
+    }
     if (isUpvoting) return;
     setIsUpvoting(true);
     try {
@@ -77,8 +82,8 @@ function MemoryDetail() {
 
   /* ── Loading ── */
   if (loading) return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+    <div className="flex min-h-screen items-center justify-center bg-background" role="status" aria-label="Loading memory">
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-accent border-t-transparent" aria-hidden />
     </div>
   );
 
@@ -107,7 +112,7 @@ function MemoryDetail() {
           <img
             src={getOptimizedImageUrl(memory.image_url, 1920)}
             className="w-full h-full object-cover"
-            alt="Memory"
+            alt={memory.caption ? `Memory: ${memory.caption.slice(0, 80)}` : 'Memory photo'}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -120,13 +125,17 @@ function MemoryDetail() {
         {/* Back + share controls */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
           <button
+            type="button"
             onClick={() => navigate(-1)}
+            aria-label="Go back"
             className="flex items-center gap-2 px-4 py-2.5 bg-card/90 backdrop-blur-md border-2 border-foreground rounded-full text-foreground font-bold shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all text-sm heading-font uppercase tracking-wide"
           >
             <ChevronLeft size={16} strokeWidth={2.5} /> Back
           </button>
           <button
+            type="button"
             onClick={copyLink}
+            aria-label={copied ? 'Link copied' : 'Copy share link'}
             className="flex items-center gap-2 px-4 py-2.5 bg-card/90 backdrop-blur-md border-2 border-foreground rounded-full text-foreground font-bold shadow-pop hover:shadow-pop-hover transition-all text-sm heading-font uppercase tracking-wide"
           >
             <Copy size={14} strokeWidth={2.5} />
@@ -194,8 +203,11 @@ function MemoryDetail() {
             </div>
 
             <button
+              type="button"
               onClick={handleUpvote}
               disabled={isUpvoting}
+              aria-pressed={hasUpvoted}
+              aria-label={`Upvote memory (${memory.upvotes || 0} votes)`}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm border-2 border-foreground shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active transition-all heading-font uppercase tracking-widest disabled:opacity-50 ${
                 hasUpvoted ? 'bg-secondary text-white' : 'bg-card text-foreground hover:bg-muted'
               }`}

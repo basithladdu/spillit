@@ -19,7 +19,12 @@ function Navbar() {
   useEffect(() => { setIsMenuOpen(false); }, [location.pathname]);
 
   const handleLogout = async () => {
-    try { await logout(); navigate('/'); } catch (_) {}
+    try {
+      await logout();
+      navigate('/');
+    } catch {
+      // Session may already be cleared
+    }
   };
 
   const isActive = (to) =>
@@ -29,6 +34,7 @@ function Navbar() {
     <>
       <motion.nav
         id="navbar-root"
+        aria-label="Main navigation"
         initial={{ y: -64, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
@@ -73,7 +79,9 @@ function Navbar() {
                 </span>
               </Link>
               <button
+                type="button"
                 onClick={handleLogout}
+                aria-label="Sign out"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-slate-500 hover:text-red-500 font-bold uppercase transition-all"
               >
                 <LogOut size={13} strokeWidth={2.5} />
@@ -81,17 +89,22 @@ function Navbar() {
               </button>
             </div>
           ) : (
-            <Link to="/login" className="hidden md:block">
-              <button className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-foreground hover:bg-muted transition-all uppercase tracking-widest border-2 border-foreground shadow-pop hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active">
-                <LogIn size={13} strokeWidth={2.5} />
-                Login
-              </button>
+            <Link
+              to="/login"
+              className="hidden md:flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-foreground hover:bg-muted transition-all uppercase tracking-widest border-2 border-foreground shadow-pop hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active"
+            >
+              <LogIn size={13} strokeWidth={2.5} aria-hidden />
+              Login
             </Link>
           )}
 
           {/* Mobile toggle */}
           <button
+            type="button"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-nav-menu"
+            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
             className="md:hidden w-8 h-8 flex items-center justify-center rounded-full bg-white border-2 border-foreground text-foreground shadow-pop transition-all"
           >
             {isMenuOpen ? <X size={15} strokeWidth={2.5} /> : <Menu size={15} strokeWidth={2.5} />}
@@ -103,6 +116,10 @@ function Navbar() {
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
+            id="mobile-nav-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation"
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
@@ -134,6 +151,7 @@ function Navbar() {
                     <CircleUser size={18} strokeWidth={2.5} /> Profile
                   </Link>
                   <button
+                    type="button"
                     onClick={handleLogout}
                     className="w-full py-4 rounded-full bg-muted border-2 border-border text-muted-foreground font-bold heading-font uppercase tracking-widest flex items-center justify-center gap-3"
                   >
@@ -142,15 +160,19 @@ function Navbar() {
                 </>
               ) : (
                 <>
-                  <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                    <button className="w-full py-4 rounded-full bg-card border-2 border-foreground text-foreground font-bold heading-font uppercase tracking-widest shadow-pop">
-                      Login
-                    </button>
+                  <Link
+                    to="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full py-4 rounded-full bg-card border-2 border-foreground text-foreground font-bold heading-font uppercase tracking-widest shadow-pop text-center"
+                  >
+                    Login
                   </Link>
-                  <Link to="/register" onClick={() => setIsMenuOpen(false)}>
-                    <button className="w-full py-4 rounded-full bg-secondary border-2 border-foreground text-white font-bold heading-font uppercase tracking-widest shadow-pop">
-                      Create Account
-                    </button>
+                  <Link
+                    to="/register"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full py-4 rounded-full bg-secondary border-2 border-foreground text-white font-bold heading-font uppercase tracking-widest shadow-pop text-center"
+                  >
+                    Create Account
                   </Link>
                 </>
               )}

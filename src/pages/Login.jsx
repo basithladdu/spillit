@@ -30,11 +30,12 @@ function Login() {
       await login(email, password);
     } catch (error) {
       setLoading(false);
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+      const message = error?.message?.toLowerCase() ?? '';
+      if (message.includes('invalid login credentials') || message.includes('invalid email or password')) {
         setErrors({ general: 'Invalid email or password.' });
-      } else if (error.code === 'auth/invalid-email') {
+      } else if (message.includes('invalid email')) {
         setErrors({ email: 'Please enter a valid email address.' });
-      } else if (error.code === 'auth/too-many-requests') {
+      } else if (message.includes('too many requests') || message.includes('rate limit')) {
         setErrors({ general: 'Too many attempts. Try again later.' });
       } else {
         setErrors({ general: 'Login failed. Please try again.' });
@@ -71,6 +72,7 @@ function Login() {
           {/* Error Banner */}
           {errors.general && (
             <motion.div
+              role="alert"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               className="mb-6 p-4 rounded-xl bg-red-50 border-2 border-red-400 flex items-center gap-3 text-red-700 text-sm font-bold"
@@ -121,6 +123,7 @@ function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showPassword ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}

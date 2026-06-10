@@ -1,13 +1,13 @@
+import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import { AuthProvider } from "./hooks/useAuth";
-import 'mapbox-gl/dist/mapbox-gl.css';
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { Suspense, lazy } from "react";
-import { Analytics } from "@vercel/analytics/react"
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import "./App.css";
 
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
@@ -22,17 +22,17 @@ const Help = lazy(() => import("./pages/Help"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Profile = lazy(() => import("./pages/Profile"));
 
-import "./App.css";
-
-// Loading Component
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen bg-background">
-    <div className="w-8 h-8 rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
+  <div
+    className="flex items-center justify-center min-h-screen bg-background"
+    role="status"
+    aria-label="Loading page"
+  >
+    <div className="w-8 h-8 rounded-full border-2 border-accent/30 border-t-accent animate-spin" aria-hidden />
   </div>
 );
 
 function App() {
-
   return (
     <AuthProvider>
       <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -66,7 +66,6 @@ function App() {
           </Routes>
         </Suspense>
 
-        <Analytics />
         <ToastContainer
           position="bottom-right"
           autoClose={3000}

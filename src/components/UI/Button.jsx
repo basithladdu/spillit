@@ -14,6 +14,7 @@ export const Button = React.forwardRef(
       icon: Icon,
       isLoading = false,
       disabled = false,
+      type = "button",
       className = "",
       ...props
     },
@@ -39,7 +40,9 @@ export const Button = React.forwardRef(
     return (
       <button
         ref={ref}
+        type={type}
         disabled={disabled || isLoading}
+        aria-busy={isLoading || undefined}
         className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
         {...props}
       >

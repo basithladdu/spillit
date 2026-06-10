@@ -1,5 +1,5 @@
 import React from "react";
-import { MapPin, Heart, Zap, Users, ArrowRight, Check } from "lucide-react";
+import { MapPin, Heart, Zap, ArrowRight, Check } from "lucide-react";
 import {
   Button,
   Card,
@@ -288,19 +288,15 @@ function LandingPage() {
               </span>
             </div>
             <p className="text-muted-foreground text-sm">
-              Where memories live on the map. © 2025 Spill It. All rights
-              reserved.
+              Where memories live on the map. &copy; {new Date().getFullYear()} Spill It.
             </p>
             <div className="flex justify-center gap-6 text-sm">
-              <a href="/about" className="text-accent hover:text-secondary transition">
+              <Link to="/about" className="text-accent hover:text-secondary transition">
                 About
-              </a>
-              <a href="/help" className="text-accent hover:text-secondary transition">
+              </Link>
+              <Link to="/help" className="text-accent hover:text-secondary transition">
                 Help
-              </a>
-              <a href="/privacy" className="text-accent hover:text-secondary transition">
-                Privacy
-              </a>
+              </Link>
             </div>
           </div>
         </Container>

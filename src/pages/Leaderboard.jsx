@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Hash, MapPin, Sparkles, Trophy, Crown, Star, Ghost, ArrowRight, Eye, User } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Heart, MapPin, Trophy, Crown, Ghost, ArrowRight, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const RankBadge = ({ rank }) => {
@@ -51,8 +51,8 @@ function Leaderboard() {
   }, []);
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
+    <div className="flex min-h-screen items-center justify-center bg-background" role="status" aria-label="Loading leaderboard">
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-accent border-t-transparent" aria-hidden />
     </div>
   );
 
@@ -110,10 +110,10 @@ function Leaderboard() {
                         <RankBadge rank={index + 1} />
                         <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-[32px] overflow-hidden border-2 border-foreground bg-muted flex-shrink-0 shadow-pop">
                            {memory.image_url ? (
-                             <img 
-                              src={memory.image_url} 
-                              alt="memory" 
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
+                             <img
+                              src={memory.image_url}
+                              alt={memory.caption ? `Memory: ${memory.caption.slice(0, 60)}` : 'Memory photo'}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                             />
                            ) : (
                              <div className="w-full h-full flex items-center justify-center"><Ghost size={32} className="text-slate-300" /></div>

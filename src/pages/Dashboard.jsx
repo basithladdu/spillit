@@ -1,25 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import {
   Search, Filter, Trash2, Layers,
-  ArrowUpDown, X, Info, MapPin, 
-  Calendar, Hash, Eye, Download,
-  Heart, Shield, AlertTriangle, CheckCircle2, ChevronDown
+  ArrowUpDown, X, MapPin,
+  Hash, Eye, Download,
+  Heart, Shield, AlertTriangle, CheckCircle2,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
-
-// --- Shared Style Helpers ---
-
-const getVibeConfig = (vibe) => {
-  switch (vibe) {
-    case 'Shock': return { color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30', icon: AlertTriangle };
-    case 'High': return { color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30', icon: Shield };
-    case 'Moment': return { color: 'text-[var(--spillit-primary)]', bg: 'bg-[var(--spillit-primary)]/10', border: 'border-[var(--spillit-primary)]/30', icon: Heart };
-    default: return { color: 'text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/30', icon: Info };
-  }
-};
 
 const getStatusConfig = (status) => {
   const s = (status || 'active').toLowerCase();
@@ -30,7 +20,7 @@ const getStatusConfig = (status) => {
 // --- Sub-Components ---
 
 const StatCard = ({ title, value, icon, accentColor, delay }) => (
-  <motion.div
+  <Motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
@@ -46,7 +36,7 @@ const StatCard = ({ title, value, icon, accentColor, delay }) => (
       </div>
     </div>
     <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-[60px] opacity-10" style={{ backgroundColor: accentColor }}></div>
-  </motion.div>
+  </Motion.div>
 );
 
 const DistributionBar = ({ label, count, total, color }) => {
@@ -58,7 +48,7 @@ const DistributionBar = ({ label, count, total, color }) => {
         <span className="text-slate-600">{count} ({percent.toFixed(0)}%)</span>
       </div>
       <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-        <motion.div
+        <Motion.div
           initial={{ width: 0 }}
           animate={{ width: `${percent}%` }}
           transition={{ duration: 1, ease: "easeOut" }}
@@ -133,8 +123,9 @@ function Dashboard() {
       if (error) throw error;
       setDeleteId(null);
       setSelectedMemory(null);
-    } catch (error) {
-      // Delete error handled by UI
+      toast.success('Memory erased from the archive.');
+    } catch {
+      toast.error('Could not delete this memory. Try again.');
     }
   };
 
@@ -148,8 +139,9 @@ function Dashboard() {
       
       if (error) throw error;
       if (selectedMemory?.id === id) setSelectedMemory(prev => ({ ...prev, status: newStatus }));
-    } catch (error) {
-      // Update error handled silently
+      toast.success(newStatus === 'archived' ? 'Memory archived.' : 'Memory restored to feed.');
+    } catch {
+      toast.error('Could not update memory status.');
     }
   };
 
@@ -224,6 +216,7 @@ function Dashboard() {
           </div>
           
           <button
+            type="button"
             onClick={handleExport}
             className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all shadow-xl"
           >
@@ -237,14 +230,14 @@ function Dashboard() {
           <StatCard title="Total Love" value={memories.reduce((acc, m) => acc + (m.upvotes || 0), 0)} icon={<Heart size={20} />} accentColor="var(--spillit-secondary)" delay={0.1} />
           <StatCard title="Live Pins" value={stats.byStatus.live || stats.total} icon={<MapPin size={20} />} accentColor="#4ade80" delay={0.2} />
           
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
             className="bg-white/5 backdrop-blur-3xl border border-white/5 rounded-[32px] p-6"
           >
             <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-4">Vibe Palette</p>
             <DistributionBar label="Pink" count={stats.byVibe['#ff7ec9'] || 0} total={stats.total} color="#ff7ec9" />
             <DistributionBar label="Purple" count={stats.byVibe['#a78bfa'] || 0} total={stats.total} color="#a78bfa" />
-          </motion.div>
+          </Motion.div>
         </div>
 
         {/* Controls Toolbar */}
@@ -262,7 +255,9 @@ function Dashboard() {
 
           <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 px-2 lg:px-0">
             <button
+              type="button"
               onClick={() => setShowFilters(!showFilters)}
+              aria-expanded={showFilters}
               className={`flex items-center gap-2 px-6 py-3.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all shrink-0 ${showFilters ? 'bg-white text-black border-white' : 'bg-white/5 text-slate-400 border-white/5 hover:bg-white/10'}`}
             >
               <Filter size={14} /> Filter View
@@ -276,6 +271,7 @@ function Dashboard() {
                ].map(opt => (
                  <button
                    key={opt.value}
+                   type="button"
                    onClick={() => setFilters({ ...filters, status: opt.value })}
                    className={`px-6 py-3.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${filters.status === opt.value ? 'bg-[var(--spillit-primary)]/20 border-[var(--spillit-primary)]/50 text-[var(--spillit-primary)]' : 'bg-white/5 border-white/5 text-slate-500 hover:text-white'}`}
                  >
@@ -364,12 +360,15 @@ function Dashboard() {
       {/* Memory Viewer Detail Modal */}
       <AnimatePresence>
         {selectedMemory && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/90 backdrop-blur-xl p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Memory details"
             onClick={() => setSelectedMemory(null)}
           >
-             <motion.div
+             <Motion.div
                initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
                onClick={e => e.stopPropagation()}
                className="w-full max-w-5xl bg-[#0a0a0c] border border-white/10 rounded-[48px] overflow-hidden flex flex-col md:flex-row h-[85vh] shadow-[0_40px_100px_rgba(0,0,0,0.8)]"
@@ -432,8 +431,8 @@ function Dashboard() {
                       <p className="text-[9px] text-slate-600 font-black uppercase tracking-widest text-center">Spilled On {selectedMemory.created_at ? new Date(selectedMemory.created_at).toLocaleString() : 'N/A'}</p>
                    </div>
                 </div>
-             </motion.div>
-          </motion.div>
+             </Motion.div>
+          </Motion.div>
         )}
       </AnimatePresence>
 
@@ -441,7 +440,7 @@ function Dashboard() {
       <AnimatePresence>
         {deleteId && (
           <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/95 backdrop-blur-md p-6">
-             <motion.div
+             <Motion.div
                initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
                className="max-w-md w-full bg-[#0a0a0c] border border-red-500/30 p-12 rounded-[40px] text-center shadow-[0_0_100px_rgba(239,68,68,0.2)]"
              >
@@ -454,7 +453,7 @@ function Dashboard() {
                    <button onClick={handleDelete} className="w-full py-4 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 transition-all text-sm uppercase tracking-widest shadow-lg shadow-red-600/30">Confirm Erase</button>
                    <button onClick={() => setDeleteId(null)} className="w-full py-4 bg-white/5 text-slate-400 font-bold rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest">Cancel</button>
                 </div>
-             </motion.div>
+             </Motion.div>
           </div>
         )}
       </AnimatePresence>

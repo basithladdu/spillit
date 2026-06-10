@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import Map, { Marker, Popup, Source, Layer } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Layers, Map as MapIcon, Satellite, Navigation, Sparkles, Heart, Ghost, Laugh, Eye, MapPin } from 'lucide-react';
+import { Layers, Map as MapIcon, Navigation, Heart, MapPin } from 'lucide-react';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
@@ -28,9 +29,8 @@ const MarkerPin = ({ color, size = 32 }) => (
     </div>
 );
 
-const PopupContent = ({ issue, isLightMode }) => {
+const PopupContent = ({ issue }) => {
     const type = issue.type || 'Moment';
-    const vibe = VIBE_CONFIG[type] || VIBE_CONFIG.Default;
 
     return (
         <div className="w-64 rounded-3xl overflow-hidden bg-[#0f0f13]/95 backdrop-blur-3xl border border-white/10 text-white shadow-2xl">
@@ -63,14 +63,14 @@ const PopupContent = ({ issue, isLightMode }) => {
                         <MapPin size={10} className="text-[#a78bfa]" />
                         <span className="truncate w-24">{issue.address?.split(',')[0]}</span>
                     </div>
-                    <a href={`/memory/${issue.id}`} className="text-[#ff7ec9] hover:underline">View</a>
+                    <Link to={`/memory/${issue.id}`} className="text-[#ff7ec9] hover:underline">View</Link>
                 </div>
             </div>
         </div>
     );
 };
 
-const DashboardMap = ({ issues, isLightMode = false }) => {
+const DashboardMap = ({ issues }) => {
     const [showHeatmap, setShowHeatmap] = useState(false);
     const [selectedIssue, setSelectedIssue] = useState(null);
     const [mapStyle, setMapStyle] = useState('dark-v11');
@@ -150,7 +150,9 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
         <div className="h-full w-full relative z-0">
             <div className="absolute top-6 left-6 z-[400] flex flex-col gap-3">
                 <button
+                    type="button"
                     onClick={() => setShowHeatmap(!showHeatmap)}
+                    aria-pressed={showHeatmap}
                     className={`flex items-center gap-3 px-6 py-3.5 rounded-2xl backdrop-blur-3xl border border-white/10 shadow-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${showHeatmap ? 'bg-[#ff7ec9] text-white' : 'bg-black/60 text-slate-400'}`}
                 >
                     <Layers size={16} /> Heartbeat {showHeatmap ? 'ON' : 'OFF'}
@@ -160,9 +162,11 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
                     {mapStyles.map((style) => (
                         <button
                             key={style.id}
+                            type="button"
                             onClick={() => setMapStyle(style.id)}
+                            aria-label={`${style.name} map style`}
+                            aria-pressed={mapStyle === style.id}
                             className={`p-3.5 rounded-2xl backdrop-blur-3xl border border-white/10 shadow-2xl transition-all ${mapStyle === style.id ? 'bg-white/10 text-white' : 'bg-black/40 text-slate-600 hover:text-slate-400'}`}
-                            title={style.name}
                         >
                             {React.createElement(style.icon, { size: 16 })}
                         </button>
@@ -208,7 +212,7 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
                         closeOnClick={false}
                         maxWidth="280px"
                     >
-                        <PopupContent issue={selectedIssue} isLightMode={isLightMode} />
+                        <PopupContent issue={selectedIssue} />
                     </Popup>
                 )}
             </Map>

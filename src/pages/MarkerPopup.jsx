@@ -1,7 +1,7 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   MapPin, Calendar, Hash, ExternalLink, Heart,
-  Sparkles, HeartHandshake, Ghost, Laugh, Eye, Map
+  Sparkles, Ghost, Laugh, Eye, Map,
 } from 'lucide-react';
 
 const VIBE_THEME = {
@@ -110,12 +110,12 @@ const MarkerPopup = ({ issue = {} }) => {
         </div>
       </div>
 
-      <a 
-        href={`/memory/${issue.id}`} 
+      <Link
+        to={`/memory/${issue.id}`}
         className="block w-full py-4 bg-gradient-to-r from-[#ff7ec9] to-[#a78bfa] text-center text-[10px] font-black text-white uppercase tracking-[0.3em] hover:opacity-90 transition-opacity"
       >
-        Step Into Memory <ExternalLink size={10} className="inline ml-2" />
-      </a>
+        Step Into Memory <ExternalLink size={10} className="inline ml-2" aria-hidden />
+      </Link>
     </div>
   );
 };

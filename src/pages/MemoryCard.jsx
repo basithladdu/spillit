@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, MapPin, Share2, Download, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { X, MapPin, Share2, ExternalLink, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const MemoryCard = ({ summaryData, setShowSummary }) => {
@@ -15,27 +16,32 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
                     text: summaryData.caption,
                     url: url,
                 });
-            } catch (err) {
-                // Share failed silently
+            } catch {
+                // Share cancelled or failed silently
             }
         } else {
-            navigator.clipboard.writeText(url);
-            alert("Link copied to clipboard!");
+            await navigator.clipboard.writeText(url);
+            toast.success('Link copied to clipboard');
         }
     };
 
     return (
         <AnimatePresence>
             <div className="fixed inset-0 z-[2500] flex items-center justify-center p-4">
-                <motion.div
+                <motion.button
+                    type="button"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
+                    aria-label="Close summary"
                     className="absolute inset-0 bg-background/80 backdrop-blur-md"
                     onClick={() => setShowSummary(false)}
                 />
 
                 <motion.div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="memory-summary-title"
                     initial={{ scale: 0.9, opacity: 0, y: 20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -44,11 +50,13 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
                     {/* Header with Success Badge */}
                     <div className="absolute top-6 left-6 z-10 flex items-center gap-2 bg-white border-2 border-foreground px-4 py-2 rounded-full shadow-pop">
                         <CheckCircle2 size={16} className="text-accent" strokeWidth={3} />
-                        <span className="text-[10px] font-black text-foreground uppercase tracking-widest heading-font">Memory Pinned</span>
+                        <span id="memory-pinned-title" className="text-[10px] font-black text-foreground uppercase tracking-widest heading-font">Memory Pinned</span>
                     </div>
                     
-                    <button 
+                    <button
+                        type="button"
                         onClick={() => setShowSummary(false)}
+                        aria-label="Close"
                         className="absolute top-6 right-6 z-10 p-2 bg-white border-2 border-foreground rounded-full text-foreground hover:bg-muted transition-all shadow-pop"
                     >
                         <X size={20} strokeWidth={3} />
@@ -65,7 +73,7 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
 
                     <div className="p-8 space-y-6">
                         <div className="space-y-3">
-                            <p className="text-xl md:text-2xl text-foreground italic leading-relaxed heading-font font-black">
+                            <p id="memory-summary-title" className="text-xl md:text-2xl text-foreground italic leading-relaxed heading-font font-black">
                                 &quot;{summaryData.caption}&quot;
                             </p>
                             <div className="flex items-center gap-2 text-slate-400 font-bold uppercase tracking-tighter text-[10px]">
@@ -87,6 +95,7 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
 
                         <div className="flex flex-col gap-4">
                             <button
+                                type="button"
                                 onClick={handleShare}
                                 className="w-full py-4 rounded-full bg-accent text-white font-black flex items-center justify-center gap-3 border-2 border-foreground shadow-pop hover:shadow-pop-hover hover:-translate-y-1 transition-all uppercase tracking-widest text-sm"
                             >

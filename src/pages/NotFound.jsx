@@ -4,7 +4,7 @@ import { Ghost, Map, ArrowLeft } from 'lucide-react';
 
 function NotFound() {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-6">
 
       {/* Blobs */}
       <div className="pointer-events-none absolute top-16 right-16 w-48 h-48 bg-tertiary rounded-full opacity-30 blur-3xl" />
@@ -26,12 +26,12 @@ function NotFound() {
           <Ghost size={44} strokeWidth={2} />
         </div>
 
-        <h2 className="heading-font text-4xl md:text-5xl font-bold text-foreground mb-4">
+        <h1 className="heading-font mb-4 text-4xl font-bold text-foreground md:text-5xl">
           Lost in the <span className="text-accent italic">Map.</span>
-        </h2>
+        </h1>
 
-        <p className="text-muted-foreground text-base mb-10 leading-relaxed max-w-sm mx-auto">
-          This page was never spilled, or it's been erased from the soul of the map.
+        <p className="mx-auto mb-10 max-w-sm text-base leading-relaxed text-muted-foreground">
+          This page was never spilled, or it has been erased from the soul of the map.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -42,6 +42,7 @@ function NotFound() {
             <Map size={18} strokeWidth={2.5} /> Return to Map
           </Link>
           <button
+            type="button"
             onClick={() => window.history.back()}
             className="flex items-center justify-center gap-2 px-8 py-4 bg-card border-2 border-foreground text-foreground rounded-full font-bold shadow-pop hover:bg-muted hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all text-sm uppercase tracking-widest heading-font"
           >
@@ -49,7 +50,7 @@ function NotFound() {
           </button>
         </div>
       </motion.div>
-    </div>
+    </main>
   );
 }
 

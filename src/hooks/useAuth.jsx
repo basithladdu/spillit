@@ -74,15 +74,16 @@ export function AuthProvider({ children }) {
 
   const value = {
     currentUser,
+    loading,
     register,
     login,
     logout,
-    signInWithGoogle
+    signInWithGoogle,
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }

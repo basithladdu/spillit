@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 
 /**
  * Playful Geometric Input Component
@@ -11,6 +11,7 @@ export const Input = React.forwardRef(
       error,
       helperText,
       icon: Icon,
+      id: idProp,
       required = false,
       className = "",
       containerClassName = "",
@@ -18,17 +19,24 @@ export const Input = React.forwardRef(
     },
     ref
   ) => {
+    const generatedId = useId();
+    const inputId = idProp ?? generatedId;
+
     return (
       <div className={`flex flex-col gap-2 ${containerClassName}`}>
         {label && (
-          <label className="heading-font font-bold text-sm tracking-wide uppercase text-foreground">
+          <label htmlFor={inputId} className="heading-font font-bold text-sm tracking-wide uppercase text-foreground">
             {label}
-            {required && <span className="text-secondary ml-1">*</span>}
+            {required && <span className="text-secondary ml-1" aria-hidden>*</span>}
           </label>
         )}
         <div className="relative">
           <input
             ref={ref}
+            id={inputId}
+            required={required}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
             className={`w-full bg-input border-2 border-border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground transition-all duration-300 focus:border-accent focus:shadow-focus outline-none ${
               Icon ? "pl-12" : ""
             } ${error ? "border-red-500" : ""} ${className}`}
@@ -41,9 +49,15 @@ export const Input = React.forwardRef(
             />
           )}
         </div>
-        {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
+        {error && (
+          <p id={`${inputId}-error`} className="text-red-500 text-sm font-medium" role="alert">
+            {error}
+          </p>
+        )}
         {helperText && !error && (
-          <p className="text-muted-foreground text-sm">{helperText}</p>
+          <p id={`${inputId}-helper`} className="text-muted-foreground text-sm">
+            {helperText}
+          </p>
         )}
       </div>
     );

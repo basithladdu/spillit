@@ -1,10 +1,9 @@
-import React from 'react';
-import { Heart, Globe, Instagram } from 'lucide-react';
+import { Heart, Instagram } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 function Footer() {
   return (
-    <footer className="border-t-2 border-border bg-muted py-12">
+    <footer className="border-t-2 border-border bg-muted py-12" aria-label="Site footer">
       <div className="max-w-6xl mx-auto px-6 flex flex-col items-center gap-6">
 
         {/* Brand */}

@@ -317,10 +317,10 @@ export default function DesignSystemShowcase() {
         {/* FOOTER */}
         <div className="mt-24 pt-12 border-t-2 border-border text-center space-y-4">
           <p className="text-muted-foreground">
-            Playful Geometric Design System © 2025
+            Playful Geometric Design System &copy; {new Date().getFullYear()}
           </p>
           <p className="text-sm text-muted-foreground">
-            Built for Spillit with care
+            Built for Spill It with care
           </p>
         </div>
       </Container>

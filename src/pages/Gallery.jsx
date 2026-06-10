@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../utils/supabase';
-import { 
-  Heart, 
-  MapPin, 
-  Calendar, 
-  Search, 
-  Filter, 
-  ChevronLeft, 
-  ChevronRight, 
-  Sparkles, 
-  Ghost, 
-  Flame,
-  Star,
+import {
+  Heart,
+  MapPin,
+  Calendar,
+  Search,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  Ghost,
   Eye,
   Hash,
-  User
+  User,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -38,13 +36,14 @@ const StatBox = ({ label, value, icon, accentColor }) => (
   </motion.div>
 );
 
-const FilterSelect = ({ label, value, onChange, options }) => (
+const FilterSelect = ({ id, label, value, onChange, options }) => (
   <div className="flex flex-col gap-2">
-    <label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-500">{label}</label>
+    <label htmlFor={id} className="ml-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">{label}</label>
     <select
+      id={id}
       value={value}
       onChange={onChange}
-      className="w-full text-xs font-black bg-white text-foreground border-2 border-foreground rounded-2xl px-5 py-4 outline-none focus:border-accent focus:shadow-focus transition-all appearance-none cursor-pointer shadow-pop"
+      className="w-full cursor-pointer appearance-none rounded-2xl border-2 border-foreground bg-white px-5 py-4 text-xs font-black text-foreground shadow-pop outline-none transition-all focus:border-accent focus:shadow-focus"
     >
       {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
     </select>
@@ -91,6 +90,10 @@ function Gallery() {
     };
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filters.vibe, filters.sortBy]);
+
   // Filtering Logic
   const filteredMemories = memories.filter(m => {
     const matchesSearch = (m.caption || '').toLowerCase().includes(searchQuery.toLowerCase()) || (m.type || '').toLowerCase().includes(searchQuery.toLowerCase());
@@ -107,8 +110,8 @@ function Gallery() {
   const currentData = filteredMemories.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
+    <div className="flex min-h-screen items-center justify-center bg-background" role="status" aria-label="Loading archive">
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-accent border-t-transparent" aria-hidden />
     </div>
   );
 
@@ -139,11 +142,12 @@ function Gallery() {
           <div className="w-full md:w-auto relative group">
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-[#ff7ec9] transition-colors" size={18} />
             <input
-              type="text"
+              type="search"
+              aria-label="Search memories"
               placeholder="Search memories..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full md:w-96 pl-16 pr-8 py-5 rounded-full bg-white border-2 border-foreground focus:border-accent text-sm font-black outline-none transition-all shadow-pop focus:shadow-focus text-foreground placeholder-slate-400"
+              className="w-full rounded-full border-2 border-foreground bg-white py-5 pr-8 pl-16 text-sm font-black text-foreground shadow-pop outline-none transition-all placeholder-slate-400 focus:border-accent focus:shadow-focus md:w-96"
             />
           </div>
         </div>
@@ -163,8 +167,10 @@ function Gallery() {
               <span className="heading-font text-xs font-bold uppercase tracking-widest text-foreground">Curate View</span>
             </div>
             <button
+              type="button"
               onClick={() => setShowFilters(!showFilters)}
-              className="px-6 py-2.5 rounded-full bg-muted border-2 border-foreground text-[10px] font-bold uppercase tracking-widest hover:bg-accent hover:text-white hover:border-accent transition-all heading-font shadow-pop"
+              aria-expanded={showFilters}
+              className="rounded-full border-2 border-foreground bg-muted px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest shadow-pop transition-all heading-font hover:border-accent hover:bg-accent hover:text-white"
             >
               {showFilters ? 'Hide' : 'Filters'}
             </button>
@@ -179,12 +185,14 @@ function Gallery() {
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6"
               >
                 <FilterSelect
+                  id="gallery-vibe-filter"
                   label="Vibe"
                   value={filters.vibe}
                   onChange={(e) => setFilters({ ...filters, vibe: e.target.value })}
                   options={['All', 'Moment', 'Crush', 'Secret', 'Laugh']}
                 />
                 <FilterSelect
+                  id="gallery-sort-filter"
                   label="Sort By"
                   value={filters.sortBy}
                   onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
@@ -217,7 +225,7 @@ function Gallery() {
                   {memory.image_url ? (
                     <img
                       src={memory.image_url}
-                      alt="memory"
+                      alt={memory.caption ? `Memory: ${memory.caption.slice(0, 60)}` : 'Memory photo'}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                     />
                   ) : (
@@ -281,8 +289,10 @@ function Gallery() {
         {totalPages > 1 && (
           <div className="flex justify-center mt-20 gap-4 items-center">
             <button
+              type="button"
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
+              aria-label="Previous page"
               className="w-12 h-12 rounded-full bg-card border-2 border-foreground flex items-center justify-center text-foreground disabled:opacity-30 shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
             >
               <ChevronLeft size={20} strokeWidth={2.5} />
@@ -291,8 +301,10 @@ function Gallery() {
               {currentPage} / {totalPages}
             </div>
             <button
+              type="button"
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
+              aria-label="Next page"
               className="w-12 h-12 rounded-full bg-card border-2 border-foreground flex items-center justify-center text-foreground disabled:opacity-30 shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
             >
               <ChevronRight size={20} strokeWidth={2.5} />
