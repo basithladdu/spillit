@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Map, { Marker, Popup, Source, Layer } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Layers, Map as MapIcon, Satellite, Navigation, Sparkles, Heart, Ghost, Laugh, Eye, MapPin } from 'lucide-react';
+import { Layers, Map as MapIcon, Satellite, Navigation, Sparkles, Heart, Ghost, Laugh, Eye, MapPin, LucideIcon } from 'lucide-react';
+import { Memory } from '../types';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
@@ -9,7 +10,19 @@ const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 const DEFAULT_CENTER = { lng: 0, lat: 20 };
 const DEFAULT_ZOOM = 1.5;
 
-const VIBE_CONFIG = {
+interface VibeConfig {
+  color: string;
+  heatIntensity: number;
+}
+
+interface MapStyle {
+  id: string;
+  name: string;
+  icon: React.ComponentType<{ size: number }>;
+  style: string;
+}
+
+const VIBE_CONFIG: Record<string, VibeConfig> = {
   Moment: { color: '#ff7ec9', heatIntensity: 0.8 },
   Crush: { color: '#a78bfa', heatIntensity: 0.7 },
   Secret: { color: '#4ade80', heatIntensity: 0.5 },
@@ -17,7 +30,12 @@ const VIBE_CONFIG = {
   Default: { color: '#3b82f6', heatIntensity: 0.2 }
 };
 
-const MarkerPin = ({ color, size = 32 }) => (
+interface MarkerPinProps {
+  color: string;
+  size?: number;
+}
+
+const MarkerPin: React.FC<MarkerPinProps> = ({ color, size = 32 }) => (
     <div style={{ transform: `translate(${-size / 2}px,${-size}px)`, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>
         <svg height={size} viewBox="0 0 24 24" style={{ fill: color, stroke: 'white', strokeWidth: 2 }}>
             <path d="M20.2,15.7L20.2,15.7c1.1-1.6,1.8-3.6,1.8-5.7c0-5.6-4.5-10-10-10S2,4.5,2,10c0,2,0.6,3.9,1.6,5.4c0,0.1,0.1,0.2,0.2,0.3
@@ -28,14 +46,19 @@ const MarkerPin = ({ color, size = 32 }) => (
     </div>
 );
 
-const PopupContent = ({ issue, isLightMode }) => {
+interface PopupContentProps {
+  issue: Memory;
+  isLightMode: boolean;
+}
+
+const PopupContent: React.FC<PopupContentProps> = ({ issue, isLightMode }) => {
     const type = issue.type || 'Moment';
     const vibe = VIBE_CONFIG[type] || VIBE_CONFIG.Default;
 
     return (
         <div className="w-64 rounded-3xl overflow-hidden bg-[#0f0f13]/95 backdrop-blur-3xl border border-white/10 text-white shadow-2xl">
             <div className="h-1 w-full bg-gradient-to-r from-[#ff7ec9] to-[#a78bfa]"></div>
-            
+
             {issue.imageUrl && (
                 <div className="w-full h-32 relative overflow-hidden">
                     <img src={issue.imageUrl} className="w-full h-full object-cover" alt="Memory" />
@@ -70,17 +93,28 @@ const PopupContent = ({ issue, isLightMode }) => {
     );
 };
 
-const DashboardMap = ({ issues, isLightMode = false }) => {
-    const [showHeatmap, setShowHeatmap] = useState(false);
-    const [selectedIssue, setSelectedIssue] = useState(null);
-    const [mapStyle, setMapStyle] = useState('dark-v11');
-    const [viewState, setViewState] = useState({
+interface DashboardMapProps {
+  issues: Memory[];
+  isLightMode?: boolean;
+}
+
+interface ViewState {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+}
+
+const DashboardMap: React.FC<DashboardMapProps> = ({ issues, isLightMode = false }) => {
+    const [showHeatmap, setShowHeatmap] = useState<boolean>(false);
+    const [selectedIssue, setSelectedIssue] = useState<Memory | null>(null);
+    const [mapStyle, setMapStyle] = useState<string>('dark-v11');
+    const [viewState, setViewState] = useState<ViewState>({
         latitude: DEFAULT_CENTER.lat,
         longitude: DEFAULT_CENTER.lng,
         zoom: DEFAULT_ZOOM
     });
 
-    const mapStyles = [
+    const mapStyles: MapStyle[] = [
         { id: 'dark-v11', name: 'Dark', icon: MapIcon, style: 'mapbox://styles/mapbox/dark-v11' },
         { id: 'satellite-streets-v12', name: 'Hybrid', icon: Navigation, style: 'mapbox://styles/mapbox/satellite-streets-v12' },
         { id: 'streets-v12', name: 'Explore', icon: MapIcon, style: 'mapbox://styles/mapbox/streets-v12' }
@@ -88,7 +122,7 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
 
     const currentMapStyle = mapStyles.find(s => s.id === mapStyle) || mapStyles[0];
 
-    const validIssues = useMemo(() =>
+    const validIssues = useMemo<Memory[]>(() =>
         issues?.filter(i =>
             i.lat !== undefined && i.lat !== null && !isNaN(Number(i.lat)) &&
             i.lng !== undefined && i.lng !== null && !isNaN(Number(i.lng))
@@ -112,20 +146,20 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
     }, [validIssues]);
 
     const heatmapData = {
-        type: 'FeatureCollection',
+        type: 'FeatureCollection' as const,
         features: validIssues.map(issue => {
             const { heatIntensity } = VIBE_CONFIG[issue.type || 'Moment'] || VIBE_CONFIG.Default;
             return {
-                type: 'Feature',
+                type: 'Feature' as const,
                 properties: { intensity: heatIntensity },
-                geometry: { type: 'Point', coordinates: [issue.lng, issue.lat] }
+                geometry: { type: 'Point' as const, coordinates: [issue.lng, issue.lat] }
             };
         })
     };
 
     const heatmapLayer = {
         id: 'heatmap',
-        type: 'heatmap',
+        type: 'heatmap' as const,
         source: 'issues',
         maxzoom: 15,
         paint: {
@@ -172,14 +206,14 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
 
             <Map
                 {...viewState}
-                onMove={evt => setViewState(evt.viewState)}
+                onMove={evt => setViewState(evt.viewState as ViewState)}
                 mapboxAccessToken={MAPBOX_TOKEN}
                 style={{ width: '100%', height: '100%' }}
                 mapStyle={currentMapStyle.style}
             >
                 {showHeatmap && (
                     <Source type="geojson" data={heatmapData}>
-                        <Layer {...heatmapLayer} />
+                        <Layer {...(heatmapLayer as any)} />
                     </Source>
                 )}
 
@@ -194,7 +228,7 @@ const DashboardMap = ({ issues, isLightMode = false }) => {
                             setSelectedIssue(issue);
                         }}
                     >
-                        <MarkerPin color={(VIBE_CONFIG[issue.type] || VIBE_CONFIG.Default).color} />
+                        <MarkerPin color={(VIBE_CONFIG[issue.type || 'Moment'] || VIBE_CONFIG.Default).color} />
                     </Marker>
                 ))}
 
