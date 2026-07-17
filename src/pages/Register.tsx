@@ -4,11 +4,17 @@ import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, AlertCircle, Heart, UserPlus } from 'lucide-react';
 
-function Register() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+interface Errors {
+  email?: string;
+  password?: string;
+  general?: string;
+}
+
+const Register: React.FC = () => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [errors, setErrors] = useState<Errors>({});
+  const [loading, setLoading] = useState<boolean>(false);
   const { register, currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -18,12 +24,12 @@ function Register() {
     }
   }, [currentUser, navigate]);
 
-  const clearError = (field) => {
+  const clearError = (field: keyof Errors): void => {
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
     if (errors.general) setErrors(prev => ({ ...prev, general: '' }));
   };
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
@@ -36,7 +42,7 @@ function Register() {
 
     try {
       await register(email, password);
-    } catch (error) {
+    } catch (error: any) {
       setLoading(false);
       if (error.code === 'auth/email-already-in-use') {
         setErrors({ email: 'This email address is already in use.' });

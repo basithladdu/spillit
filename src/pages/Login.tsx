@@ -4,12 +4,18 @@ import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff, Heart } from 'lucide-react';
 
-function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+interface Errors {
+  email?: string;
+  password?: string;
+  general?: string;
+}
+
+const Login: React.FC = () => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [errors, setErrors] = useState<Errors>({});
+  const [loading, setLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const { login, currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -19,19 +25,19 @@ function Login() {
     }
   }, [currentUser, navigate]);
 
-  const clearError = (field) => {
+  const clearError = (field: keyof Errors): void => {
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
     if (errors.general) setErrors(prev => ({ ...prev, general: '' }));
   };
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
 
     try {
       await login(email, password);
-    } catch (error) {
+    } catch (error: any) {
       setLoading(false);
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         setErrors({ general: 'Invalid email or password.' });

@@ -5,15 +5,48 @@ import { motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import {
   Search, Filter, Trash2, Layers,
-  ArrowUpDown, X, Info, MapPin, 
+  ArrowUpDown, X, Info, MapPin,
   Calendar, Hash, Eye, Download,
-  Heart, Shield, AlertTriangle, CheckCircle2, ChevronDown
+  Heart, Shield, AlertTriangle, CheckCircle2, ChevronDown, LucideIcon
 } from 'lucide-react';
-import { getOptimizedImageUrl } from '../utils/imageOptimizer';
+import { getOptimizedImageUrl } from '../utils/image';
+import { Memory } from '../types';
+
+// --- Types ---
+
+interface SortConfig {
+  key: string;
+  direction: 'asc' | 'desc';
+}
+
+interface Filters {
+  status: string;
+  vibe: string;
+}
+
+interface Stats {
+  total: number;
+  byVibe: Record<string, number>;
+  byStatus: Record<string, number>;
+}
+
+interface VibeConfig {
+  color: string;
+  bg: string;
+  border: string;
+  icon: LucideIcon;
+}
+
+interface StatusConfig {
+  color: string;
+  bg: string;
+  border: string;
+  label: string;
+}
 
 // --- Shared Style Helpers ---
 
-const getVibeConfig = (vibe) => {
+const getVibeConfig = (vibe: string): VibeConfig => {
   switch (vibe) {
     case 'Shock': return { color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30', icon: AlertTriangle };
     case 'High': return { color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30', icon: Shield };
@@ -22,7 +55,7 @@ const getVibeConfig = (vibe) => {
   }
 };
 
-const getStatusConfig = (status) => {
+const getStatusConfig = (status?: string): StatusConfig => {
   const s = (status || 'active').toLowerCase();
   if (s === 'mined' || s === 'archived') return { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', label: 'Archived' };
   return { color: 'text-[var(--spillit-secondary)]', bg: 'bg-[var(--spillit-secondary)]/10', border: 'border-[var(--spillit-secondary)]/30', label: 'Live' };
@@ -30,7 +63,15 @@ const getStatusConfig = (status) => {
 
 // --- Sub-Components ---
 
-const StatCard = ({ title, value, icon, accentColor, delay }) => (
+interface StatCardProps {
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  accentColor: string;
+  delay: number;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, accentColor, delay }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -50,7 +91,14 @@ const StatCard = ({ title, value, icon, accentColor, delay }) => (
   </motion.div>
 );
 
-const DistributionBar = ({ label, count, total, color }) => {
+interface DistributionBarProps {
+  label: string;
+  count: number;
+  total: number;
+  color: string;
+}
+
+const DistributionBar: React.FC<DistributionBarProps> = ({ label, count, total, color }) => {
   const percent = total > 0 ? (count / total) * 100 : 0;
   return (
     <div className="mb-4">
@@ -73,29 +121,29 @@ const DistributionBar = ({ label, count, total, color }) => {
 
 // --- Main Dashboard Component ---
 
-function Dashboard() {
-  const [memories, setMemories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, byVibe: {}, byStatus: {} });
+const Dashboard: React.FC = () => {
+  const [memories, setMemories] = useState<Memory[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [stats, setStats] = useState<Stats>({ total: 0, byVibe: {}, byStatus: {} });
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState({ status: 'All', vibe: 'All' });
-  const [sortConfig, setSortConfig] = useState({ key: 'ts', direction: 'desc' });
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [filters, setFilters] = useState<Filters>({ status: 'All', vibe: 'All' });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'ts', direction: 'desc' });
 
-  const [selectedMemory, setSelectedMemory] = useState(null);
-  const [deleteId, setDeleteId] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
+  const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState<boolean>(false);
 
   useEffect(() => {
-    // collection name is 'memories'
     const q = query(collection(db, 'memories'), orderBy('ts', 'desc'), limit(200));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = [];
-      const vibeCounts = {};
-      const statusCounts = {};
+      const data: Memory[] = [];
+      const vibeCounts: Record<string, number> = {};
+      const statusCounts: Record<string, number> = {};
 
       snapshot.forEach((docSnap) => {
-        const item = { id: docSnap.id, ...docSnap.data() };
+        const memoryData = docSnap.data() as Omit<Memory, 'id'>;
+        const item: Memory = { ...memoryData, id: docSnap.id };
         data.push(item);
         vibeCounts[item.colorChoice || 'default'] = (vibeCounts[item.colorChoice || 'default'] || 0) + 1;
         statusCounts[item.status || 'live'] = (statusCounts[item.status || 'live'] || 0) + 1;
@@ -108,7 +156,7 @@ function Dashboard() {
     return () => unsubscribe();
   }, []);
 
-  const handleDelete = async () => {
+  const handleDelete = async (): Promise<void> => {
     if (!deleteId) return;
     try {
       await deleteDoc(doc(db, 'memories', deleteId));
@@ -119,17 +167,17 @@ function Dashboard() {
     }
   };
 
-  const handleArchiveToggle = async (id, currentStatus) => {
+  const handleArchiveToggle = async (id: string, currentStatus?: string): Promise<void> => {
     const newStatus = (currentStatus === 'archived') ? 'live' : 'archived';
     try {
       await updateDoc(doc(db, 'memories', id), { status: newStatus });
-      if (selectedMemory?.id === id) setSelectedMemory(prev => ({ ...prev, status: newStatus }));
+      if (selectedMemory?.id === id) setSelectedMemory(prev => prev ? { ...prev, status: newStatus } : null);
     } catch (error) {
       // Update error handled silently
     }
   };
 
-  const handleSort = (key) => {
+  const handleSort = (key: string): void => {
     setSortConfig({
       key,
       direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
@@ -143,24 +191,24 @@ function Dashboard() {
     return matchesSearch && matchesStatus && matchesVibe;
   }).sort((a, b) => {
     if (sortConfig.key === 'ts') {
-      const timeA = a.ts?.toMillis?.() || 0;
-      const timeB = b.ts?.toMillis?.() || 0;
+      const timeA = 'toMillis' in a.ts ? a.ts.toMillis() : 0;
+      const timeB = 'toMillis' in b.ts ? b.ts.toMillis() : 0;
       return sortConfig.direction === 'asc' ? timeA - timeB : timeB - timeA;
     }
-    const valA = a[sortConfig.key] || '';
-    const valB = b[sortConfig.key] || '';
+    const valA = (a as any)[sortConfig.key] || '';
+    const valB = (b as any)[sortConfig.key] || '';
     if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
     if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
     return 0;
   });
 
-  const handleExport = () => {
+  const handleExport = (): void => {
     const dataToExport = filteredData.map(item => ({
       Memory_ID: item.id,
       Caption: item.caption,
       Upvotes: item.upvotes || 0,
       Address: item.address,
-      Date: item.ts ? new Date(item.ts.toMillis()).toLocaleString() : 'N/A',
+      Date: item.ts ? new Date('toMillis' in item.ts ? item.ts.toMillis() : 0).toLocaleString() : 'N/A',
       Image: item.imageUrl
     }));
 
@@ -178,7 +226,7 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[var(--spillit-bg)] text-white font-sans pb-24 selection:bg-[var(--spillit-primary)]/30">
-      
+
       {/* Background Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[600px] bg-gradient-to-b from-[var(--spillit-primary)]/10 via-transparent to-transparent blur-[120px] pointer-events-none"></div>
 
@@ -198,7 +246,7 @@ function Dashboard() {
               Review, manage, and curate the anonymous memories spilling across the global map.
             </p>
           </div>
-          
+
           <button
             onClick={handleExport}
             className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all shadow-xl"
@@ -212,7 +260,7 @@ function Dashboard() {
           <StatCard title="Total Spills" value={stats.total} icon={<Layers size={20} />} accentColor="var(--spillit-primary)" delay={0} />
           <StatCard title="Total Love" value={memories.reduce((acc, m) => acc + (m.upvotes || 0), 0)} icon={<Heart size={20} />} accentColor="var(--spillit-secondary)" delay={0.1} />
           <StatCard title="Live Pins" value={stats.byStatus.live || stats.total} icon={<MapPin size={20} />} accentColor="#4ade80" delay={0.2} />
-          
+
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
             className="bg-white/5 backdrop-blur-3xl border border-white/5 rounded-[32px] p-6"
@@ -285,7 +333,7 @@ function Dashboard() {
               <tbody className="text-sm">
                 {filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="p-12 text-center text-slate-600 italic font-medium">Archive is empty or no spills found.</td>
+                    <td colSpan={6} className="p-12 text-center text-slate-600 italic font-medium">Archive is empty or no spills found.</td>
                   </tr>
                 ) : (
                   filteredData.map((memory) => {
@@ -319,7 +367,7 @@ function Dashboard() {
                            </div>
                         </td>
                         <td className="p-6 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                           {memory.ts ? new Date(memory.ts.toMillis()).toLocaleDateString() : 'N/A'}
+                           {memory.ts ? new Date('toMillis' in memory.ts ? memory.ts.toMillis() : 0).toLocaleDateString() : 'N/A'}
                         </td>
                         <td className="p-6 text-right">
                            <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
@@ -405,7 +453,7 @@ function Dashboard() {
                    </div>
 
                    <div className="pt-10 mt-auto border-t border-white/5">
-                      <p className="text-[9px] text-slate-600 font-black uppercase tracking-widest text-center">Spilled On {selectedMemory.ts ? new Date(selectedMemory.ts.toMillis()).toLocaleString() : 'N/A'}</p>
+                      <p className="text-[9px] text-slate-600 font-black uppercase tracking-widest text-center">Spilled On {selectedMemory.ts ? new Date('toMillis' in selectedMemory.ts ? selectedMemory.ts.toMillis() : 0).toLocaleString() : 'N/A'}</p>
                    </div>
                 </div>
              </motion.div>

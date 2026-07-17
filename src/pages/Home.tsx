@@ -8,10 +8,11 @@ import { Link } from 'react-router-dom';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import Map, { Marker, Popup, NavigationControl, GeolocateControl } from 'react-map-gl';
-import { getOptimizedImageUrl } from '../utils/imageOptimizer';
+import { getOptimizedImageUrl } from '../utils/image';
 import { Heart, Map as MapIcon, LocateFixed, ArrowRight, Flame, Ghost } from 'lucide-react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
+import { Memory } from '../types';
 import MemoryCard from './MemoryCard';
 import SpillMemoryModal from '../components/SpillMemoryModal';
 
@@ -22,10 +23,26 @@ const MAP_STYLES = [
   { name: 'Dark', id: 'mapbox://styles/mapbox/dark-v11', color: 'bg-gray-900' },
   { name: 'Satellite', id: 'mapbox://styles/mapbox/satellite-streets-v12', color: 'bg-green-900' },
   { name: 'Street', id: 'mapbox://styles/mapbox/streets-v12', color: 'bg-blue-100' }
-];
+] as const;
+
+interface TourStep {
+  title: string;
+  content: string;
+  action: string;
+  placement: 'center' | 'top' | 'bottom';
+  targetRefKey?: string;
+  targetId?: string;
+}
+
+interface MapViewState {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+  transitionDuration?: number;
+}
 
 // --- Onboarding Tour Data ---
-const TOUR_STEPS = [
+const TOUR_STEPS: TourStep[] = [
   {
     title: "Welcome to Spill It",
     content: "The world is a map of memories. Share yours anonymously with a photo and a story.",
@@ -62,8 +79,14 @@ const TOUR_STEPS = [
 ];
 
 // --- Onboarding Component ---
-const OnboardingTour = ({ onComplete, targetRefs, setShowForm }) => {
-  const [step, setStep] = useState(0);
+interface OnboardingTourProps {
+  onComplete: () => void;
+  targetRefs: Record<string, React.RefObject<HTMLElement>>;
+  setShowForm: (show: boolean) => void;
+}
+
+const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete, targetRefs, setShowForm }) => {
+  const [step, setStep] = useState<number>(0);
   const currentStepData = TOUR_STEPS[step];
 
   const handleNext = () => {
@@ -122,26 +145,26 @@ const OnboardingTour = ({ onComplete, targetRefs, setShowForm }) => {
   );
 };
 
-function Home() {
-  const reportBtnRef = useRef(null);
-  const [allMemories, setAllMemories] = useState({});
-  const [selectedMemory, setSelectedMemory] = useState(null);
+const Home: React.FC = () => {
+  const reportBtnRef = useRef<HTMLButtonElement>(null);
+  const [allMemories, setAllMemories] = useState<Record<string, Memory>>({});
+  const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
 
   // UI State
-  const [showForm, setShowForm] = useState(false);
-  const [showSummary, setShowSummary] = useState(false);
-  const [summaryData, setSummaryData] = useState(null);
-  const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/satellite-streets-v12');
+  const [showForm, setShowForm] = useState<boolean>(false);
+  const [showSummary, setShowSummary] = useState<boolean>(false);
+  const [summaryData, setSummaryData] = useState<any>(null);
+  const [mapStyle, setMapStyle] = useState<string>('mapbox://styles/mapbox/satellite-streets-v12');
 
   // Map state - Start over Europe/Asia at zoom 3 so actual landmass is visible
-  const [viewState, setViewState] = useState({
+  const [viewState, setViewState] = useState<MapViewState>({
     latitude: 30,
     longitude: 20,
     zoom: 2.5
   });
 
   // Onboarding State
-  const [showTour, setShowTour] = useState(false);
+  const [showTour, setShowTour] = useState<boolean>(false);
 
   // Check for first visit
   useEffect(() => {
@@ -160,29 +183,36 @@ function Home() {
   useEffect(() => {
     const q = query(collection(db, 'memories'), orderBy('ts', 'desc'), limit(50));
     const unsubscribe = onSnapshot(q, (snap) => {
-      const memories = {};
-      snap.forEach(d => memories[d.id] = { id: d.id, ...d.data() });
+      const memories: Record<string, Memory> = {};
+      snap.forEach(d => {
+        const data = d.data() as Omit<Memory, 'id'>;
+        memories[d.id] = { ...data, id: d.id };
+      });
       setAllMemories(memories);
     });
     return () => unsubscribe();
   }, []);
 
-  const handleReportSuccess = (data) => {
+  const handleReportSuccess = (data: any): void => {
     setSummaryData(data);
     setShowSummary(true);
   };
 
-  const memoriesArray = useMemo(
+  const memoriesArray = useMemo<Memory[]>(
     () =>
       Object.entries(allMemories)
-        .map(([id, memory]) => ({ id, ...memory }))
-        .sort((a, b) => (b.ts?.toMillis?.() || 0) - (a.ts?.toMillis?.() || 0)),
+        .map(([id, memory]) => ({ ...memory, id }))
+        .sort((a, b) => {
+          const aTime = 'toMillis' in a.ts ? a.ts.toMillis() : 0;
+          const bTime = 'toMillis' in b.ts ? b.ts.toMillis() : 0;
+          return bTime - aTime;
+        }),
     [allMemories]
   );
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-[var(--spillit-bg)] text-white font-sans">
-      
+
       {/* --- HERO OVERLAY --- */}
       <div className="pointer-events-none hidden lg:flex flex-col gap-5 absolute top-24 left-8 z-[850] max-w-md">
         {/* Main hero card */}
@@ -233,7 +263,7 @@ function Home() {
             </div>
             <p className="text-[10px] text-slate-500">Real stories, real places, real people.</p>
           </div>
-          
+
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 custom-scrollbar">
             {memoriesArray.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full gap-4 py-12 text-center">
@@ -268,7 +298,7 @@ function Home() {
                   )}
                   <div className="p-4 space-y-2">
                     <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed italic">
-                      &quot;{memory.caption || memory.desc || 'A silent memory...'}&quot;
+                      &quot;{memory.caption || 'A silent memory...'}&quot;
                     </p>
                     <div className="flex items-center justify-between text-[10px] text-slate-500">
                       <div className="flex items-center gap-1 truncate max-w-[120px]">
@@ -290,7 +320,7 @@ function Home() {
       <div id="map-root" className="w-full h-full">
         <Map
           {...viewState}
-          onMove={evt => setViewState(evt.viewState)}
+          onMove={evt => setViewState(evt.viewState as MapViewState)}
           mapStyle={mapStyle}
           mapboxAccessToken={MAPBOX_TOKEN}
           projection="mercator"
@@ -310,7 +340,7 @@ function Home() {
                 setSelectedMemory(memory);
               }}
             >
-              <motion.div 
+              <motion.div
                 whileHover={{ scale: 1.2 }}
                 className="cursor-pointer"
               >
@@ -338,7 +368,7 @@ function Home() {
                   <img src={getOptimizedImageUrl(selectedMemory.imageUrl, 300)} className="w-full h-32 object-cover border-b border-white/10" alt="memory" />
                 )}
                 <div className="p-4">
-                  <p className="text-xs text-slate-300 mb-3 italic leading-relaxed">&quot;{selectedMemory.caption || selectedMemory.desc}&quot;</p>
+                  <p className="text-xs text-slate-300 mb-3 italic leading-relaxed">&quot;{selectedMemory.caption}&quot;</p>
                   <Link to={`/memory/${selectedMemory.id}`} className="block w-full text-center py-2 rounded-xl bg-gradient-to-r from-[#ff7ec9] to-[#a78bfa] text-white text-[10px] font-bold uppercase tracking-widest shadow-lg">
                     See Memory
                   </Link>
