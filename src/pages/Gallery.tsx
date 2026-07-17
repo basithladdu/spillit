@@ -2,25 +2,48 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db } from '../utils/firebase';
-import { 
-  Heart, 
-  MapPin, 
-  Calendar, 
-  Search, 
-  Filter, 
-  ChevronLeft, 
-  ChevronRight, 
-  Sparkles, 
-  Ghost, 
+import {
+  Heart,
+  MapPin,
+  Calendar,
+  Search,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  Ghost,
   Flame,
   Star,
   Eye,
   Hash
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Memory } from '../types';
+
+// --- Types ---
+
+interface StatBoxProps {
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+  accentColor: string;
+}
+
+interface FilterSelectProps {
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  options: string[];
+}
+
+interface Filters {
+  vibe: string;
+  sortBy: string;
+}
 
 // --- Sub-Components ---
-const StatBox = ({ label, value, icon, accentColor }) => (
+
+const StatBox: React.FC<StatBoxProps> = ({ label, value, icon, accentColor }) => (
   <motion.div
     whileHover={{ y: -5 }}
     className="p-6 bg-[#0f0f13] border border-white/5 rounded-[32px] overflow-hidden relative group transition-all"
@@ -38,7 +61,7 @@ const StatBox = ({ label, value, icon, accentColor }) => (
   </motion.div>
 );
 
-const FilterSelect = ({ label, value, onChange, options }) => (
+const FilterSelect: React.FC<FilterSelectProps> = ({ label, value, onChange, options }) => (
   <div className="flex flex-col gap-2">
     <label className="text-[10px] font-bold uppercase tracking-widest ml-1 text-slate-500">{label}</label>
     <select
@@ -52,23 +75,26 @@ const FilterSelect = ({ label, value, onChange, options }) => (
 );
 
 // --- Main Gallery Component ---
-function Gallery() {
-  const [memories, setMemories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
+
+const Gallery: React.FC = () => {
+  const [memories, setMemories] = useState<Memory[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [filters, setFilters] = useState<Filters>({
     vibe: 'All', sortBy: 'Newest First'
   });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [showFilters, setShowFilters] = useState<boolean>(false);
   const itemsPerPage = 9;
 
   // Data Fetching
   useEffect(() => {
-    // collection name is 'memories'
     const q = query(collection(db, 'memories'), orderBy('ts', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const data: Memory[] = snapshot.docs.map(doc => {
+        const docData = doc.data() as Omit<Memory, 'id'>;
+        return { ...docData, id: doc.id };
+      });
       setMemories(data);
       setLoading(false);
     });
@@ -81,7 +107,11 @@ function Gallery() {
     const matchesVibe = filters.vibe === 'All' || m.type === filters.vibe;
     return matchesSearch && matchesVibe;
   }).sort((a, b) => {
-    if (filters.sortBy === 'Newest First') return (b.ts?.toMillis?.() || 0) - (a.ts?.toMillis?.() || 0);
+    if (filters.sortBy === 'Newest First') {
+      const timeA = 'toMillis' in a.ts ? a.ts.toMillis() : 0;
+      const timeB = 'toMillis' in b.ts ? b.ts.toMillis() : 0;
+      return timeB - timeA;
+    }
     if (filters.sortBy === 'Most Loved') return (b.upvotes || 0) - (a.upvotes || 0);
     return 0;
   });
@@ -98,12 +128,12 @@ function Gallery() {
 
   return (
     <div className="min-h-screen bg-[#08080c] text-white font-sans pb-24 overflow-x-hidden">
-      
+
       {/* Background Decor */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[600px] bg-gradient-to-b from-[#ff7ec9]/5 via-transparent to-transparent blur-[120px] pointer-events-none"></div>
 
       <div className="relative pt-32 px-6 max-w-7xl mx-auto z-10">
-        
+
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-12">
           <div className="space-y-4">
@@ -236,7 +266,7 @@ function Gallery() {
                   <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase">
                       <Calendar size={12} className="text-[#ff7ec9]" />
-                      {memory.ts ? new Date(memory.ts.seconds * 1000).toLocaleDateString() : 'Hidden Date'}
+                      {memory.ts ? new Date('toMillis' in memory.ts ? memory.ts.toMillis() : 0).toLocaleDateString() : 'Hidden Date'}
                     </div>
 
                     <Link
