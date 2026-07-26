@@ -5,13 +5,11 @@ import {
   signOut,
   onAuthStateChanged,
   User as FirebaseUser,
-  Auth,
 } from 'firebase/auth';
 import {
   doc,
   getDoc,
   setDoc,
-  Firestore,
   Timestamp,
 } from 'firebase/firestore';
 import { auth, db } from '../utils/firebase';

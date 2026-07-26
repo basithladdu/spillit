@@ -2,6 +2,8 @@
  * Global Type Definitions for Spillit
  */
 
+import type { Timestamp } from 'firebase/firestore';
+
 // ============ Firestore Models ============
 
 export interface Memory {
@@ -16,7 +18,7 @@ export interface Memory {
   userId: string;
   upvotes: number;
   upvotedBy?: string[];
-  ts: FirebaseFirestore.Timestamp;
+  ts: Timestamp;
   status?: 'live' | 'archived';
   colorChoice?: string;
   vibe?: string;
@@ -36,8 +38,8 @@ export interface User {
   uid: string;
   email: string;
   displayName?: string;
-  createdAt: FirebaseFirestore.Timestamp;
-  updatedAt: FirebaseFirestore.Timestamp;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface LocationData {

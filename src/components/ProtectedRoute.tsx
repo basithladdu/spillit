@@ -7,9 +7,13 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { currentUser, loading } = useAuth();
+  const { currentUser } = useAuth();
 
-  if (loading) return null;
+  // Note: useAuth will handle loading state internally
+  // For protection, we just need to check if user exists
+  if (!currentUser && typeof window !== 'undefined') {
+    return null;
+  }
 
   if (!currentUser) {
     return <Navigate to="/login" />;

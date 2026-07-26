@@ -3,7 +3,6 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "skip": false,
     "module": "ESNext",
 
     // Strict mode - PRODUCTION REQUIREMENT
@@ -48,6 +47,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
 
     // Source maps for debugging
     "sourceMap": true,

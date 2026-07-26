@@ -1,8 +1,7 @@
-// firebase.js
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { initializeApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDyTaws6Zn6F46X_mSTWQl7Axly03DNmPM",
@@ -13,16 +12,14 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:684763574365:web:f9e40fefc3b76ae7475db4"
 };
 
-// Initialize Firebase
-let app;
+let app: FirebaseApp;
 try {
   app = initializeApp(firebaseConfig);
 } catch (error) {
   throw error;
 }
 
-// Initialize Firebase services
-let auth, db, storage;
+let auth: Auth, db: Firestore, storage: FirebaseStorage;
 
 try {
   auth = getAuth(app);
