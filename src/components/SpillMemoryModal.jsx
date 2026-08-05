@@ -215,7 +215,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
       if (insertError) throw insertError;
 
       showToast('Memory pinned! 📍', 'success');
-      onSuccess({ id: newDoc.id, ...formData, imageUrl: publicUrl });
+      onSuccess({ id: newDoc.id, ...formData, imageUrl: publicUrl, created_at: newDoc.created_at ?? new Date().toISOString() });
       setFormData({ caption: '', image: null, lat: null, lng: null, address: '', anonymous: true, type: 'Moment' });
       if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = setTimeout(() => {

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
+import { PageSpinner, FetchErrorPanel } from '../components/UI/PageStatus';
 
 const getStatusConfig = (status) => {
   const s = (status || 'active').toLowerCase();
@@ -205,27 +206,14 @@ function Dashboard() {
     }
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-[var(--spillit-bg)] flex items-center justify-center" role="status" aria-busy="true" aria-atomic="true" aria-label="Loading operations dashboard">
-      <div className="w-12 h-12 border-4 border-[var(--spillit-primary)] border-t-transparent rounded-full animate-spin shadow-[0_0_20px_var(--spillit-glow-primary)]"></div>
-    </div>
-  );
+  if (loading) return <PageSpinner label="Loading operations dashboard" />;
 
   if (loadError) return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-6">
-      <section role="alert" aria-live="assertive" className="w-full max-w-md rounded-2xl border-2 border-foreground bg-card p-8 text-center shadow-pop">
-        <p className="heading-font mb-3 text-xs font-black uppercase tracking-[0.2em] text-accent">Operations paused</p>
-        <h1 className="heading-font mb-3 text-3xl font-black">The dashboard needs a retry.</h1>
-        <p className="mb-6 text-sm leading-relaxed text-muted-foreground">We couldn’t load the moderation queue. Try again when the connection is ready.</p>
-        <button
-          type="button"
-          onClick={() => { setLoading(true); setRetryCount((count) => count + 1); }}
-          className="rounded-full border-2 border-foreground bg-accent px-6 py-3 text-sm font-black uppercase tracking-widest text-white shadow-pop transition-transform hover:-translate-y-0.5"
-        >
-          Try again
-        </button>
-      </section>
-    </main>
+    <FetchErrorPanel
+      eyebrow="Operations paused"
+      title="The dashboard needs a retry."
+      onRetry={() => { setLoading(true); setRetryCount((count) => count + 1); }}
+    />
   );
 
   return (

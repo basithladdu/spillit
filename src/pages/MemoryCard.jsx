@@ -168,7 +168,7 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
                         </div>
                         
                         <p className="text-[10px] text-center text-slate-400 font-black uppercase tracking-[0.2em]">
-                            Spilled on {new Date().toLocaleDateString()}
+                            Spilled {summaryData.created_at ? timeAgo(summaryData.created_at) : 'just now'}
                         </p>
                     </div>
                 </motion.div>

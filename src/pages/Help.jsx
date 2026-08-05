@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion as Motion } from 'framer-motion';
 import { MapPin, Ghost, Map, Shield, HelpCircle, MessageSquare, Sparkles, Mail } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const FAQS = [
   {
@@ -105,13 +106,22 @@ function Help() {
                 workwithdevit@gmail.com
               </a>
             </p>
-            <a
-              href="mailto:workwithdevit@gmail.com"
-              className="inline-flex items-center gap-2 rounded-full border-2 border-foreground bg-white px-10 py-4 text-xs font-black uppercase tracking-widest text-foreground shadow-pop transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-pop-hover"
-            >
-              <Mail size={16} strokeWidth={2.5} aria-hidden />
-              Contact Support
-            </a>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 rounded-full border-2 border-foreground bg-white px-10 py-4 text-xs font-black uppercase tracking-widest text-foreground shadow-pop transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-pop-hover"
+              >
+                <Map size={16} strokeWidth={2.5} aria-hidden />
+                Open the map
+              </Link>
+              <a
+                href="mailto:workwithdevit@gmail.com"
+                className="inline-flex items-center gap-2 rounded-full border-2 border-white/40 bg-transparent px-10 py-4 text-xs font-black uppercase tracking-widest text-white shadow-pop transition-all hover:bg-white/10"
+              >
+                <Mail size={16} strokeWidth={2.5} aria-hidden />
+                Contact Support
+              </a>
+            </div>
           </div>
         </Motion.section>
       </main>
