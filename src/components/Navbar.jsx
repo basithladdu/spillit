@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { Map, Camera, Star, LogIn, LogOut, Menu, X, Flame, CircleUser } from 'lucide-react';
+import { Map, Camera, Star, LogIn, LogOut, Menu, X, Flame, CircleUser, HelpCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 const NAV_LINKS = [
@@ -121,6 +121,13 @@ function Navbar() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
+          <Link
+            to="/help"
+            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all uppercase tracking-widest"
+          >
+            <HelpCircle size={13} strokeWidth={2} aria-hidden />
+            Help
+          </Link>
           {currentUser ? (
             <div className="hidden md:flex items-center gap-2">
               <Link to="/profile" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border-2 border-foreground shadow-pop hover:bg-muted transition-all">
@@ -199,6 +206,13 @@ function Navbar() {
             </div>
 
             <div className="mt-auto p-4 border-t-2 border-border flex flex-col gap-3">
+              <Link
+                to="/help"
+                onClick={() => setIsMenuOpen(false)}
+                className="w-full py-3 rounded-full bg-muted border-2 border-border text-muted-foreground font-bold heading-font uppercase tracking-widest flex items-center justify-center gap-2 text-sm"
+              >
+                <HelpCircle size={16} strokeWidth={2.5} aria-hidden /> Help & FAQs
+              </Link>
               {currentUser ? (
                 <>
                   <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="w-full py-4 rounded-full bg-card border-2 border-foreground text-foreground font-bold heading-font uppercase tracking-widest flex items-center justify-center gap-3 shadow-pop">

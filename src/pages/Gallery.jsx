@@ -243,7 +243,13 @@ function Gallery() {
           <div className="text-center py-32 bg-card border-2 border-foreground rounded-2xl shadow-pop">
           <Ghost className="text-muted-foreground mx-auto mb-6" size={64} strokeWidth={1.5} aria-hidden="true" />
             <h3 className="heading-font text-2xl font-bold mb-2 text-foreground">Nothing Spilled Yet</h3>
-            <p className="text-muted-foreground italic">This archive is currently empty.</p>
+            <p className="text-muted-foreground italic mb-6">This archive is currently empty.</p>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 rounded-full border-2 border-foreground bg-accent px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-pop hover:-translate-y-0.5 transition-transform"
+            >
+              Spill the first memory
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

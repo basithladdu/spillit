@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight, AlertCircle, UserPlus } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle, UserPlus, Eye, EyeOff } from 'lucide-react';
 
 function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { register, currentUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = location.state?.from || '/';
 
   useEffect(() => {
-    if (currentUser) navigate('/');
-  }, [currentUser, navigate]);
+    if (currentUser) navigate(redirectTo, { replace: true });
+  }, [currentUser, navigate, redirectTo]);
 
   const clearError = (field) => {
     if (errors[field]) setErrors(p => ({ ...p, [field]: '' }));
@@ -121,16 +124,24 @@ function Register() {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   aria-invalid={Boolean(errors.password)}
                   aria-describedby={errors.password ? 'register-password-error' : undefined}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
-                  className={`w-full bg-input border-2 ${errors.password ? 'border-red-400' : 'border-border'} rounded-xl py-3.5 pl-12 pr-4 text-foreground placeholder-muted-foreground outline-none focus:border-secondary focus:shadow-focus transition-all`}
+                  className={`w-full bg-input border-2 ${errors.password ? 'border-red-400' : 'border-border'} rounded-xl py-3.5 pl-12 pr-12 text-foreground placeholder-muted-foreground outline-none focus:border-secondary focus:shadow-focus transition-all`}
                   placeholder="At least 6 characters"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} strokeWidth={2.5} aria-hidden="true" /> : <Eye size={18} strokeWidth={2.5} aria-hidden="true" />}
+                </button>
               </div>
               {errors.password && <p id="register-password-error" className="text-red-500 text-xs font-bold">{errors.password}</p>}
             </div>
