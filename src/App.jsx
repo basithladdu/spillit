@@ -56,6 +56,7 @@ function RouteTitle() {
     .replace(/\u00e2\u20ac\u2122/g, '’');
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     document.title = displayTitle;
     const robotsTag = document.querySelector('meta[name="robots"]');
     const isPrivateRoute = /^\/(dashboard|profile|login|register)(\/|$)/.test(pathname);

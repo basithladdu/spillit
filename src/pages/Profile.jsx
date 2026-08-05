@@ -26,18 +26,37 @@ function Profile() {
 
     const fetchProfile = async () => {
       try {
-        const [{ data }, { data: memories }] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', currentUser.id).single(),
+        const [{ data, error: profileError }, { data: memories }] = await Promise.all([
+          supabase.from('profiles').select('*').eq('id', currentUser.id).maybeSingle(),
           supabase.from('memories').select('upvotes').eq('user_id', currentUser.id),
         ]);
 
-        if (data && active) {
-          setProfile({
-            username: data.username || '',
-            full_name: data.full_name || '',
-            bio: data.bio || '',
-            avatar_url: data.avatar_url || ''
-          });
+        if (active) {
+          if (data) {
+            setProfile({
+              username: data.username || '',
+              full_name: data.full_name || '',
+              bio: data.bio || '',
+              avatar_url: data.avatar_url || ''
+            });
+          } else if (!profileError || profileError.code === 'PGRST116') {
+            const defaultUsername = (currentUser.email?.split('@')[0] || `spiller_${currentUser.id.slice(0, 6)}`)
+              .replace(/[^a-z0-9_]/gi, '')
+              .slice(0, 20) || `spiller_${currentUser.id.slice(0, 6)}`;
+            const { data: created } = await supabase
+              .from('profiles')
+              .insert({ id: currentUser.id, username: defaultUsername.toLowerCase() })
+              .select()
+              .single();
+            if (created) {
+              setProfile({
+                username: created.username || defaultUsername,
+                full_name: '',
+                bio: '',
+                avatar_url: ''
+              });
+            }
+          }
         }
         if (memories && active) {
           setMemoryStats({
@@ -64,13 +83,13 @@ function Profile() {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: currentUser.id,
           username: profile.username.toLowerCase(),
           full_name: profile.full_name,
           bio: profile.bio,
-          updated_at: new Date()
-        })
-        .eq('id', currentUser.id);
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'id' });
 
       if (error) throw error;
       toast.success('Profile updated successfully!');
