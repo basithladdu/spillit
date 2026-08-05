@@ -171,7 +171,7 @@ function Login() {
                   aria-describedby={errors.password ? 'login-password-error' : undefined}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
-                  className="w-full bg-input border-2 border-border rounded-xl py-3.5 pl-12 pr-12 text-foreground placeholder-muted-foreground outline-none focus:border-accent focus:shadow-focus transition-all"
+                  className={`w-full bg-input border-2 ${errors.password ? 'border-red-400' : 'border-border'} rounded-xl py-3.5 pl-12 pr-12 text-foreground placeholder-muted-foreground outline-none focus:border-accent focus:shadow-focus transition-all`}
                   placeholder="••••••••"
                   required
                 />

@@ -43,13 +43,23 @@ const FAQS = [
   {
     id: 'account',
     question: 'Do I need an account?',
-    answer: 'No — posting is anonymous without signing in. Create an account only if you want a profile or to manage your own spills later.',
+    answer: (
+      <>
+        No — posting is anonymous without signing in.{' '}
+        <Link to="/register" className="font-bold text-accent hover:underline">Create an account</Link>
+        {' '}only if you want a profile or to manage your own spills later.
+      </>
+    ),
     icon: KeyRound,
   },
   {
     id: 'password',
     question: 'Forgot your password?',
-    answer: 'On the login page, tap Forgot password?, enter your email, and follow the reset link. You will land on a page to choose a new password.',
+    answer: (
+      <>
+        On the <Link to="/login" className="font-bold text-accent hover:underline">login page</Link>, tap Forgot password?, enter your email, and follow the reset link. You will land on a page to choose a new password.
+      </>
+    ),
     icon: Mail,
   },
 ];
@@ -125,6 +135,13 @@ function Help() {
               >
                 <Map size={16} strokeWidth={2.5} aria-hidden />
                 Open the map
+              </Link>
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-2 rounded-full border-2 border-foreground bg-white/90 px-10 py-4 text-xs font-black uppercase tracking-widest text-foreground shadow-pop transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-pop-hover"
+              >
+                <KeyRound size={16} strokeWidth={2.5} aria-hidden />
+                Sign in
               </Link>
               <a
                 href="mailto:workwithdevit@gmail.com"
