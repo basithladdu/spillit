@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Map, { Marker, Popup, NavigationControl } from 'react-map-gl';
 import { toast } from 'react-toastify';
@@ -486,6 +486,7 @@ const MapUnavailable = ({ message = 'The map is temporarily unavailable. You can
 
 /* ── Main page ── */
 function Home() {
+  const [searchParams] = useSearchParams();
   const feedTriggerRef = useRef(null);
   const feedDialogRef = useRef(null);
   const feedReturnFocusRef = useRef(null);
@@ -554,6 +555,26 @@ function Home() {
   useEffect(() => {
     if (!hasSeenOnboarding()) setShowTour(true);
   }, []);
+
+  useEffect(() => {
+    const lat = Number(searchParams.get('lat'));
+    const lng = Number(searchParams.get('lng'));
+    const memoryId = searchParams.get('memory');
+
+    if (isValidCoord(lat, lng)) {
+      setViewState((v) => ({
+        ...v,
+        latitude: lat,
+        longitude: lng,
+        zoom: Math.max(v.zoom, 14),
+        transitionDuration: 1400,
+      }));
+    }
+
+    if (memoryId && allMemories[memoryId]) {
+      setSelectedMemory(allMemories[memoryId]);
+    }
+  }, [searchParams, allMemories]);
 
   useEffect(() => {
     let active = true;

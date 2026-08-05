@@ -266,10 +266,18 @@ function MemoryDetail() {
               <div className="w-9 h-9 rounded-full bg-accent border-2 border-foreground flex items-center justify-center text-white shadow-pop shrink-0">
                 <MapPin size={16} strokeWidth={2.5} aria-hidden="true" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Location</p>
                 <p className="text-xs font-bold text-foreground truncate">{memory.address || 'Unknown spot'}</p>
               </div>
+              {isValidCoord(memory.lat, memory.lng) && (
+                <Link
+                  to={`/?lat=${memory.lat}&lng=${memory.lng}&memory=${memory.id}`}
+                  className="shrink-0 rounded-full border-2 border-foreground bg-card px-4 py-2 text-[10px] font-black uppercase tracking-widest text-accent shadow-pop hover:-translate-y-0.5 transition-transform"
+                >
+                  View on map
+                </Link>
+              )}
             </div>
 
             <button

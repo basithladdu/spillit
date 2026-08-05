@@ -18,6 +18,8 @@ function Footer() {
 
         {/* Links */}
         <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 text-sm text-muted-foreground font-medium">
+          <Link to="/" className="hover:text-accent transition-colors">Map</Link>
+          <span className="w-1 h-1 rounded-full bg-border" />
           <Link to="/help" className="hover:text-accent transition-colors">Help</Link>
           <span className="w-1 h-1 rounded-full bg-border" />
           <Link to="/about" className="hover:text-accent transition-colors">About</Link>
