@@ -97,7 +97,7 @@ function MemoryDetail() {
   const handleUpvote = async () => {
     if (!currentUser) {
       toast.info('Sign in to upvote memories.');
-      navigate('/login');
+      navigate('/login', { state: { from: `/memory/${id}` } });
       return;
     }
     if (isUpvoting) return;
@@ -108,7 +108,12 @@ function MemoryDetail() {
       const newList    = removing ? upvotedBy.filter(u => u !== currentUser.id) : [...upvotedBy, currentUser.id];
       const newUpvotes = (memory.upvotes || 0) + (removing ? -1 : 1);
       const { error } = await supabase.from('memories').update({ upvotes: newUpvotes, upvoted_by: newList }).eq('id', id);
-      if (!error) { setMemory(p => ({ ...p, upvotes: newUpvotes, upvoted_by: newList })); setHasUpvoted(!removing); }
+      if (error) {
+        toast.error('Could not save your upvote. Try again.');
+      } else {
+        setMemory(p => ({ ...p, upvotes: newUpvotes, upvoted_by: newList }));
+        setHasUpvoted(!removing);
+      }
     } finally { setIsUpvoting(false); }
   };
 
@@ -131,6 +136,7 @@ function MemoryDetail() {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
+      toast.success('Link copied to clipboard');
       if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
       copiedTimeoutRef.current = setTimeout(() => {
         setCopied(false);

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Heart, Lightbulb, Users, Camera, MapPin, Ghost, Code, Mail, ArrowUpRight, Linkedin } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Heart, Lightbulb, Users, Camera, MapPin, Ghost, Code, Mail, ArrowUpRight, Linkedin, Map } from 'lucide-react';
 
 const About = () => {
   const fadeUp = {
@@ -26,9 +27,15 @@ const About = () => {
             <h1 className="heading-font text-6xl md:text-7xl font-bold mb-4 text-foreground">
               Spill <span className="text-accent italic">It</span>
             </h1>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed">
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed mb-8">
               A digital sanctuary for anonymous memories, pinned forever to the spots where life happened.
             </p>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 rounded-full border-2 border-foreground bg-accent px-8 py-4 text-sm font-black uppercase tracking-widest text-white shadow-pop hover:-translate-y-0.5 transition-transform heading-font"
+            >
+              <Map size={18} strokeWidth={2.5} aria-hidden /> Open the map
+            </Link>
           </motion.div>
         </div>
 

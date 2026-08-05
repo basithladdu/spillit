@@ -100,7 +100,13 @@ function Leaderboard() {
         {topMemories.length === 0 ? (
           <div className="text-center py-40 bg-white border-2 border-foreground rounded-[40px] border-dashed">
              <Ghost size={64} className="text-slate-800 mx-auto mb-6" aria-hidden="true" />
-             <p className="text-slate-600 font-bold uppercase tracking-widest text-xs">No one has spilled enough love yet.</p>
+             <p className="text-slate-600 font-bold uppercase tracking-widest text-xs mb-6">No one has spilled enough love yet.</p>
+             <Link
+               to="/"
+               className="inline-flex items-center gap-2 rounded-full border-2 border-foreground bg-accent px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-pop hover:-translate-y-0.5 transition-transform"
+             >
+               Be the first to spill
+             </Link>
           </div>
         ) : (
           <div className="space-y-6">
