@@ -577,6 +577,25 @@ function Home() {
   }, [searchParams, allMemories]);
 
   useEffect(() => {
+    const memoryId = searchParams.get('memory');
+    if (!memoryId || allMemories[memoryId]) return undefined;
+
+    let active = true;
+    supabase
+      .from('memories')
+      .select('*')
+      .eq('id', memoryId)
+      .single()
+      .then(({ data }) => {
+        if (!active || !data) return;
+        setAllMemories((prev) => ({ ...prev, [data.id]: data }));
+        setSelectedMemory(data);
+      });
+
+    return () => { active = false; };
+  }, [searchParams, allMemories]);
+
+  useEffect(() => {
     let active = true;
     let channel = null;
 
