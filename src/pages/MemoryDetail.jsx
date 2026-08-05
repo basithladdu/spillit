@@ -181,7 +181,7 @@ function MemoryDetail() {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
-      toast.success('Link copied to clipboard');
+      toast.success('Link copied to clipboard', { toastId: 'link-copied' });
       if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
       copiedTimeoutRef.current = setTimeout(() => {
         setCopied(false);

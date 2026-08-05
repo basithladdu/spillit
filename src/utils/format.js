@@ -62,3 +62,17 @@ export function isValidEmail(value) {
   const email = value?.trim() ?? '';
   return email.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
+
+/** Client-side password strength label for registration hints. */
+export function getPasswordStrength(password) {
+  if (!password) return { label: '', level: 0 };
+  if (password.length < 6) return { label: 'Too short — need at least 6 characters', level: 1 };
+  let score = 0;
+  if (password.length >= 8) score += 1;
+  if (/[A-Z]/.test(password)) score += 1;
+  if (/[0-9]/.test(password)) score += 1;
+  if (/[^A-Za-z0-9]/.test(password)) score += 1;
+  if (score <= 1) return { label: 'Weak — try mixing letters and numbers', level: 2 };
+  if (score <= 2) return { label: 'Fair', level: 3 };
+  return { label: 'Strong', level: 4 };
+}

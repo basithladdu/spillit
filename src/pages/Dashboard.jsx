@@ -222,6 +222,10 @@ function Dashboard() {
 
   const handleExport = async () => {
     if (exporting) return;
+    if (filteredData.length === 0) {
+      toast.info('No memories match your current filters to export.', { toastId: 'export-empty' });
+      return;
+    }
     setExporting(true);
     const dataToExport = filteredData.map(item => ({
       Memory_ID: item.id,
@@ -238,6 +242,7 @@ function Dashboard() {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Spillit Memories");
       XLSX.writeFile(workbook, "Spillit_Archive_Export.xlsx");
+      toast.success(`Exported ${filteredData.length} ${filteredData.length === 1 ? 'memory' : 'memories'}.`, { toastId: 'export-success' });
     } catch {
       toast.error('Could not prepare the archive export. Try again.');
     } finally {
@@ -281,12 +286,12 @@ function Dashboard() {
           <button
             type="button"
             onClick={handleExport}
-            disabled={exporting}
+            disabled={exporting || filteredData.length === 0}
             aria-busy={exporting}
-            aria-label={exporting ? 'Preparing archive export' : 'Export archive as spreadsheet'}
-            className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all shadow-xl disabled:cursor-wait disabled:opacity-60"
+            aria-label={exporting ? 'Preparing archive export' : filteredData.length === 0 ? 'Export archive (no memories to export)' : `Export ${filteredData.length} memories as spreadsheet`}
+            className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <Download size={18} aria-hidden="true" /> {exporting ? 'Preparing…' : 'Export Archive'}
+            <Download size={18} aria-hidden="true" /> {exporting ? 'Preparing…' : `Export Archive${filteredData.length > 0 ? ` (${filteredData.length})` : ''}`}
           </button>
         </div>
 

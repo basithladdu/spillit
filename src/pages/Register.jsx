@@ -4,11 +4,12 @@ import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, AlertCircle, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { isValidEmail } from '../utils/format';
+import { isValidEmail, getPasswordStrength } from '../utils/format';
 
 function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -38,6 +39,10 @@ function Register() {
       setErrors({ password: 'Password must be at least 6 characters.' });
       return;
     }
+    if (password !== confirmPassword) {
+      setErrors({ confirmPassword: 'Passwords do not match.' });
+      return;
+    }
     setLoading(true);
     try {
       const data = await register(trimmed, password);
@@ -58,6 +63,14 @@ function Register() {
         setErrors({ general: 'Registration failed. Please try again.' });
       }
     }
+  };
+
+  const strength = getPasswordStrength(password);
+  const strengthColors = {
+    1: 'text-red-500',
+    2: 'text-amber-600',
+    3: 'text-accent',
+    4: 'text-green-600',
   };
 
   return (
@@ -138,12 +151,13 @@ function Register() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   aria-invalid={Boolean(errors.password)}
-                  aria-describedby={errors.password ? 'register-password-error' : undefined}
+                  aria-describedby={errors.password ? 'register-password-error register-password-hint' : 'register-password-hint'}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
                   className={`w-full bg-input border-2 ${errors.password ? 'border-red-400' : 'border-border'} rounded-xl py-3.5 pl-12 pr-12 text-foreground placeholder-muted-foreground outline-none focus:border-secondary focus:shadow-focus transition-all`}
                   placeholder="At least 6 characters"
                   required
+                  minLength={6}
                 />
                 <button
                   type="button"
@@ -155,6 +169,36 @@ function Register() {
                 </button>
               </div>
               {errors.password && <p id="register-password-error" className="text-red-500 text-xs font-bold">{errors.password}</p>}
+              {strength.label && (
+                <p id="register-password-hint" className={`text-xs font-bold ${strengthColors[strength.level] ?? 'text-muted-foreground'}`}>
+                  {strength.label}
+                </p>
+              )}
+            </div>
+
+            {/* Confirm password */}
+            <div className="space-y-2">
+              <label htmlFor="confirm-password" className="heading-font text-xs font-bold uppercase tracking-widest text-foreground">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} strokeWidth={2.5} aria-hidden="true" />
+                <input
+                  id="confirm-password"
+                  name="confirmPassword"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  aria-invalid={Boolean(errors.confirmPassword)}
+                  aria-describedby={errors.confirmPassword ? 'register-confirm-error' : undefined}
+                  value={confirmPassword}
+                  onChange={(e) => { setConfirmPassword(e.target.value); clearError('confirmPassword'); }}
+                  className={`w-full bg-input border-2 ${errors.confirmPassword ? 'border-red-400' : confirmPassword && password === confirmPassword ? 'border-green-500' : 'border-border'} rounded-xl py-3.5 pl-12 pr-4 text-foreground placeholder-muted-foreground outline-none focus:border-secondary focus:shadow-focus transition-all`}
+                  placeholder="Re-enter your password"
+                  required
+                  minLength={6}
+                />
+              </div>
+              {errors.confirmPassword && <p id="register-confirm-error" className="text-red-500 text-xs font-bold">{errors.confirmPassword}</p>}
             </div>
 
             {/* Submit */}

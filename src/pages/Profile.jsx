@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
 import { useAuth } from '../hooks/useAuth';
-import { User, AtSign, Mail, Save, Camera, Map } from 'lucide-react';
+import { User, AtSign, Mail, Save, Camera, Map, Ghost } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import { PageSpinner } from '../components/UI/PageStatus';
@@ -126,6 +126,22 @@ function Profile() {
             </Link>
           </div>
         </header>
+
+        {memoryStats.count === 0 && (
+          <div className="mb-8 rounded-2xl border-2 border-dashed border-foreground bg-muted/40 p-8 text-center">
+            <Ghost size={40} className="mx-auto mb-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+            <h2 className="heading-font text-xl font-bold text-foreground mb-2">No memories spilled yet</h2>
+            <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
+              Drop your first pin on the map — it will show up in your stats here.
+            </p>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 rounded-full border-2 border-foreground bg-accent px-6 py-3 text-[10px] font-black uppercase tracking-widest text-white shadow-pop hover:-translate-y-0.5 transition-transform"
+            >
+              <Map size={14} strokeWidth={2.5} aria-hidden="true" /> Spill your first memory
+            </Link>
+          </div>
+        )}
 
         <div className="bg-white border-2 border-foreground rounded-[40px] shadow-pop overflow-hidden">
           {/* Cover Placeholder */}

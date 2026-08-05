@@ -1,8 +1,34 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 import { Ghost, Map, ArrowLeft, Camera } from 'lucide-react';
 
 function NotFound() {
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = 'Page not found — Spill It';
+
+    const robotsTag = document.querySelector('meta[name="robots"]');
+    const descriptionTag = document.querySelector('meta[name="description"]');
+    const ogTitleTag = document.querySelector('meta[property="og:title"]');
+    const prev = {
+      robots: robotsTag?.getAttribute('content'),
+      description: descriptionTag?.getAttribute('content'),
+      ogTitle: ogTitleTag?.getAttribute('content'),
+    };
+
+    robotsTag?.setAttribute('content', 'noindex, nofollow');
+    descriptionTag?.setAttribute('content', 'This page could not be found on Spill It.');
+    ogTitleTag?.setAttribute('content', 'Page not found — Spill It');
+
+    return () => {
+      document.title = prevTitle;
+      if (prev.robots != null) robotsTag?.setAttribute('content', prev.robots);
+      if (prev.description != null) descriptionTag?.setAttribute('content', prev.description);
+      if (prev.ogTitle != null) ogTitleTag?.setAttribute('content', prev.ogTitle);
+    };
+  }, []);
+
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-6">
 

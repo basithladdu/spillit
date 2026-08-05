@@ -68,7 +68,7 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
 
         try {
             await navigator.clipboard.writeText(url);
-            toast.success('Link copied to clipboard');
+            toast.success('Link copied to clipboard', { toastId: 'link-copied' });
         } catch {
             toast.error('Could not copy the link. Please copy it from your address bar.');
         }
