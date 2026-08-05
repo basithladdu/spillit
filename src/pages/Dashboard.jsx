@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../utils/supabase';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import {
@@ -77,6 +77,45 @@ function Dashboard() {
   const [deleteId, setDeleteId] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const deleteDialogRef = useRef(null);
+  const deleteReturnFocusRef = useRef(null);
+
+  useEffect(() => {
+    if (!deleteId) return undefined;
+
+    const dialog = deleteDialogRef.current;
+    if (!dialog) return undefined;
+
+    deleteReturnFocusRef.current = document.activeElement;
+    const focusable = () => [...dialog.querySelectorAll('button')].filter((el) => !el.disabled);
+    focusable()[0]?.focus();
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setDeleteId(null);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const elements = focusable();
+      if (!elements.length) return;
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      deleteReturnFocusRef.current?.focus?.();
+      deleteReturnFocusRef.current = null;
+    };
+  }, [deleteId]);
 
   useEffect(() => {
     let active = true;
@@ -475,7 +514,13 @@ function Dashboard() {
       {/* Delete Confirmation */}
       <AnimatePresence>
         {deleteId && (
-          <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/95 backdrop-blur-md p-6">
+          <div
+            ref={deleteDialogRef}
+            className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/95 backdrop-blur-md p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-dialog-title"
+          >
              <Motion.div
                initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
                className="max-w-md w-full bg-[#0a0a0c] border border-red-500/30 p-12 rounded-[40px] text-center shadow-[0_0_100px_rgba(239,68,68,0.2)]"
@@ -483,7 +528,7 @@ function Dashboard() {
                 <div className="w-20 h-20 bg-red-500/10 rounded-[32px] flex items-center justify-center text-red-500 mb-8 mx-auto border border-red-500/20">
                    <Trash2 size={32} aria-hidden="true" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-4 heading-font uppercase tracking-widest">Erase Memory?</h3>
+                <h3 id="delete-dialog-title" className="text-2xl font-bold text-white mb-4 heading-font uppercase tracking-widest">Erase Memory?</h3>
                 <p className="text-slate-500 text-sm leading-relaxed mb-10">This will permanently remove this spill from the global archive. This action cannot be undone.</p>
                 <div className="flex flex-col gap-3">
                    <button type="button" onClick={handleDelete} className="w-full py-4 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 transition-all text-sm uppercase tracking-widest shadow-lg shadow-red-600/30">Confirm Erase</button>

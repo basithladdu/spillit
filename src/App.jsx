@@ -7,6 +7,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
 import { PageSpinner } from "./components/UI/PageStatus";
 import "./App.css";
 
@@ -22,6 +23,7 @@ const Gallery = lazy(() => import("./pages/Gallery"));
 const Help = lazy(() => import("./pages/Help"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Profile = lazy(() => import("./pages/Profile"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 const PageLoader = () => <PageSpinner label="Loading page" />;
 
@@ -31,6 +33,7 @@ function RouteTitle() {
     [/^\/$/, 'Spill It — Map Your Memories Anonymously'],
     [/^\/login$/, 'Log in — Spill It'],
     [/^\/register$/, 'Create an account — Spill It'],
+    [/^\/reset-password$/, 'Reset password — Spill It'],
     [/^\/gallery$/, 'Memory gallery — Spill It'],
     [/^\/leaderboard$/, 'Hall of fame — Spill It'],
     [/^\/about$/, 'About — Spill It'],
@@ -47,7 +50,7 @@ function RouteTitle() {
     [/^\/leaderboard$/, 'Explore the most loved anonymous memories shared on Spill It.'],
     [/^\/about$/, 'Learn about Spill It, an anonymous map for memories, stories, and moments.'],
     [/^\/help$/, 'Find answers about posting memories, anonymity, locations, and community guidelines on Spill It.'],
-    [/^\/(login|register)$/, 'Join Spill It to manage your anonymous memories and discover moments on the map.'],
+    [/^\/(login|register|reset-password)$/, 'Join Spill It to manage your anonymous memories and discover moments on the map.'],
   ];
   const description = descriptions.find(([pattern]) => pattern.test(pathname))?.[1]
     ?? 'Spill It is a location-based memory sharing app for anonymous stories and moments.';
@@ -59,7 +62,7 @@ function RouteTitle() {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     document.title = displayTitle;
     const robotsTag = document.querySelector('meta[name="robots"]');
-    const isPrivateRoute = /^\/(dashboard|profile|login|register)(\/|$)/.test(pathname);
+    const isPrivateRoute = /^\/(dashboard|profile|login|register|reset-password)(\/|$)/.test(pathname);
     robotsTag?.setAttribute('content', isPrivateRoute ? 'noindex, nofollow' : 'index, follow');
     const descriptionTag = document.querySelector('meta[name="description"]');
     descriptionTag?.setAttribute('content', description);
@@ -102,12 +105,13 @@ function App() {
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/memory/:id" element={<MemoryDetail />} />
                     <Route path="/gallery" element={<Gallery />} />
                     <Route path="/help" element={<Help />} />
                     <Route path="/leaderboard" element={<Leaderboard />} />
                     <Route path="/about" element={<About />} />
-                    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                    <Route path="/dashboard" element={<AdminRoute><Dashboard /></AdminRoute>} />
                     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
