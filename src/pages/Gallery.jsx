@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getOptimizedImageSrcSet, getOptimizedImageUrl } from '../utils/imageOptimizer';
-import { timeAgo, uniqueCityCount } from '../utils/format';
+import { timeAgo, uniqueCityCount, isValidCoord } from '../utils/format';
 import { PageSpinner, FetchErrorPanel } from '../components/UI/PageStatus';
 
 // --- Sub-Components ---
@@ -356,12 +356,23 @@ function Gallery() {
                       {memory.created_at ? timeAgo(memory.created_at) : 'Hidden Date'}
                     </div>
 
-                    <Link
-                      to={`/memory/${memory.id}`}
-                      className="px-6 py-2.5 bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-full border-2 border-foreground hover:shadow-pop transition-all flex items-center gap-2"
-                    >
-          Enter <Eye size={12} strokeWidth={3} aria-hidden="true" />
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      {isValidCoord(memory.lat, memory.lng) && (
+                        <Link
+                          to={`/?lat=${memory.lat}&lng=${memory.lng}&memory=${memory.id}`}
+                          className="text-[9px] font-black uppercase tracking-widest text-accent hover:text-secondary transition-colors"
+                          aria-label="View memory on map"
+                        >
+                          Map
+                        </Link>
+                      )}
+                      <Link
+                        to={`/memory/${memory.id}`}
+                        className="px-6 py-2.5 bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-full border-2 border-foreground hover:shadow-pop transition-all flex items-center gap-2"
+                      >
+                        Enter <Eye size={12} strokeWidth={3} aria-hidden="true" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </motion.div>

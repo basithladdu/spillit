@@ -249,7 +249,8 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
               exit={{ opacity: 0 }}
               aria-label="Close spill form"
               className="absolute inset-0 bg-black/80"
-              onClick={onClose}
+              onClick={() => { if (!isSubmitting) onClose(); }}
+              disabled={isSubmitting}
             />
 
             <Motion.div
@@ -308,7 +309,8 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                   </div>
                   <button
                     type="button"
-                    onClick={onClose}
+                    onClick={() => { if (!isSubmitting) onClose(); }}
+                    disabled={isSubmitting}
                     aria-label="Close spill memory form"
                     className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-foreground text-foreground hover:bg-secondary hover:text-white hover:-translate-x-0.5 hover:-translate-y-0.5 shadow-pop hover:shadow-pop-hover active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active transition-all"
                   >

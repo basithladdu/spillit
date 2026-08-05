@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
 import { useAuth } from '../hooks/useAuth';
-import { User, AtSign, Mail, Save, Camera } from 'lucide-react';
+import { User, AtSign, Mail, Save, Camera, Map } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 import { PageSpinner } from '../components/UI/PageStatus';
 
 function Profile() {
@@ -117,6 +118,12 @@ function Profile() {
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Hearts received</p>
               <p className="heading-font text-2xl font-black text-secondary">{memoryStats.upvotes}</p>
             </div>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 rounded-2xl border-2 border-foreground bg-accent px-5 py-3 text-[10px] font-black uppercase tracking-widest text-white shadow-pop hover:-translate-y-0.5 transition-transform self-end"
+            >
+              <Map size={14} strokeWidth={2.5} aria-hidden /> Spill on map
+            </Link>
           </div>
         </header>
 
