@@ -158,9 +158,14 @@ function MemoryDetail() {
       </div>
       <h1 className="heading-font text-4xl font-bold text-foreground">Memory Faded</h1>
       <p className="text-muted-foreground max-w-sm">This memory couldn't be found. It may have been deleted or the link is broken.</p>
-      <Link to="/" className="px-8 py-4 bg-accent text-white border-2 border-foreground rounded-full font-bold shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all heading-font uppercase tracking-widest">
-        Back to Map
-      </Link>
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Link to="/" className="px-8 py-4 bg-accent text-white border-2 border-foreground rounded-full font-bold shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all heading-font uppercase tracking-widest">
+          Back to Map
+        </Link>
+        <Link to="/gallery" className="px-8 py-4 bg-card border-2 border-foreground text-foreground rounded-full font-bold shadow-pop hover:bg-muted transition-all heading-font uppercase tracking-widest">
+          Browse Archive
+        </Link>
+      </div>
     </div>
   );
 

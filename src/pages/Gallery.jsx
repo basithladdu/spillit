@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../utils/supabase';
 import {
@@ -67,6 +67,7 @@ function Gallery() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const itemsPerPage = 9;
+  const skipPageScrollRef = useRef(true);
 
   // Data Fetching
   useEffect(() => {
@@ -134,6 +135,14 @@ function Gallery() {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [totalPages]);
+
+  useEffect(() => {
+    if (skipPageScrollRef.current) {
+      skipPageScrollRef.current = false;
+      return;
+    }
+    document.getElementById('gallery-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [currentPage]);
 
   if (loading) return <PageSpinner label="Loading archive" />;
 
@@ -247,6 +256,7 @@ function Gallery() {
         </div>
 
         {/* Gallery Grid */}
+        <div id="gallery-grid">
         <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
           {currentData.length} {currentData.length === 1 ? 'memory' : 'memories'} shown
         </p>
@@ -358,6 +368,8 @@ function Gallery() {
             ))}
           </div>
         )}
+
+        </div>
 
         {/* Pagination */}
         {totalPages > 1 && (
