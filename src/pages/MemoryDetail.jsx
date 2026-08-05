@@ -6,7 +6,7 @@ import { motion as Motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import {
   Heart, MapPin, Calendar, User,
-  ChevronLeft, ArrowRight, Copy, Ghost,
+  ChevronLeft, ArrowRight, Copy, Share2, Ghost,
 } from 'lucide-react';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import { timeAgo, formatDate, distanceKm, isValidCoord } from '../utils/format';
@@ -223,6 +223,9 @@ function MemoryDetail() {
   );
 
   const typeBadgeColor = TYPE_COLORS[memory.type] || 'bg-accent';
+  const canNativeShare = typeof navigator !== 'undefined' && Boolean(navigator.share);
+  const shareLabel = copied ? 'Copied!' : canNativeShare ? 'Share' : 'Copy link';
+  const ShareIcon = canNativeShare ? Share2 : Copy;
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-24">
@@ -259,11 +262,11 @@ function MemoryDetail() {
           <button
             type="button"
             onClick={copyLink}
-            aria-label={copied ? 'Link copied' : 'Copy share link'}
+            aria-label={copied ? 'Link copied' : canNativeShare ? 'Share memory' : 'Copy share link'}
             className="flex items-center gap-2 px-4 py-2.5 bg-card/90 backdrop-blur-md border-2 border-foreground rounded-full text-foreground font-bold shadow-pop hover:shadow-pop-hover transition-all text-sm heading-font uppercase tracking-wide"
           >
-            <Copy size={14} strokeWidth={2.5} aria-hidden="true" />
-            {copied ? 'Copied!' : 'Share'}
+            <ShareIcon size={14} strokeWidth={2.5} aria-hidden="true" />
+            {shareLabel}
           </button>
           <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
             {copied ? 'Share link copied to clipboard' : ''}

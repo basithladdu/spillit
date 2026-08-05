@@ -1,4 +1,4 @@
-import { Heart, Linkedin, ArrowUpRight } from 'lucide-react';
+import { Heart, Linkedin, ArrowUpRight, ArrowUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 function Footer() {
@@ -50,6 +50,15 @@ function Footer() {
             <ArrowUpRight size={14} strokeWidth={2.5} aria-hidden="true" /> Work
           </a>
         </div>
+
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="inline-flex items-center gap-1.5 rounded-full border-2 border-foreground bg-card px-4 py-2 text-[10px] font-black uppercase tracking-widest text-foreground shadow-pop hover:bg-muted hover:-translate-y-0.5 transition-all"
+        >
+          <ArrowUp size={12} strokeWidth={2.5} aria-hidden="true" />
+          Back to top
+        </button>
 
         {/* Copyright */}
         <p className="text-xs text-muted-foreground flex items-center gap-1.5">

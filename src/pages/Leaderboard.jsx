@@ -242,6 +242,10 @@ function Leaderboard() {
         )}
 
         {totalPages > 1 && (
+          <>
+          <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+            Page {currentPage} of {totalPages}
+          </p>
           <nav aria-label="Leaderboard pages" className="flex justify-center mt-16 gap-4 items-center">
             <button
               type="button"
@@ -265,6 +269,7 @@ function Leaderboard() {
               <ChevronRight size={20} strokeWidth={2.5} aria-hidden="true" />
             </button>
           </nav>
+          </>
         )}
 
       </div>

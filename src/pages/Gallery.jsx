@@ -253,12 +253,41 @@ function Gallery() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {(filters.vibe !== 'All' || searchQuery) && (
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Active:</span>
+              {filters.vibe !== 'All' && (
+                <button
+                  type="button"
+                  onClick={() => setFilters((prev) => ({ ...prev, vibe: 'All' }))}
+                  className="inline-flex items-center gap-1.5 rounded-full border-2 border-foreground bg-muted px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-foreground hover:bg-accent hover:text-white transition-colors"
+                >
+                  {filters.vibe}
+                  <X size={12} strokeWidth={2.5} aria-hidden="true" />
+                  <span className="sr-only">Remove vibe filter</span>
+                </button>
+              )}
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="inline-flex items-center gap-1.5 rounded-full border-2 border-foreground bg-muted px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-foreground hover:bg-accent hover:text-white transition-colors"
+                >
+                  &ldquo;{searchQuery.length > 24 ? `${searchQuery.slice(0, 24)}…` : searchQuery}&rdquo;
+                  <X size={12} strokeWidth={2.5} aria-hidden="true" />
+                  <span className="sr-only">Clear search</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Gallery Grid */}
         <div id="gallery-grid">
         <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-          {currentData.length} {currentData.length === 1 ? 'memory' : 'memories'} shown
+          {filteredMemories.length} {filteredMemories.length === 1 ? 'match' : 'matches'}
+          {totalPages > 1 ? `, page ${currentPage} of ${totalPages}` : ''}
         </p>
         {currentData.length === 0 ? (
           <div className="text-center py-32 bg-card border-2 border-foreground rounded-2xl shadow-pop">
@@ -394,7 +423,7 @@ function Gallery() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center mt-20 gap-4 items-center">
+          <nav aria-label="Gallery pages" className="flex justify-center mt-20 gap-4 items-center">
             <button
               type="button"
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
@@ -416,7 +445,7 @@ function Gallery() {
             >
           <ChevronRight size={20} strokeWidth={2.5} aria-hidden="true" />
             </button>
-          </div>
+          </nav>
         )}
 
       </div>
