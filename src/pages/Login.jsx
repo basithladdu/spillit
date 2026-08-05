@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff, Heart } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -10,7 +11,7 @@ function Login() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { login, currentUser } = useAuth();
+  const { login, resetPassword, currentUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || '/';
@@ -22,6 +23,19 @@ function Login() {
   const clearError = (field) => {
     if (errors[field]) setErrors(p => ({ ...p, [field]: '' }));
     if (errors.general) setErrors(p => ({ ...p, general: '' }));
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setErrors({ email: 'Enter your email to reset your password.' });
+      return;
+    }
+    try {
+      await resetPassword(email.trim());
+      toast.success('Password reset link sent — check your inbox.');
+    } catch (error) {
+      toast.error(error?.message || 'Could not send reset email. Try again.');
+    }
   };
 
   const handleLogin = async (e) => {
@@ -113,9 +127,18 @@ function Login() {
 
             {/* Password */}
             <div className="space-y-2">
-              <label htmlFor="password" className="heading-font text-xs font-bold uppercase tracking-widest text-foreground">
-                Password
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="heading-font text-xs font-bold uppercase tracking-widest text-foreground">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-[10px] font-bold uppercase tracking-widest text-accent hover:text-secondary transition-colors"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} strokeWidth={2.5} aria-hidden="true" />
                 <input

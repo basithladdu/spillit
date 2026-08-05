@@ -3,6 +3,7 @@ import {
   MapPin, Calendar, Hash, ExternalLink, Heart,
   Sparkles, Ghost, Laugh, Eye, Map,
 } from 'lucide-react';
+import { timeAgo } from '../utils/format';
 
 const VIBE_THEME = {
   Moment: {
@@ -47,9 +48,14 @@ const MarkerPopup = ({ issue = {} }) => {
   const theme = VIBE_THEME[type] || VIBE_THEME.Default;
   const Icon = theme.icon;
   
-  const timestamp = issue.ts && issue.ts.toDate 
-    ? new Date(issue.ts.toDate()).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) 
-    : (issue.ts ? new Date(issue.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'N/A');
+  const timestamp = issue.created_at
+    ? timeAgo(issue.created_at)
+    : issue.ts && issue.ts.toDate
+      ? timeAgo(issue.ts.toDate())
+      : issue.ts
+        ? timeAgo(issue.ts)
+        : 'N/A';
+  const spot = issue.address?.split(',')[0] || issue.placeName?.split(',')[0] || 'Somewhere';
 
   return (
     <div className="relative w-72 overflow-hidden rounded-[32px] font-sans text-white bg-[#0f0f13]/95 backdrop-blur-3xl border border-white/10 shadow-2xl p-0">
@@ -83,7 +89,7 @@ const MarkerPopup = ({ issue = {} }) => {
             <div className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1.5">Spot</div>
             <div className="flex items-center gap-1.5">
           <MapPin size={10} className="text-[#a78bfa]" aria-hidden="true" />
-               <span className="text-[10px] font-bold text-slate-200 truncate">{issue.placeName?.split(',')[0] || 'Somewhere'}</span>
+               <span className="text-[10px] font-bold text-slate-200 truncate">{spot}</span>
             </div>
           </div>
 

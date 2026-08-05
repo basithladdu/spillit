@@ -64,6 +64,13 @@ export function AuthProvider({ children }) {
     return supabase.auth.signOut();
   }
 
+  async function resetPassword(email) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login`,
+    });
+    if (error) throw error;
+  }
+
   useEffect(() => {
     // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -98,6 +105,7 @@ export function AuthProvider({ children }) {
     register,
     login,
     logout,
+    resetPassword,
     signInWithGoogle,
   };
 
