@@ -378,7 +378,7 @@ function Dashboard() {
                            {memory.created_at ? new Date(memory.created_at).toLocaleDateString() : 'N/A'}
                         </td>
                         <td className="p-6 text-right">
-                      <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all">
+                      <div className="flex items-center justify-end gap-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-all">
                                  <button type="button" onClick={() => setSelectedMemory(memory)} aria-label={`View memory: ${memory.caption || 'untitled'}`} className="p-3 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 rounded-2xl transition-all"><Eye size={18} aria-hidden /></button>
                               <button type="button" onClick={() => setDeleteId(memory.id)} aria-label={`Delete memory: ${memory.caption || 'untitled'}`} className="p-3 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-2xl transition-all"><Trash2 size={18} aria-hidden /></button>
                            </div>

@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import { timeAgo, formatDate, distanceKm, isValidCoord } from '../utils/format';
-import { PageSpinner } from '../components/UI/PageStatus';
+import { PageSpinner, FetchErrorPanel } from '../components/UI/PageStatus';
 
 const TYPE_COLORS = {
   Moment: 'bg-accent',
@@ -26,6 +26,8 @@ function MemoryDetail() {
 
   const [memory, setMemory]             = useState(null);
   const [loading, setLoading]           = useState(true);
+  const [fetchError, setFetchError]     = useState(false);
+  const [retryCount, setRetryCount]     = useState(0);
   const [hasUpvoted, setHasUpvoted]     = useState(false);
   const [isUpvoting, setIsUpvoting]     = useState(false);
   const [nearbyMemories, setNearbyMemories] = useState([]);
@@ -35,16 +37,22 @@ function MemoryDetail() {
   useEffect(() => {
     let active = true;
     setLoading(true);
+    setFetchError(false);
     setMemory(null);
     setNearbyMemories([]);
     setHasUpvoted(false);
     const fetch = async () => {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('memories')
           .select('*')
           .eq('id', id)
           .single();
+
+        if (error) {
+          if (error.code !== 'PGRST116' && active) setFetchError(true);
+          return;
+        }
 
         if (data && active) {
           setMemory(data);
@@ -72,7 +80,7 @@ function MemoryDetail() {
     };
     fetch();
     return () => { active = false; };
-  }, [id, currentUser]);
+  }, [id, currentUser, retryCount]);
 
   useEffect(() => {
     if (!memory) return undefined;
@@ -84,10 +92,47 @@ function MemoryDetail() {
     const desc = memory.caption
       ? `An anonymous ${memory.type || 'memory'} from ${memory.address?.split(',')[0] || 'the map'}: “${memory.caption.slice(0, 120)}”`
       : 'An anonymous memory on Spill It.';
-    document.querySelector('meta[name="description"]')?.setAttribute('content', desc);
-    document.querySelector('meta[property="og:title"]')?.setAttribute('content', document.title);
-    document.querySelector('meta[property="og:description"]')?.setAttribute('content', desc);
-    return () => { document.title = prevTitle; };
+    const pageUrl = window.location.href;
+    const shareImage = memory.image_url ? getOptimizedImageUrl(memory.image_url, 1200) : null;
+
+    const descriptionTag = document.querySelector('meta[name="description"]');
+    const ogTitleTag = document.querySelector('meta[property="og:title"]');
+    const ogDescTag = document.querySelector('meta[property="og:description"]');
+    const ogUrlTag = document.querySelector('meta[property="og:url"]');
+    const ogImageTag = document.querySelector('meta[property="og:image"]');
+    const twitterImageTag = document.querySelector('meta[name="twitter:image"]');
+    const canonicalTag = document.querySelector('link[rel="canonical"]');
+
+    const prev = {
+      description: descriptionTag?.getAttribute('content'),
+      ogTitle: ogTitleTag?.getAttribute('content'),
+      ogDesc: ogDescTag?.getAttribute('content'),
+      ogUrl: ogUrlTag?.getAttribute('content'),
+      ogImage: ogImageTag?.getAttribute('content'),
+      twitterImage: twitterImageTag?.getAttribute('content'),
+      canonical: canonicalTag?.getAttribute('href'),
+    };
+
+    descriptionTag?.setAttribute('content', desc);
+    ogTitleTag?.setAttribute('content', document.title);
+    ogDescTag?.setAttribute('content', desc);
+    ogUrlTag?.setAttribute('content', pageUrl);
+    canonicalTag?.setAttribute('href', pageUrl);
+    if (shareImage) {
+      ogImageTag?.setAttribute('content', shareImage);
+      twitterImageTag?.setAttribute('content', shareImage);
+    }
+
+    return () => {
+      document.title = prevTitle;
+      if (prev.description != null) descriptionTag?.setAttribute('content', prev.description);
+      if (prev.ogTitle != null) ogTitleTag?.setAttribute('content', prev.ogTitle);
+      if (prev.ogDesc != null) ogDescTag?.setAttribute('content', prev.ogDesc);
+      if (prev.ogUrl != null) ogUrlTag?.setAttribute('content', prev.ogUrl);
+      if (prev.ogImage != null) ogImageTag?.setAttribute('content', prev.ogImage);
+      if (prev.twitterImage != null) twitterImageTag?.setAttribute('content', prev.twitterImage);
+      if (prev.canonical != null) canonicalTag?.setAttribute('href', prev.canonical);
+    };
   }, [memory]);
 
   useEffect(() => () => {
@@ -149,6 +194,14 @@ function MemoryDetail() {
 
   /* ── Loading ── */
   if (loading) return <PageSpinner label="Loading memory" />;
+
+  if (fetchError) return (
+    <FetchErrorPanel
+      eyebrow="Memory paused"
+      title="This spill needs a retry."
+      onRetry={() => { setLoading(true); setRetryCount((count) => count + 1); }}
+    />
+  );
 
   /* ── Not found ── */
   if (!memory) return (

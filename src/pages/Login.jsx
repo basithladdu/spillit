@@ -10,6 +10,7 @@ function Login() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { login, resetPassword, currentUser } = useAuth();
   const navigate = useNavigate();
@@ -30,11 +31,14 @@ function Login() {
       setErrors({ email: 'Enter your email to reset your password.' });
       return;
     }
+    setResetting(true);
     try {
       await resetPassword(email.trim());
       toast.success('Password reset link sent — check your inbox.');
     } catch (error) {
       toast.error(error?.message || 'Could not send reset email. Try again.');
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -134,9 +138,11 @@ function Login() {
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-[10px] font-bold uppercase tracking-widest text-accent hover:text-secondary transition-colors"
+                  disabled={resetting || loading}
+                  aria-busy={resetting}
+                  className="text-[10px] font-bold uppercase tracking-widest text-accent hover:text-secondary transition-colors disabled:opacity-50"
                 >
-                  Forgot password?
+                  {resetting ? 'Sending…' : 'Forgot password?'}
                 </button>
               </div>
               <div className="relative">

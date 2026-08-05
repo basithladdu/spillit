@@ -586,10 +586,16 @@ function Home() {
       .select('*')
       .eq('id', memoryId)
       .single()
-      .then(({ data }) => {
-        if (!active || !data) return;
-        setAllMemories((prev) => ({ ...prev, [data.id]: data }));
-        setSelectedMemory(data);
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (data) {
+          setAllMemories((prev) => ({ ...prev, [data.id]: data }));
+          setSelectedMemory(data);
+          return;
+        }
+        if (error?.code === 'PGRST116' || !error) {
+          toast.info('That memory is no longer on the map.');
+        }
       });
 
     return () => { active = false; };
