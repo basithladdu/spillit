@@ -341,6 +341,16 @@ function Gallery() {
                     &quot;{memory.caption || 'A silent memory whispered into the map...'}&quot;
                   </p>
 
+                  {memory.address && (
+                    <p
+                      className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wide truncate"
+                      title={memory.address}
+                    >
+                      <MapPin size={11} className="shrink-0 text-[#ff7ec9]" aria-hidden="true" />
+                      <span className="truncate">{memory.address.split(',')[0]}</span>
+                    </p>
+                  )}
+
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg bg-muted border border-foreground flex items-center justify-center text-accent">
                       <User size={12} strokeWidth={3} />

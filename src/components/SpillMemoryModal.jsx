@@ -19,6 +19,8 @@ const MEMORY_TYPES = [
 /* ── small inline toast ── */
 const Toast = ({ message, type, onClose }) => (
   <Motion.div
+    role="alert"
+    aria-live="assertive"
     initial={{ opacity: 0, y: -24, scale: 0.9 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, y: -24, scale: 0.9 }}
@@ -334,6 +336,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                         <button
                           type="button"
                           onClick={() => setFormData(p => ({ ...p, image: null }))}
+                          aria-label="Remove selected photo"
                           className="text-[10px] font-bold text-red-500 hover:underline uppercase tracking-wide"
                         >
                           Remove
@@ -341,6 +344,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                       )}
                     </div>
                     <label
+                      htmlFor="spill-photo-input"
                       className={`relative flex flex-col items-center justify-center w-full h-32 rounded-xl border-2 border-dashed cursor-pointer overflow-hidden transition-all group
                         ${formData.image
                           ? 'border-accent bg-accent/5'
@@ -373,6 +377,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                         </div>
                       )}
                       <input
+                        id="spill-photo-input"
                         type="file"
                         accept="image/*"
                         capture="environment"
@@ -394,6 +399,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                           type="button"
                           onClick={() => setFormData(p => ({ ...p, type: label }))}
                           aria-pressed={formData.type === label}
+                          aria-label={`${label} memory type`}
                           className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 transition-all
                             ${formData.type === label
                               ? `${active} shadow-pop -translate-x-0.5 -translate-y-0.5`
@@ -439,6 +445,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                     type="button"
                     onClick={() => setFormData(p => ({ ...p, anonymous: !p.anonymous }))}
                     aria-pressed={formData.anonymous}
+                    aria-label={formData.anonymous ? 'Post anonymously' : 'Post with your username visible'}
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl border-2 transition-all
                       ${formData.anonymous
                         ? 'border-accent bg-accent/5 shadow-pop -translate-x-0.5 -translate-y-0.5'

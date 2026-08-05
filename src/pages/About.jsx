@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Heart, Lightbulb, Users, Camera, MapPin, Ghost, Code, Mail, ArrowUpRight, Linkedin, Map } from 'lucide-react';
+import { Heart, Lightbulb, Users, Camera, MapPin, Ghost, Code, Mail, ArrowUpRight, Linkedin, Map, Archive } from 'lucide-react';
 
 const About = () => {
   const fadeUp = {
@@ -30,12 +30,20 @@ const About = () => {
             <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed mb-8">
               A digital sanctuary for anonymous memories, pinned forever to the spots where life happened.
             </p>
-            <Link
-              to="/"
-              className="inline-flex items-center gap-2 rounded-full border-2 border-foreground bg-accent px-8 py-4 text-sm font-black uppercase tracking-widest text-white shadow-pop hover:-translate-y-0.5 transition-transform heading-font"
-            >
-              <Map size={18} strokeWidth={2.5} aria-hidden /> Open the map
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 rounded-full border-2 border-foreground bg-accent px-8 py-4 text-sm font-black uppercase tracking-widest text-white shadow-pop hover:-translate-y-0.5 transition-transform heading-font"
+              >
+                <Map size={18} strokeWidth={2.5} aria-hidden="true" /> Open the map
+              </Link>
+              <Link
+                to="/gallery"
+                className="inline-flex items-center gap-2 rounded-full border-2 border-foreground bg-card px-8 py-4 text-sm font-black uppercase tracking-widest text-foreground shadow-pop hover:bg-muted hover:-translate-y-0.5 transition-transform heading-font"
+              >
+                <Archive size={18} strokeWidth={2.5} aria-hidden="true" /> Browse archive
+              </Link>
+            </div>
           </motion.div>
         </div>
 

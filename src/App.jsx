@@ -131,6 +131,7 @@ function App() {
           hideProgressBar={false}
           newestOnTop={false}
           closeOnClick
+          closeOnEscape
           rtl={false}
           pauseOnFocusLoss
           draggable

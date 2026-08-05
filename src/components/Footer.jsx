@@ -34,18 +34,20 @@ function Footer() {
             href="https://www.linkedin.com/in/basithladoo/"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Basith on LinkedIn (opens in new tab)"
             className="hover:text-secondary transition-colors flex items-center gap-1"
           >
-            <Linkedin size={14} strokeWidth={2.5} /> Basith
+            <Linkedin size={14} strokeWidth={2.5} aria-hidden="true" /> Basith
           </a>
-          <span className="w-1 h-1 rounded-full bg-border" />
+          <span className="w-1 h-1 rounded-full bg-border" aria-hidden="true" />
           <a
             href="https://www.wedevit.in/projects"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="devit. projects (opens in new tab)"
             className="hover:text-accent transition-colors flex items-center gap-1"
           >
-            <ArrowUpRight size={14} strokeWidth={2.5} /> Work
+            <ArrowUpRight size={14} strokeWidth={2.5} aria-hidden="true" /> Work
           </a>
         </div>
 
