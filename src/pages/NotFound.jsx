@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Ghost, Map, ArrowLeft } from 'lucide-react';
+import { Ghost, Map, ArrowLeft, Camera } from 'lucide-react';
 
 function NotFound() {
   return (
@@ -40,6 +40,12 @@ function NotFound() {
             className="flex items-center justify-center gap-2 px-8 py-4 bg-accent text-white border-2 border-foreground rounded-full font-bold shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active transition-all heading-font uppercase tracking-widest text-sm"
           >
             <Map size={18} strokeWidth={2.5} aria-hidden="true" /> Return to Map
+          </Link>
+          <Link
+            to="/gallery"
+            className="flex items-center justify-center gap-2 px-8 py-4 bg-card border-2 border-foreground text-foreground rounded-full font-bold shadow-pop hover:bg-muted hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all text-sm uppercase tracking-widest heading-font"
+          >
+            <Camera size={18} strokeWidth={2.5} aria-hidden="true" /> Browse Archive
           </Link>
           <button
             type="button"

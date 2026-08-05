@@ -14,6 +14,7 @@ import {
   Eye,
   Hash,
   User,
+  X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getOptimizedImageSrcSet, getOptimizedImageUrl } from '../utils/imageOptimizer';
@@ -177,8 +178,18 @@ function Gallery() {
               placeholder="Search memories..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-full border-2 border-foreground bg-white py-5 pr-8 pl-16 text-sm font-black text-foreground shadow-pop outline-none transition-all placeholder-slate-400 focus:border-accent focus:shadow-focus md:w-96"
+              className="w-full rounded-full border-2 border-foreground bg-white py-5 pr-14 pl-16 text-sm font-black text-foreground shadow-pop outline-none transition-all placeholder-slate-400 focus:border-accent focus:shadow-focus md:w-96"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+                className="absolute right-5 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:text-foreground transition-colors"
+              >
+                <X size={16} strokeWidth={2.5} aria-hidden="true" />
+              </button>
+            )}
           </div>
         </div>
 

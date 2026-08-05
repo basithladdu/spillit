@@ -163,7 +163,7 @@ function Register() {
 
           <p className="text-center mt-8 text-muted-foreground text-sm">
             Already have an account?{' '}
-            <Link to="/login" className="text-secondary font-bold hover:underline">
+            <Link to="/login" state={{ from: redirectTo }} className="text-secondary font-bold hover:underline">
               Login here
             </Link>
           </p>

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
-import { X, MapPin, Share2, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { X, MapPin, Share2, ExternalLink, CheckCircle2, Ghost } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import { timeAgo } from '../utils/format';
@@ -113,14 +113,20 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
                     </button>
 
                     {/* Content Image */}
-                    <div className="relative h-72 w-full border-b-2 border-foreground">
-                        <img 
+                    <div className="relative h-72 w-full border-b-2 border-foreground bg-muted">
+                        {summaryData.imageUrl ? (
+                          <img
                             src={getOptimizedImageUrl(summaryData.imageUrl, 640)}
                             width="640"
                             height="288"
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-cover"
                             alt={`Memory photo: ${(summaryData.caption || 'Spilled memory').trim().slice(0, 80)}`}
-                        />
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center">
+                            <Ghost size={64} className="text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+                          </div>
+                        )}
                     </div>
 
                     <div className="p-8 space-y-6">

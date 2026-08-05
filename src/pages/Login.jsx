@@ -161,7 +161,7 @@ function Login() {
           {/* Footer */}
           <p className="text-center mt-8 text-muted-foreground text-sm">
             New here?{' '}
-            <Link to="/register" className="text-accent font-bold hover:underline">
+            <Link to="/register" state={{ from: redirectTo }} className="text-accent font-bold hover:underline">
               Create an account
             </Link>
           </p>
