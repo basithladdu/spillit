@@ -16,6 +16,9 @@ import {
   User,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getOptimizedImageSrcSet, getOptimizedImageUrl } from '../utils/imageOptimizer';
+import { timeAgo, uniqueCityCount } from '../utils/format';
+import { PageSpinner, FetchErrorPanel } from '../components/UI/PageStatus';
 
 // --- Sub-Components ---
 const StatBox = ({ label, value, icon, accentColor }) => (
@@ -54,6 +57,8 @@ const FilterSelect = ({ id, label, value, onChange, options }) => (
 function Gallery() {
   const [memories, setMemories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [filters, setFilters] = useState({
     vibe: 'All', sortBy: 'Newest First'
   });
@@ -64,16 +69,23 @@ function Gallery() {
 
   // Data Fetching
   useEffect(() => {
+    let active = true;
     const fetchMemories = async () => {
+      setLoadError(false);
       const { data, error } = await supabase
         .from('memories')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (!active) return;
       
-      if (!error && data) {
+      if (error) {
+        console.error('[Gallery] Failed to load memories:', error.message);
+        setLoadError(true);
+      } else if (data) {
         setMemories(data);
       }
-      setLoading(false);
+      if (active) setLoading(false);
     };
 
     fetchMemories();
@@ -86,9 +98,10 @@ function Gallery() {
       .subscribe();
 
     return () => {
+      active = false;
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [retryCount]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -109,10 +122,14 @@ function Gallery() {
   const totalPages = Math.ceil(filteredMemories.length / itemsPerPage);
   const currentData = filteredMemories.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-background" role="status" aria-label="Loading archive">
-      <div className="h-12 w-12 animate-spin rounded-full border-4 border-accent border-t-transparent" aria-hidden />
-    </div>
+  if (loading) return <PageSpinner label="Loading archive" />;
+
+  if (loadError) return (
+    <FetchErrorPanel
+      eyebrow="Archive paused"
+      title="The spills are taking a moment."
+      onRetry={() => { setLoading(true); setRetryCount((count) => count + 1); }}
+    />
   );
 
   return (
@@ -127,7 +144,7 @@ function Gallery() {
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-12">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-               <Sparkles size={20} className="text-[#ff7ec9] animate-pulse" />
+            <Sparkles size={20} className="text-[#ff7ec9] animate-pulse" aria-hidden="true" />
                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">The Collection</span>
             </div>
             <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-none heading-font text-foreground">
@@ -140,10 +157,11 @@ function Gallery() {
 
           {/* Search */}
           <div className="w-full md:w-auto relative group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-[#ff7ec9] transition-colors" size={18} />
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-[#ff7ec9] transition-colors" size={18} aria-hidden="true" />
             <input
               type="search"
               aria-label="Search memories"
+              autoComplete="off"
               placeholder="Search memories..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -156,7 +174,7 @@ function Gallery() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           <StatBox label="Total Memories" value={memories.length} icon={<Ghost size={20} />} accentColor="#ff7ec9" />
           <StatBox label="Love Poured" value={memories.reduce((acc, m) => acc + (m.upvotes || 0), 0)} icon={<Heart size={20} />} accentColor="#a78bfa" />
-          <StatBox label="Sprawl" value={new Set(memories.map(m => m.address?.split(',')[0])).size} icon={<MapPin size={20} />} accentColor="#4ade80" />
+          <StatBox label="Sprawl" value={uniqueCityCount(memories)} icon={<MapPin size={20} />} accentColor="#4ade80" />
         </div>
 
         {/* Filters */}
@@ -170,6 +188,7 @@ function Gallery() {
               type="button"
               onClick={() => setShowFilters(!showFilters)}
               aria-expanded={showFilters}
+              aria-controls="gallery-filter-panel"
               className="rounded-full border-2 border-foreground bg-muted px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest shadow-pop transition-all heading-font hover:border-accent hover:bg-accent hover:text-white"
             >
               {showFilters ? 'Hide' : 'Filters'}
@@ -179,6 +198,7 @@ function Gallery() {
           <AnimatePresence>
             {showFilters && (
               <motion.div
+                id="gallery-filter-panel"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
@@ -204,9 +224,12 @@ function Gallery() {
         </div>
 
         {/* Gallery Grid */}
+        <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+          {currentData.length} {currentData.length === 1 ? 'memory' : 'memories'} shown
+        </p>
         {currentData.length === 0 ? (
           <div className="text-center py-32 bg-card border-2 border-foreground rounded-2xl shadow-pop">
-            <Ghost className="text-muted-foreground mx-auto mb-6" size={64} strokeWidth={1.5} />
+          <Ghost className="text-muted-foreground mx-auto mb-6" size={64} strokeWidth={1.5} aria-hidden="true" />
             <h3 className="heading-font text-2xl font-bold mb-2 text-foreground">Nothing Spilled Yet</h3>
             <p className="text-muted-foreground italic">This archive is currently empty.</p>
           </div>
@@ -224,13 +247,19 @@ function Gallery() {
                 <div className="relative h-64 overflow-hidden">
                   {memory.image_url ? (
                     <img
-                      src={memory.image_url}
+                      src={getOptimizedImageUrl(memory.image_url, 640)}
+                      srcSet={getOptimizedImageSrcSet(memory.image_url)}
+                      sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                       alt={memory.caption ? `Memory: ${memory.caption.slice(0, 60)}` : 'Memory photo'}
+                      loading="lazy"
+                      decoding="async"
+                      width="640"
+                      height="256"
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-white/[0.02]">
-                       <Ghost size={48} className="text-slate-800" />
+          <Ghost size={48} className="text-slate-800" aria-hidden="true" />
                     </div>
                   )}
                   <div className="absolute top-6 left-6 flex gap-2">
@@ -248,7 +277,7 @@ function Gallery() {
                        {memory.id.slice(-8)}
                      </div>
                      <div className="flex items-center gap-1.5 text-[10px] font-black text-[#ff7ec9]">
-                       <Heart size={14} className="fill-current" />
+          <Heart size={14} className="fill-current" aria-hidden="true" />
                        {memory.upvotes || 0}
                      </div>
                   </div>
@@ -268,15 +297,15 @@ function Gallery() {
 
                   <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase">
-                      <Calendar size={12} className="text-[#ff7ec9]" />
-                      {memory.created_at ? new Date(memory.created_at).toLocaleDateString() : 'Hidden Date'}
+                      <Calendar size={12} className="text-[#ff7ec9]" aria-hidden="true" />
+                      {memory.created_at ? timeAgo(memory.created_at) : 'Hidden Date'}
                     </div>
 
                     <Link
                       to={`/memory/${memory.id}`}
                       className="px-6 py-2.5 bg-accent text-white text-[10px] font-black uppercase tracking-widest rounded-full border-2 border-foreground hover:shadow-pop transition-all flex items-center gap-2"
                     >
-                      Enter <Eye size={12} strokeWidth={3} />
+          Enter <Eye size={12} strokeWidth={3} aria-hidden="true" />
                     </Link>
                   </div>
                 </div>
@@ -295,7 +324,7 @@ function Gallery() {
               aria-label="Previous page"
               className="w-12 h-12 rounded-full bg-card border-2 border-foreground flex items-center justify-center text-foreground disabled:opacity-30 shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
             >
-              <ChevronLeft size={20} strokeWidth={2.5} />
+          <ChevronLeft size={20} strokeWidth={2.5} aria-hidden="true" />
             </button>
             <div className="heading-font font-bold text-sm uppercase tracking-widest text-foreground px-4">
               {currentPage} / {totalPages}
@@ -307,7 +336,7 @@ function Gallery() {
               aria-label="Next page"
               className="w-12 h-12 rounded-full bg-card border-2 border-foreground flex items-center justify-center text-foreground disabled:opacity-30 shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
             >
-              <ChevronRight size={20} strokeWidth={2.5} />
+          <ChevronRight size={20} strokeWidth={2.5} aria-hidden="true" />
             </button>
           </div>
         )}

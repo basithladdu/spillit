@@ -3,6 +3,9 @@ import { supabase } from '../utils/supabase';
 import { motion } from 'framer-motion';
 import { Heart, MapPin, Trophy, Crown, Ghost, ArrowRight, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getOptimizedImageUrl } from '../utils/imageOptimizer';
+import { timeAgo } from '../utils/format';
+import { PageSpinner, FetchErrorPanel } from '../components/UI/PageStatus';
 
 const RankBadge = ({ rank }) => {
   const styles = {
@@ -20,17 +23,26 @@ const RankBadge = ({ rank }) => {
 function Leaderboard() {
   const [topMemories, setTopMemories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
+    let active = true;
     const fetchTopMemories = async () => {
+      setLoadError(false);
       const { data, error } = await supabase
         .from('memories')
         .select('*')
         .order('upvotes', { ascending: false })
         .limit(50);
+
+      if (!active) return;
       
       if (!error && data) {
         setTopMemories(data);
+      } else if (error) {
+        console.error('[Leaderboard] Failed to load memories:', error.message);
+        setLoadError(true);
       }
       setLoading(false);
     };
@@ -46,14 +58,19 @@ function Leaderboard() {
       .subscribe();
 
     return () => {
+      active = false;
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [retryCount]);
 
-  if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-background" role="status" aria-label="Loading leaderboard">
-      <div className="h-12 w-12 animate-spin rounded-full border-4 border-accent border-t-transparent" aria-hidden />
-    </div>
+  if (loading) return <PageSpinner label="Loading leaderboard" />;
+
+  if (loadError) return (
+    <FetchErrorPanel
+      eyebrow="Hall of fame paused"
+      title="The rankings are taking a moment."
+      onRetry={() => { setLoading(true); setRetryCount((count) => count + 1); }}
+    />
   );
 
   return (
@@ -82,7 +99,7 @@ function Leaderboard() {
 
         {topMemories.length === 0 ? (
           <div className="text-center py-40 bg-white border-2 border-foreground rounded-[40px] border-dashed">
-             <Ghost size={64} className="text-slate-800 mx-auto mb-6" />
+             <Ghost size={64} className="text-slate-800 mx-auto mb-6" aria-hidden="true" />
              <p className="text-slate-600 font-bold uppercase tracking-widest text-xs">No one has spilled enough love yet.</p>
           </div>
         ) : (
@@ -111,12 +128,16 @@ function Leaderboard() {
                         <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-[32px] overflow-hidden border-2 border-foreground bg-muted flex-shrink-0 shadow-pop">
                            {memory.image_url ? (
                              <img
-                              src={memory.image_url}
+                              src={getOptimizedImageUrl(memory.image_url, 160)}
+                              width="160"
+                              height="160"
                               alt={memory.caption ? `Memory: ${memory.caption.slice(0, 60)}` : 'Memory photo'}
+                              loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                             />
                            ) : (
-                             <div className="w-full h-full flex items-center justify-center"><Ghost size={32} className="text-slate-300" /></div>
+                             <div className="w-full h-full flex items-center justify-center"><Ghost size={32} className="text-slate-300" aria-hidden="true" /></div>
                            )}
                            <div className="absolute top-3 left-3 px-2 py-1 rounded-full bg-white border-2 border-foreground text-[8px] font-black uppercase text-foreground">
                               {memory.type || 'Moment'}
@@ -129,7 +150,7 @@ function Leaderboard() {
                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                           <div className="flex items-center justify-center md:justify-start gap-3">
                              <div className="flex items-center gap-1.5 text-accent font-black text-lg">
-                                <Heart size={20} className="fill-current" strokeWidth={3} />
+                                <Heart size={20} className="fill-current" strokeWidth={3} aria-hidden="true" />
                                 <span>{memory.upvotes || 0}</span>
                              </div>
                              <div className="w-1 h-1 rounded-full bg-foreground/10 hidden md:block"></div>
@@ -144,7 +165,7 @@ function Leaderboard() {
                           </div>
                           
                            <div className="flex items-center justify-center gap-2 text-[10px] font-black text-foreground uppercase tracking-widest bg-muted px-4 py-2 rounded-2xl border-2 border-foreground shadow-pop">
-                             <MapPin size={12} className="text-quaternary" strokeWidth={3} /> {memory.address?.split(',')[0] || 'The Unknown'}
+                             <MapPin size={12} className="text-quaternary" strokeWidth={3} aria-hidden="true" /> {memory.address?.split(',')[0] || 'The Unknown'}
                            </div>
                        </div>
 
@@ -156,12 +177,12 @@ function Leaderboard() {
                           <div className="flex items-center gap-3">
                              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Spilled On</span>
                               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                 {memory.created_at ? new Date(memory.created_at).toLocaleDateString() : 'N/A'}
+                                 {memory.created_at ? timeAgo(memory.created_at) : 'N/A'}
                               </span>
                           </div>
                           
                           <div className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-accent group-hover:translate-x-2 transition-transform">
-                             View Spill <ArrowRight size={14} strokeWidth={3} />
+                             View Spill <ArrowRight size={14} strokeWidth={3} aria-hidden="true" />
                           </div>
                        </div>
                     </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Map, { Marker, Popup, NavigationControl } from 'react-map-gl';
@@ -15,7 +15,8 @@ import {
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 import { supabase } from '../utils/supabase';
-import { getOptimizedImageUrl } from '../utils/imageOptimizer';
+import { getOptimizedImageSrcSet, getOptimizedImageUrl } from '../utils/imageOptimizer';
+import { timeAgo, uniqueCityCount, isValidCoord } from '../utils/format';
 import MemoryCard from './MemoryCard';
 import SpillMemoryModal from '../components/SpillMemoryModal';
 
@@ -44,6 +45,14 @@ const MAP_STYLE = 'mapbox://styles/mapbox/streets-v12';
 const DEFAULT_VIEW = { latitude: 25, longitude: 15, zoom: 2 };
 const ONBOARDING_KEY = 'spillit_onboarded';
 const MEMORY_LIMIT = 100;
+
+const hasSeenOnboarding = () => {
+  try { return localStorage.getItem(ONBOARDING_KEY) === '1'; } catch { return false; }
+};
+
+const rememberOnboarding = () => {
+  try { localStorage.setItem(ONBOARDING_KEY, '1'); } catch { /* Storage unavailable. */ }
+};
 
 const TYPE_COLORS = {
   Moment: T.accent,
@@ -106,32 +115,6 @@ const clampLines = {
 };
 
 /* ── Utilities ── */
-const isValidCoord = (lat, lng) => {
-  const a = Number(lat);
-  const b = Number(lng);
-  return Number.isFinite(a) && Number.isFinite(b) && !(a === 0 && b === 0);
-};
-
-const uniqueCityCount = (memories) =>
-  new Set(
-    memories
-      .map((m) => m.address?.split(',').pop()?.trim())
-      .filter(Boolean),
-  ).size;
-
-const timeAgo = (dateStr) => {
-  if (!dateStr) return '';
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-};
-
 const recordsToMap = (rows) =>
   Object.fromEntries((rows ?? []).map((row) => [row.id, row]));
 
@@ -212,8 +195,49 @@ const TOUR_STEPS = [
 
 const OnboardingTour = ({ onComplete, onSpill }) => {
   const [step, setStep] = useState(0);
+  const dialogRef = useRef(null);
+  const returnFocusRef = useRef(null);
   const current = TOUR_STEPS[step];
   const isLast = step === TOUR_STEPS.length - 1;
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return undefined;
+
+    returnFocusRef.current = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const focusable = () => [...dialog.querySelectorAll('button, a[href]')]
+      .filter((element) => !element.disabled);
+    focusable()[0]?.focus();
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        onComplete();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const elements = focusable();
+      if (!elements.length) return;
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      returnFocusRef.current?.focus?.();
+      returnFocusRef.current = null;
+    };
+  }, [onComplete]);
 
   const advance = () => {
     if (!isLast) {
@@ -225,7 +249,7 @@ const OnboardingTour = ({ onComplete, onSpill }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4" role="dialog" aria-modal aria-labelledby="tour-title">
+    <div ref={dialogRef} className="fixed inset-0 z-[3000] flex items-center justify-center p-4" role="dialog" aria-modal aria-labelledby="tour-title">
       <button
         type="button"
         aria-label="Dismiss tour"
@@ -252,12 +276,15 @@ const OnboardingTour = ({ onComplete, onSpill }) => {
         <button type="button" onClick={onComplete} className="mt-3 text-xs py-2 block w-full" style={{ color: T.muted }}>
           Skip intro
         </button>
-        <div className="flex justify-center gap-2 mt-4" role="tablist" aria-label="Tour progress">
+        <div
+          className="flex justify-center gap-2 mt-4"
+          role="group"
+          aria-label={`Tour progress: step ${step + 1} of ${TOUR_STEPS.length}`}
+        >
           {TOUR_STEPS.map((_, i) => (
             <div
               key={i}
-              role="tab"
-              aria-selected={i === step}
+              aria-hidden="true"
               className="h-1.5 rounded-full transition-all duration-300"
               style={{
                 width: i === step ? 32 : 8,
@@ -275,16 +302,35 @@ const OnboardingTour = ({ onComplete, onSpill }) => {
 const LiveIndicator = () => (
   <span
     className="home-live-dot"
+    aria-hidden="true"
     style={{ width: 8, height: 8, borderRadius: '50%', background: T.live, display: 'inline-block' }}
   />
 );
 
 const FeedEmpty = ({ compact = false }) => (
   <div className={`flex flex-col items-center justify-center text-center gap-3 ${compact ? 'py-8' : 'py-12'}`}>
-    <Ghost size={compact ? 32 : 36} color={T.faint} strokeWidth={1.5} />
+    <Ghost size={compact ? 32 : 36} color={T.faint} strokeWidth={1.5} aria-hidden="true" />
     <div>
       <p style={{ fontSize: compact ? 12 : 14, color: T.ink, fontWeight: 600 }}>No spills yet</p>
       <p style={{ fontSize: compact ? 11 : 12, color: T.muted, marginTop: 4 }}>Be the first to pin a memory.</p>
+    </div>
+  </div>
+);
+
+const FeedUnavailable = ({ compact = false, onRetry }) => (
+  <div className={`flex flex-col items-center justify-center text-center gap-3 ${compact ? 'py-8' : 'py-12'}`} role="alert" aria-live="assertive">
+    <AlertCircle size={compact ? 30 : 36} color={T.accent} strokeWidth={1.5} aria-hidden />
+    <div>
+      <p style={{ fontSize: compact ? 12 : 14, color: T.ink, fontWeight: 600 }}>Archive unavailable</p>
+      <p style={{ fontSize: compact ? 11 : 12, color: T.muted, marginTop: 4 }}>We couldn’t reach the memory service. Try refreshing.</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="home-btn-primary mt-3 px-4 py-2 text-[10px] font-bold uppercase tracking-widest"
+        style={{ boxShadow: '2px 2px 0 #1E293B' }}
+      >
+        Try again
+      </button>
     </div>
   </div>
 );
@@ -300,8 +346,13 @@ const FeedCard = ({ memory, variant = 'desktop', onNavigate }) => {
       {memory.image_url && (
         <img
           src={getOptimizedImageUrl(memory.image_url, 120)}
-          alt=""
+          srcSet={getOptimizedImageSrcSet(memory.image_url, [120, 240])}
+          sizes="64px"
+          alt={`Memory photo: ${caption.slice(0, 80)}`}
           loading="lazy"
+          decoding="async"
+          width="64"
+          height="64"
           style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover', border: `2px solid ${T.border}`, flexShrink: 0 }}
         />
       )}
@@ -326,8 +377,13 @@ const FeedCard = ({ memory, variant = 'desktop', onNavigate }) => {
         <div style={{ height: 96, overflow: 'hidden', borderBottom: `1px solid ${T.border}` }}>
           <img
             src={getOptimizedImageUrl(memory.image_url, 300)}
-            alt=""
+            srcSet={getOptimizedImageSrcSet(memory.image_url, [300, 600])}
+            sizes="300px"
+            alt={`Memory photo: ${caption.slice(0, 80)}`}
             loading="lazy"
+            decoding="async"
+            width="300"
+            height="96"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         </div>
@@ -418,22 +474,25 @@ const BrandBadge = ({ size = 'md' }) => {
   );
 };
 
-const MapUnavailable = () => (
+const MapUnavailable = ({ message = 'The map is temporarily unavailable. You can still explore memories from the archive.' }) => (
   <div className="absolute inset-0 flex items-center justify-center p-6" style={{ background: T.canvas }}>
     <div style={panel({ maxWidth: 360, padding: '32px 28px', textAlign: 'center' })}>
-      <AlertCircle size={32} color={T.accent} className="mx-auto mb-4" strokeWidth={2} />
+      <AlertCircle size={32} color={T.accent} className="mx-auto mb-4" strokeWidth={2} aria-hidden="true" />
       <h2 className="heading-font text-xl font-bold mb-2" style={{ color: T.ink }}>Map unavailable</h2>
-      <p className="text-sm leading-relaxed" style={{ color: T.muted }}>
-        Add a Mapbox token to <code className="text-xs px-1 py-0.5 rounded" style={{ background: T.surfaceSubtle }}>VITE_MAPBOX_TOKEN</code> to enable the map.
-      </p>
+      <p className="text-sm leading-relaxed" style={{ color: T.muted }}>{message}</p>
     </div>
   </div>
 );
 
 /* ── Main page ── */
 function Home() {
+  const feedTriggerRef = useRef(null);
+  const feedDialogRef = useRef(null);
+  const feedReturnFocusRef = useRef(null);
   const [allMemories, setAllMemories] = useState({});
   const [loading, setLoading] = useState(true);
+  const [feedError, setFeedError] = useState(false);
+  const [feedRetryCount, setFeedRetryCount] = useState(0);
   const [selectedMemory, setSelectedMemory] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
@@ -442,6 +501,7 @@ function Home() {
   const [showFeed, setShowFeed] = useState(false);
   const [viewState, setViewState] = useState(DEFAULT_VIEW);
   const [locating, setLocating] = useState(false);
+  const [mapError, setMapError] = useState('');
 
   const memories = useMemo(
     () => Object.values(allMemories).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)),
@@ -454,7 +514,7 @@ function Home() {
 
   const completeTour = useCallback(() => {
     setShowTour(false);
-    localStorage.setItem(ONBOARDING_KEY, '1');
+    rememberOnboarding();
   }, []);
 
   const openSpillForm = useCallback(() => setShowForm(true), []);
@@ -492,11 +552,12 @@ function Home() {
   }, []);
 
   useEffect(() => {
-    if (!localStorage.getItem(ONBOARDING_KEY)) setShowTour(true);
+    if (!hasSeenOnboarding()) setShowTour(true);
   }, []);
 
   useEffect(() => {
     let active = true;
+    let channel = null;
 
     const loadMemories = async () => {
       const { data, error } = await supabase
@@ -508,47 +569,77 @@ function Home() {
       if (!active) return;
 
       if (error) {
+        setFeedError(true);
         console.error('[Home] Failed to load memories:', error.message);
         toast.error('Couldn\u2019t load memories. Try refreshing.');
       } else if (data) {
+        setFeedError(false);
         setAllMemories(recordsToMap(data));
+        channel = supabase
+          .channel('home:memories')
+          .on('postgres_changes', { event: '*', table: 'memories', schema: 'public' }, (payload) => {
+            if (payload.eventType === 'DELETE') {
+              setAllMemories((prev) => {
+                const next = { ...prev };
+                delete next[payload.old.id];
+                return next;
+              });
+              setSelectedMemory((cur) => (cur?.id === payload.old.id ? null : cur));
+            } else {
+              setAllMemories((prev) => ({ ...prev, [payload.new.id]: payload.new }));
+            }
+          })
+          .subscribe();
       }
       setLoading(false);
     };
 
     loadMemories();
 
-    const channel = supabase
-      .channel('home:memories')
-      .on('postgres_changes', { event: '*', table: 'memories', schema: 'public' }, (payload) => {
-        if (payload.eventType === 'DELETE') {
-          setAllMemories((prev) => {
-            const next = { ...prev };
-            delete next[payload.old.id];
-            return next;
-          });
-          setSelectedMemory((cur) => (cur?.id === payload.old.id ? null : cur));
-        } else {
-          setAllMemories((prev) => ({ ...prev, [payload.new.id]: payload.new }));
-        }
-      })
-      .subscribe();
-
     return () => {
       active = false;
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
-  }, []);
+  }, [feedRetryCount]);
 
   useEffect(() => {
     if (!showFeed) return undefined;
-    const onKey = (e) => { if (e.key === 'Escape') setShowFeed(false); };
+    const dialog = feedDialogRef.current;
+    if (!dialog) return undefined;
+
+    feedReturnFocusRef.current = document.activeElement;
+    const focusable = () => [...dialog.querySelectorAll('button, a[href], input, select, textarea')]
+      .filter((element) => !element.disabled);
+    focusable()[0]?.focus();
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setShowFeed(false);
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const elements = focusable();
+      if (!elements.length) return;
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      feedReturnFocusRef.current?.focus?.();
+      feedReturnFocusRef.current = null;
+    };
   }, [showFeed]);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden" style={{ background: T.canvas }}>
+    <main id="main-content" tabIndex="-1" className="relative w-full h-screen overflow-hidden outline-none" style={{ background: T.canvas }}>
 
       {/* Desktop hero */}
       <div className="pointer-events-none hidden lg:flex flex-col gap-4 absolute top-20 left-6 z-[850] max-w-xs">
@@ -588,11 +679,13 @@ function Home() {
           <LiveFeedHeader />
           <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
             {loading ? (
-              <div className="space-y-3" aria-busy aria-label="Loading memories">
+              <div className="space-y-3" role="status" aria-busy aria-label="Loading memories">
                 {[0, 1, 2].map((i) => (
                   <div key={i} className="home-skeleton" style={{ height: 120, borderRadius: 12 }} />
                 ))}
               </div>
+            ) : feedError ? (
+              <FeedUnavailable compact onRetry={() => { setLoading(true); setFeedRetryCount((count) => count + 1); }} />
             ) : memories.length === 0 ? (
               <FeedEmpty compact />
             ) : (
@@ -603,9 +696,9 @@ function Home() {
       </div>
 
       {/* Map */}
-      <div id="map-root" className="absolute inset-0">
-        {!MAPBOX_TOKEN ? (
-          <MapUnavailable />
+      <div id="map-root" className="absolute inset-0" role="region" aria-label="Memory map">
+        {!MAPBOX_TOKEN || mapError ? (
+          <MapUnavailable message={mapError || undefined} />
         ) : (
           <Map
             {...viewState}
@@ -613,6 +706,13 @@ function Home() {
             onClick={handleMapClick}
             mapStyle={MAP_STYLE}
             mapboxAccessToken={MAPBOX_TOKEN}
+            onError={(event) => {
+              if (event?.error?.status === 401) {
+                setMapError('The map is temporarily unavailable. Please try again later.');
+              } else {
+                setMapError('The map could not load right now. Check the connection and try again.');
+              }
+            }}
             style={{ width: '100%', height: '100%' }}
             reuseMaps
             attributionControl
@@ -659,9 +759,14 @@ function Home() {
                   {selectedMemory.image_url && (
                     <img
                       src={getOptimizedImageUrl(selectedMemory.image_url, 300)}
+                      srcSet={getOptimizedImageSrcSet(selectedMemory.image_url, [300, 600])}
+                      sizes="300px"
                       style={{ width: '100%', height: 112, objectFit: 'cover', borderBottom: `2px solid ${T.ink}`, display: 'block' }}
-                      alt=""
+                      alt={selectedMemory.caption ? `Memory photo: ${selectedMemory.caption.slice(0, 80)}` : 'Memory photo'}
                       loading="lazy"
+                      decoding="async"
+                      width="300"
+                      height="112"
                     />
                   )}
                   <div className="p-3">
@@ -696,6 +801,7 @@ function Home() {
         </div>
         <button
           type="button"
+          ref={feedTriggerRef}
           onClick={() => setShowFeed(true)}
           style={pill({ display: 'flex', alignItems: 'center', gap: 8, background: T.surface })}
           className="pointer-events-auto"
@@ -773,6 +879,7 @@ function Home() {
             onClick={() => setShowFeed(false)}
           />
           <motion.div
+            ref={feedDialogRef}
             id="mobile-live-feed"
             role="dialog"
             aria-modal
@@ -800,11 +907,13 @@ function Home() {
             <LiveFeedHeader showClose onClose={() => setShowFeed(false)} />
             <div className="overflow-y-auto p-3 space-y-3 custom-scrollbar flex-1">
               {loading ? (
-                <div className="space-y-3" aria-busy>
+                <div className="space-y-3" role="status" aria-busy aria-label="Loading memories">
                   {[0, 1, 2, 3].map((i) => (
                     <div key={i} className="home-skeleton" style={{ height: 88, borderRadius: 12 }} />
                   ))}
                 </div>
+              ) : feedError ? (
+                <FeedUnavailable onRetry={() => { setLoading(true); setFeedRetryCount((count) => count + 1); }} />
               ) : memories.length === 0 ? (
                 <FeedEmpty />
               ) : (
@@ -882,7 +991,7 @@ function Home() {
           .home-btn-primary:hover, .home-btn-primary:active { transform: none; }
         }
       `}</style>
-    </div>
+    </main>
   );
 }
 

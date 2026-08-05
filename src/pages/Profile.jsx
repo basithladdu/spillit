@@ -3,6 +3,7 @@ import { supabase } from '../utils/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { User, AtSign, Mail, Save, Camera } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { PageSpinner } from '../components/UI/PageStatus';
 
 function Profile() {
   const { currentUser } = useAuth();
@@ -14,19 +15,23 @@ function Profile() {
     bio: '',
     avatar_url: ''
   });
+  const [memoryStats, setMemoryStats] = useState({ count: 0, upvotes: 0 });
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!currentUser) return;
-      
-      try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single();
+    let active = true;
+    if (!currentUser) {
+      setLoading(false);
+      return () => { active = false; };
+    }
 
-        if (data) {
+    const fetchProfile = async () => {
+      try {
+        const [{ data }, { data: memories }] = await Promise.all([
+          supabase.from('profiles').select('*').eq('id', currentUser.id).single(),
+          supabase.from('memories').select('upvotes').eq('user_id', currentUser.id),
+        ]);
+
+        if (data && active) {
           setProfile({
             username: data.username || '',
             full_name: data.full_name || '',
@@ -34,14 +39,21 @@ function Profile() {
             avatar_url: data.avatar_url || ''
           });
         }
+        if (memories && active) {
+          setMemoryStats({
+            count: memories.length,
+            upvotes: memories.reduce((sum, m) => sum + (m.upvotes || 0), 0),
+          });
+        }
       } catch (error) {
         console.error('Error fetching profile:', error);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
     fetchProfile();
+    return () => { active = false; };
   }, [currentUser]);
 
   const handleUpdate = async (e) => {
@@ -69,13 +81,7 @@ function Profile() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background" role="status" aria-label="Loading profile">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" aria-hidden />
-      </div>
-    );
-  }
+  if (loading) return <PageSpinner label="Loading profile" />;
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-12">
@@ -83,6 +89,16 @@ function Profile() {
         <header className="mb-10">
           <h1 className="heading-font text-4xl md:text-5xl font-black text-foreground mb-2">My Profile</h1>
           <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">How the map sees you</p>
+          <div className="mt-6 flex flex-wrap gap-4">
+            <div className="rounded-2xl border-2 border-foreground bg-white px-5 py-3 shadow-pop">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Memories spilled</p>
+              <p className="heading-font text-2xl font-black text-accent">{memoryStats.count}</p>
+            </div>
+            <div className="rounded-2xl border-2 border-foreground bg-white px-5 py-3 shadow-pop">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Hearts received</p>
+              <p className="heading-font text-2xl font-black text-secondary">{memoryStats.upvotes}</p>
+            </div>
+          </div>
         </header>
 
         <div className="bg-white border-2 border-foreground rounded-[40px] shadow-pop overflow-hidden">
@@ -91,7 +107,7 @@ function Profile() {
             <div className="absolute -bottom-12 left-10">
               <div className="w-24 h-24 rounded-3xl bg-white border-2 border-foreground shadow-pop flex items-center justify-center relative group">
                 {profile.avatar_url ? (
-                  <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover rounded-[22px]" />
+                  <img src={profile.avatar_url} width="96" height="96" alt="Profile avatar" className="w-full h-full object-cover rounded-[22px]" />
                 ) : (
                   <User size={40} className="text-slate-300" />
                 )}
@@ -111,7 +127,9 @@ function Profile() {
                 </label>
                 <input
                   id="profile-username"
+                  name="username"
                   type="text"
+                  autoComplete="username"
                   value={profile.username}
                   onChange={(e) => setProfile({ ...profile, username: e.target.value })}
                   placeholder="cool_spiller"
@@ -128,7 +146,9 @@ function Profile() {
                 </label>
                 <input
                   id="profile-display-name"
+                  name="name"
                   type="text"
+                  autoComplete="name"
                   value={profile.full_name}
                   onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
                   placeholder="Your Name"
@@ -144,6 +164,7 @@ function Profile() {
               </label>
               <textarea
                 id="profile-bio"
+                name="bio"
                 value={profile.bio}
                 onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                 placeholder="Spilling secrets since..."
@@ -155,7 +176,7 @@ function Profile() {
             {/* Email (Read Only) */}
             <div className="space-y-2 opacity-60">
               <label className="heading-font text-xs font-black uppercase tracking-[0.2em] text-foreground flex items-center gap-2">
-                <Mail size={14} /> Registered Email
+              <Mail size={14} aria-hidden="true" /> Registered Email
               </label>
               <div className="w-full bg-white border-2 border-foreground rounded-2xl px-5 py-4 text-foreground font-bold italic">
                 {currentUser?.email}
@@ -168,13 +189,15 @@ function Profile() {
               <button
                 type="submit"
                 disabled={updating}
+                aria-busy={updating}
+                aria-label={updating ? 'Saving profile' : undefined}
                 className="w-full py-4 bg-accent text-white border-2 border-foreground rounded-full font-black heading-font uppercase tracking-[0.2em] shadow-pop hover:shadow-pop-hover hover:-translate-y-1 transition-all flex items-center justify-center gap-3"
               >
                 {updating ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
                 ) : (
                   <>
-                    <Save size={20} strokeWidth={3} />
+                    <Save size={20} strokeWidth={3} aria-hidden="true" />
                     Save Changes
                   </>
                 )}
