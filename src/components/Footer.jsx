@@ -28,6 +28,8 @@ function Footer() {
           <span className="w-1 h-1 rounded-full bg-border" />
           <Link to="/leaderboard" className="hover:text-accent transition-colors">Hall of Fame</Link>
           <span className="w-1 h-1 rounded-full bg-border" />
+          <Link to="/login" className="hover:text-accent transition-colors">Login</Link>
+          <span className="w-1 h-1 rounded-full bg-border" />
           <a
             href="https://www.linkedin.com/in/basithladoo/"
             target="_blank"

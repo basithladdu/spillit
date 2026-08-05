@@ -56,3 +56,9 @@ export function isValidCoord(lat, lng) {
   const b = Number(lng);
   return Number.isFinite(a) && Number.isFinite(b) && !(a === 0 && b === 0);
 }
+
+/** Basic email shape check for client-side form validation. */
+export function isValidEmail(value) {
+  const email = value?.trim() ?? '';
+  return email.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}

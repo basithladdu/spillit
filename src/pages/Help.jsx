@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion as Motion } from 'framer-motion';
-import { MapPin, Ghost, Map, Shield, HelpCircle, MessageSquare, Sparkles, Mail } from 'lucide-react';
+import { MapPin, Ghost, Map, Shield, HelpCircle, MessageSquare, Sparkles, Mail, KeyRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const FAQS = [
@@ -39,6 +39,18 @@ const FAQS = [
     question: 'What happens to my post?',
     answer: 'Your memory lives on the map unless removed for guideline violations. Anyone visiting that spot on Spill It can see it as an anonymous artifact.',
     icon: MessageSquare,
+  },
+  {
+    id: 'account',
+    question: 'Do I need an account?',
+    answer: 'No — posting is anonymous without signing in. Create an account only if you want a profile or to manage your own spills later.',
+    icon: KeyRound,
+  },
+  {
+    id: 'password',
+    question: 'Forgot your password?',
+    answer: 'On the login page, tap Forgot password?, enter your email, and follow the reset link. You will land on a page to choose a new password.',
+    icon: Mail,
   },
 ];
 

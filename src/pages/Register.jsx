@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, AlertCircle, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { isValidEmail } from '../utils/format';
 
 function Register() {
   const [email, setEmail] = useState('');
@@ -28,13 +29,18 @@ function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setErrors({});
+    const trimmed = email.trim();
+    if (!isValidEmail(trimmed)) {
+      setErrors({ email: 'Please enter a valid email address.' });
+      return;
+    }
     if (password.length < 6) {
       setErrors({ password: 'Password must be at least 6 characters.' });
       return;
     }
     setLoading(true);
     try {
-      const data = await register(email, password);
+      const data = await register(trimmed, password);
       setLoading(false);
       if (!data?.session) {
         toast.info('Check your email to confirm your account, then log in.');

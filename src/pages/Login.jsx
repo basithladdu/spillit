@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff, Heart } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { isValidEmail } from '../utils/format';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -27,13 +28,18 @@ function Login() {
   };
 
   const handleForgotPassword = async () => {
-    if (!email.trim()) {
+    const trimmed = email.trim();
+    if (!trimmed) {
       setErrors({ email: 'Enter your email to reset your password.' });
+      return;
+    }
+    if (!isValidEmail(trimmed)) {
+      setErrors({ email: 'Please enter a valid email address.' });
       return;
     }
     setResetting(true);
     try {
-      await resetPassword(email.trim());
+      await resetPassword(trimmed);
       toast.success('Password reset link sent — check your inbox.');
     } catch (error) {
       toast.error(error?.message || 'Could not send reset email. Try again.');
@@ -45,9 +51,18 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrors({});
+    const trimmed = email.trim();
+    if (!isValidEmail(trimmed)) {
+      setErrors({ email: 'Please enter a valid email address.' });
+      return;
+    }
+    if (!password) {
+      setErrors({ password: 'Enter your password.' });
+      return;
+    }
     setLoading(true);
     try {
-      await login(email, password);
+      await login(trimmed, password);
     } catch (error) {
       setLoading(false);
       const message = error?.message?.toLowerCase() ?? '';

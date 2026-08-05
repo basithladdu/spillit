@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Map, Camera, Star, LogIn, LogOut, Menu, X, Flame, CircleUser, HelpCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { isAdminUser } from '../utils/admin';
 
 const NAV_LINKS = [
   { to: '/', icon: Map, label: 'Map' },
@@ -18,6 +19,7 @@ function Navbar() {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const showOpsLink = isAdminUser(currentUser);
 
   useEffect(() => { setIsMenuOpen(false); }, [location.pathname]);
 
@@ -130,12 +132,14 @@ function Navbar() {
           </Link>
           {currentUser ? (
             <div className="hidden md:flex items-center gap-2">
-              <Link
-                to="/dashboard"
-                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all uppercase tracking-widest"
-              >
-                Ops
-              </Link>
+              {showOpsLink && (
+                <Link
+                  to="/dashboard"
+                  className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all uppercase tracking-widest"
+                >
+                  Ops
+                </Link>
+              )}
               <Link to="/profile" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border-2 border-foreground shadow-pop hover:bg-muted transition-all">
                 <CircleUser size={13} className="text-accent" />
                 <span className="text-[11px] text-foreground font-black uppercase tracking-tight">
@@ -221,9 +225,11 @@ function Navbar() {
               </Link>
               {currentUser ? (
                 <>
-                  <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="w-full py-3 rounded-full bg-muted border-2 border-border text-muted-foreground font-bold heading-font uppercase tracking-widest flex items-center justify-center gap-2 text-sm">
-                    Operations
-                  </Link>
+                  {showOpsLink && (
+                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="w-full py-3 rounded-full bg-muted border-2 border-border text-muted-foreground font-bold heading-font uppercase tracking-widest flex items-center justify-center gap-2 text-sm">
+                      Operations
+                    </Link>
+                  )}
                   <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="w-full py-4 rounded-full bg-card border-2 border-foreground text-foreground font-bold heading-font uppercase tracking-widest flex items-center justify-center gap-3 shadow-pop">
                     <CircleUser size={18} strokeWidth={2.5} /> Profile
                   </Link>

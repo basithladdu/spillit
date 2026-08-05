@@ -87,13 +87,16 @@ function Leaderboard() {
             animate={{ scale: 1, opacity: 1 }}
             className="inline-flex w-16 h-16 rounded-[24px] bg-white border-2 border-foreground items-center justify-center text-accent shadow-pop"
           >
-            <Trophy size={32} strokeWidth={2.5} />
+            <Trophy size={32} strokeWidth={2.5} aria-hidden="true" />
           </motion.div>
           <h1 className="text-5xl md:text-7xl font-black heading-font tracking-tight text-foreground">
             Hall Of <span className="text-accent italic">Spills</span>
           </h1>
           <p className="text-slate-400 max-w-lg mx-auto text-sm font-medium leading-relaxed">
             These are the memories that touched the most hearts. The highest upvoted moments on the global map.
+          </p>
+          <p className="sr-only" role="status" aria-live="polite">
+            {topMemories.length} {topMemories.length === 1 ? 'memory' : 'memories'} ranked by upvotes
           </p>
         </div>
 
@@ -120,7 +123,7 @@ function Leaderboard() {
               >
                 {/* Crown for #1 */}
                 {index === 0 && (
-                   <div className="absolute -left-3 -top-3 z-20 -rotate-12">
+                   <div className="absolute -left-3 -top-3 z-20 -rotate-12" aria-hidden="true">
                       <Crown size={32} className="text-yellow-400 drop-shadow-lg" />
                    </div>
                 )}
