@@ -121,6 +121,7 @@ function App() {
         <ToastContainer
           role="alert"
           ariaLabel="Spill It notifications"
+          limit={3}
           position="bottom-right"
           autoClose={3000}
           hideProgressBar={false}

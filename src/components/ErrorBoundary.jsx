@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import { Link } from 'react-router-dom';
 
 class ErrorBoundary extends Component {
   state = { hasError: false };
@@ -26,13 +27,21 @@ class ErrorBoundary extends Component {
           <p className="text-sm text-muted-foreground leading-relaxed mb-6">
             The page could not finish rendering. Reload once and we’ll try again.
           </p>
-          <button
-            type="button"
-            onClick={this.handleReload}
-            className="rounded-full border-2 border-foreground bg-accent px-6 py-3 text-sm font-black uppercase tracking-widest text-white shadow-pop hover:-translate-y-0.5 transition-transform"
-          >
-            Reload Spill It
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              type="button"
+              onClick={this.handleReload}
+              className="rounded-full border-2 border-foreground bg-accent px-6 py-3 text-sm font-black uppercase tracking-widest text-white shadow-pop hover:-translate-y-0.5 transition-transform"
+            >
+              Reload Spill It
+            </button>
+            <Link
+              to="/"
+              className="rounded-full border-2 border-foreground bg-card px-6 py-3 text-sm font-black uppercase tracking-widest text-foreground shadow-pop hover:-translate-y-0.5 transition-transform text-center"
+            >
+              Back to map
+            </Link>
+          </div>
         </section>
       </main>
     );

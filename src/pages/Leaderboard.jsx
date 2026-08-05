@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Heart, MapPin, Trophy, Crown, Ghost, ArrowRight, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
-import { timeAgo } from '../utils/format';
+import { timeAgo, isValidCoord } from '../utils/format';
 import { PageSpinner, FetchErrorPanel } from '../components/UI/PageStatus';
 
 const RankBadge = ({ rank }) => {
@@ -125,7 +125,10 @@ function Leaderboard() {
                    </div>
                 )}
 
-                <Link to={`/memory/${memory.id}`}>
+                <Link
+                  to={`/memory/${memory.id}`}
+                  aria-label={`Rank ${index + 1}: ${memory.caption ? memory.caption.slice(0, 60) : 'Anonymous memory'}`}
+                >
                   <div className="bg-white flex flex-col md:flex-row items-center gap-6 p-6 md:p-8 rounded-[40px] border-2 border-foreground hover:border-accent hover:bg-muted transition-all shadow-pop hover:-translate-y-1 group">
                     
                     {/* Rank & Media */}
@@ -195,6 +198,16 @@ function Leaderboard() {
 
                   </div>
                 </Link>
+                {isValidCoord(memory.lat, memory.lng) && (
+                  <div className="mt-2 text-center md:text-right md:pr-4">
+                    <Link
+                      to={`/?lat=${memory.lat}&lng=${memory.lng}&memory=${memory.id}`}
+                      className="text-[10px] font-black uppercase tracking-widest text-accent hover:text-secondary transition-colors"
+                    >
+                      View on map
+                    </Link>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
