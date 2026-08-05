@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
 import { motion } from 'framer-motion';
-import { Heart, MapPin, Trophy, Crown, Ghost, ArrowRight, User } from 'lucide-react';
+import { Heart, MapPin, Trophy, Crown, Ghost, ArrowRight, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import { timeAgo, isValidCoord } from '../utils/format';
@@ -20,11 +20,14 @@ const RankBadge = ({ rank }) => {
   );
 };
 
+const ITEMS_PER_PAGE = 10;
+
 function Leaderboard() {
   const [topMemories, setTopMemories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     let active = true;
@@ -62,6 +65,26 @@ function Leaderboard() {
       supabase.removeChannel(channel);
     };
   }, [retryCount]);
+
+  const totalPages = Math.ceil(topMemories.length / ITEMS_PER_PAGE);
+  const pageStart = (currentPage - 1) * ITEMS_PER_PAGE;
+  const pageMemories = topMemories.slice(pageStart, pageStart + ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [topMemories.length]);
+
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (totalPages <= 1) return;
+      const tag = event.target?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+      if (event.key === 'ArrowLeft') setCurrentPage((p) => Math.max(1, p - 1));
+      if (event.key === 'ArrowRight') setCurrentPage((p) => Math.min(totalPages, p + 1));
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [totalPages]);
 
   if (loading) return <PageSpinner label="Loading leaderboard" />;
 
@@ -113,7 +136,9 @@ function Leaderboard() {
           </div>
         ) : (
           <div className="space-y-6">
-            {topMemories.map((memory, index) => (
+            {pageMemories.map((memory, index) => {
+              const rank = pageStart + index + 1;
+              return (
               <motion.div
                 key={memory.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -122,7 +147,7 @@ function Leaderboard() {
                 className="group relative"
               >
                 {/* Crown for #1 */}
-                {index === 0 && (
+                {rank === 1 && (
                    <div className="absolute -left-3 -top-3 z-20 -rotate-12" aria-hidden="true">
                       <Crown size={32} className="text-yellow-400 drop-shadow-lg" />
                    </div>
@@ -130,13 +155,13 @@ function Leaderboard() {
 
                 <Link
                   to={`/memory/${memory.id}`}
-                  aria-label={`Rank ${index + 1}: ${memory.caption ? memory.caption.slice(0, 60) : 'Anonymous memory'}`}
+                  aria-label={`Rank ${rank}: ${memory.caption ? memory.caption.slice(0, 60) : 'Anonymous memory'}`}
                 >
                   <div className="bg-white flex flex-col md:flex-row items-center gap-6 p-6 md:p-8 rounded-[40px] border-2 border-foreground hover:border-accent hover:bg-muted transition-all shadow-pop hover:-translate-y-1 group">
                     
                     {/* Rank & Media */}
                     <div className="flex items-center gap-6 w-full md:w-auto">
-                        <RankBadge rank={index + 1} />
+                        <RankBadge rank={rank} />
                         <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-[32px] overflow-hidden border-2 border-foreground bg-muted flex-shrink-0 shadow-pop">
                            {memory.image_url ? (
                              <img
@@ -212,8 +237,34 @@ function Leaderboard() {
                   </div>
                 )}
               </motion.div>
-            ))}
+            );})}
           </div>
+        )}
+
+        {totalPages > 1 && (
+          <nav aria-label="Leaderboard pages" className="flex justify-center mt-16 gap-4 items-center">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              aria-label="Previous page"
+              className="w-12 h-12 rounded-full bg-card border-2 border-foreground flex items-center justify-center text-foreground disabled:opacity-30 shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
+            >
+              <ChevronLeft size={20} strokeWidth={2.5} aria-hidden="true" />
+            </button>
+            <span className="heading-font font-bold text-sm uppercase tracking-widest text-foreground px-4">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              aria-label="Next page"
+              className="w-12 h-12 rounded-full bg-card border-2 border-foreground flex items-center justify-center text-foreground disabled:opacity-30 shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all"
+            >
+              <ChevronRight size={20} strokeWidth={2.5} aria-hidden="true" />
+            </button>
+          </nav>
         )}
 
       </div>

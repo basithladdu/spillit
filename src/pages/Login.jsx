@@ -130,6 +130,7 @@ function Login() {
                   id="email"
                   name="email"
                   type="email"
+                  autoFocus
                   autoComplete="email"
                   inputMode="email"
                   aria-invalid={Boolean(errors.email)}

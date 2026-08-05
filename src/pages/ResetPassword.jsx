@@ -144,6 +144,7 @@ function ResetPassword() {
                   id="new-password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
+                  autoFocus
                   autoComplete="new-password"
                   aria-invalid={Boolean(errors.password)}
                   aria-describedby={errors.password ? 'reset-password-error' : undefined}
@@ -181,7 +182,7 @@ function ResetPassword() {
                   aria-describedby={errors.confirm ? 'reset-confirm-error' : undefined}
                   value={confirm}
                   onChange={(e) => { setConfirm(e.target.value); clearError('confirm'); }}
-                  className={`w-full bg-input border-2 ${errors.confirm ? 'border-red-400' : 'border-border'} rounded-xl py-3.5 pl-12 pr-4 text-foreground placeholder-muted-foreground outline-none focus:border-accent focus:shadow-focus transition-all`}
+                  className={`w-full bg-input border-2 ${errors.confirm ? 'border-red-400' : confirm && password === confirm ? 'border-green-500' : 'border-border'} rounded-xl py-3.5 pl-12 pr-4 text-foreground placeholder-muted-foreground outline-none focus:border-accent focus:shadow-focus transition-all`}
                   placeholder="••••••••"
                   required
                   minLength={6}
