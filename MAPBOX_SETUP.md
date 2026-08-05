@@ -17,7 +17,7 @@ To use the map features in this application, you need a Mapbox access token.
 
 ### Step 3: Add Token to Your Project
 
-1. Create a `.env` file in the project root (same directory as `package.json`)
+1. Copy `.env.example` to `.env.local` in the project root (same directory as `package.json`)
 2. Add this line to the file:
    ```
    VITE_MAPBOX_TOKEN=pk.eyJ1IjoieW91ci11c2VybmFtZSIsImEiOiJ5b3VyLXRva2VuIn0.your-signature
@@ -51,7 +51,7 @@ This is more than enough for development and small-scale production use.
 
 ### Map Not Showing
 
-1. **Check your token**: Make sure the `.env` file exists and has the correct token
+1. **Check your token**: Make sure `.env.local` exists and has the correct token
 2. **Restart dev server**: Environment variables are only loaded on startup
 3. **Check browser console**: Look for Mapbox-related errors
 4. **Verify token**: Go to Mapbox dashboard and ensure the token is active
@@ -59,7 +59,7 @@ This is more than enough for development and small-scale production use.
 ### Token Not Working
 
 1. Make sure the token starts with `pk.` (public token)
-2. Check that there are no extra spaces in the `.env` file
+2. Check that there are no extra spaces in `.env.local`
 3. Verify the token hasn't been deleted or restricted in your Mapbox account
 
 ### Map Loads But Shows "Unauthorized"
@@ -79,7 +79,7 @@ If you want to use a custom map style:
 
 ## Security Notes
 
-- ✅ Public tokens (starting with `pk.`) are safe to use in client-side code
-- ✅ The `.env` file is in `.gitignore` to prevent accidental commits
-- ✅ Never commit your `.env` file to version control
-- ✅ For production, consider adding URL restrictions to your token in the Mapbox dashboard
+- Public tokens (starting with `pk.`) are intended for client-side use
+- `.env.local` is ignored to prevent accidental commits
+- Never commit `.env.local` to version control
+- For production, add URL restrictions to your token in the Mapbox dashboard

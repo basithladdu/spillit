@@ -63,7 +63,7 @@ function Login() {
           {/* Header */}
           <div className="text-center mb-10">
             <div className="w-20 h-20 rounded-full bg-accent border-2 border-foreground flex items-center justify-center text-white mx-auto mb-6 shadow-pop">
-              <Heart size={32} strokeWidth={2.5} fill="currentColor" />
+              <Heart size={32} strokeWidth={2.5} fill="currentColor" aria-hidden="true" />
             </div>
             <h1 className="heading-font text-4xl font-bold text-foreground mb-2">Welcome Back</h1>
             <p className="text-muted-foreground text-sm">Sign in to Spill It.</p>
@@ -77,7 +77,7 @@ function Login() {
               animate={{ opacity: 1, height: 'auto' }}
               className="mb-6 p-4 rounded-xl bg-red-50 border-2 border-red-400 flex items-center gap-3 text-red-700 text-sm font-bold"
             >
-              <AlertCircle size={16} className="shrink-0" />
+              <AlertCircle size={16} className="shrink-0" aria-hidden="true" />
               {errors.general}
             </motion.div>
           )}
@@ -90,10 +90,15 @@ function Login() {
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} strokeWidth={2.5} />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} strokeWidth={2.5} aria-hidden="true" />
                 <input
                   id="email"
+                  name="email"
                   type="email"
+                  autoComplete="username"
+                  inputMode="email"
+                  aria-invalid={Boolean(errors.email)}
+                  aria-describedby={errors.email ? 'login-email-error' : undefined}
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
                   className={`w-full bg-input border-2 ${errors.email ? 'border-red-400' : 'border-border'} rounded-xl py-3.5 pl-12 pr-4 text-foreground placeholder-muted-foreground outline-none focus:border-accent focus:shadow-focus transition-all`}
@@ -101,7 +106,7 @@ function Login() {
                   required
                 />
               </div>
-              {errors.email && <p className="text-red-500 text-xs font-bold">{errors.email}</p>}
+              {errors.email && <p id="login-email-error" className="text-red-500 text-xs font-bold">{errors.email}</p>}
             </div>
 
             {/* Password */}
@@ -110,10 +115,14 @@ function Login() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} strokeWidth={2.5} />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} strokeWidth={2.5} aria-hidden="true" />
                 <input
                   id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  aria-invalid={Boolean(errors.password)}
+                  aria-describedby={errors.password ? 'login-password-error' : undefined}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
                   className="w-full bg-input border-2 border-border rounded-xl py-3.5 pl-12 pr-12 text-foreground placeholder-muted-foreground outline-none focus:border-accent focus:shadow-focus transition-all"
@@ -126,20 +135,23 @@ function Login() {
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {showPassword ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}
+                  {showPassword ? <EyeOff size={18} strokeWidth={2.5} aria-hidden="true" /> : <Eye size={18} strokeWidth={2.5} aria-hidden="true" />}
                 </button>
               </div>
+              {errors.password && <p id="login-password-error" className="text-red-500 text-xs font-bold">{errors.password}</p>}
             </div>
 
             {/* Submit */}
             <button
               type="submit"
               disabled={loading}
+              aria-busy={loading}
+              aria-label={loading ? 'Signing in' : undefined}
               className="w-full mt-2 py-4 rounded-full bg-accent text-white border-2 border-foreground font-bold shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active disabled:opacity-50 flex items-center justify-center gap-3 heading-font uppercase tracking-widest transition-all"
             >
               {loading
                 ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                : <><span>Enter Spill It</span><ArrowRight size={18} strokeWidth={2.5} /></>
+                : <><span>Enter Spill It</span><ArrowRight size={18} strokeWidth={2.5} aria-hidden="true" /></>
               }
             </button>
           </form>

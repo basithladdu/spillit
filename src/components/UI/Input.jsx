@@ -46,6 +46,7 @@ export const Input = React.forwardRef(
             <Icon
               strokeWidth={2.5}
               className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none"
+              aria-hidden="true"
             />
           )}
         </div>
@@ -76,6 +77,7 @@ export const Textarea = React.forwardRef(
       error,
       helperText,
       required = false,
+      id: idProp,
       className = "",
       containerClassName = "",
       rows = 4,
@@ -83,25 +85,32 @@ export const Textarea = React.forwardRef(
     },
     ref
   ) => {
+    const generatedId = useId();
+    const textareaId = idProp ?? generatedId;
+
     return (
       <div className={`flex flex-col gap-2 ${containerClassName}`}>
         {label && (
-          <label className="heading-font font-bold text-sm tracking-wide uppercase text-foreground">
+          <label htmlFor={textareaId} className="heading-font font-bold text-sm tracking-wide uppercase text-foreground">
             {label}
-            {required && <span className="text-secondary ml-1">*</span>}
+            {required && <span className="text-secondary ml-1" aria-hidden="true">*</span>}
           </label>
         )}
         <textarea
           ref={ref}
+          id={textareaId}
           rows={rows}
+          required={required}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${textareaId}-error` : helperText ? `${textareaId}-helper` : undefined}
           className={`w-full bg-input border-2 border-border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground transition-all duration-300 focus:border-accent focus:shadow-focus outline-none resize-none ${
             error ? "border-red-500" : ""
           } ${className}`}
           {...props}
         />
-        {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
+        {error && <p id={`${textareaId}-error`} className="text-red-500 text-sm font-medium" role="alert">{error}</p>}
         {helperText && !error && (
-          <p className="text-muted-foreground text-sm">{helperText}</p>
+          <p id={`${textareaId}-helper`} className="text-muted-foreground text-sm">{helperText}</p>
         )}
       </div>
     );
@@ -121,22 +130,30 @@ export const Select = React.forwardRef(
       helperText,
       required = false,
       options = [],
+      id: idProp,
       className = "",
       containerClassName = "",
       ...props
     },
     ref
   ) => {
+    const generatedId = useId();
+    const selectId = idProp ?? generatedId;
+
     return (
       <div className={`flex flex-col gap-2 ${containerClassName}`}>
         {label && (
-          <label className="heading-font font-bold text-sm tracking-wide uppercase text-foreground">
+          <label htmlFor={selectId} className="heading-font font-bold text-sm tracking-wide uppercase text-foreground">
             {label}
-            {required && <span className="text-secondary ml-1">*</span>}
+            {required && <span className="text-secondary ml-1" aria-hidden="true">*</span>}
           </label>
         )}
         <select
           ref={ref}
+          id={selectId}
+          required={required}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${selectId}-error` : helperText ? `${selectId}-helper` : undefined}
           className={`w-full bg-input border-2 border-border rounded-lg px-4 py-3 text-foreground transition-all duration-300 focus:border-accent focus:shadow-focus outline-none cursor-pointer ${
             error ? "border-red-500" : ""
           } ${className}`}
@@ -148,9 +165,9 @@ export const Select = React.forwardRef(
             </option>
           ))}
         </select>
-        {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
+        {error && <p id={`${selectId}-error`} className="text-red-500 text-sm font-medium" role="alert">{error}</p>}
         {helperText && !error && (
-          <p className="text-muted-foreground text-sm">{helperText}</p>
+          <p id={`${selectId}-helper`} className="text-muted-foreground text-sm">{helperText}</p>
         )}
       </div>
     );

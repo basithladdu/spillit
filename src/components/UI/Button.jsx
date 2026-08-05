@@ -21,7 +21,7 @@ export const Button = React.forwardRef(
     ref
   ) => {
     const baseClasses =
-      "font-heading font-bold rounded-full border-2 border-foreground transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-pop-active hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-pop-hover disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap";
+      "font-heading font-bold rounded-full border-2 border-foreground min-h-11 touch-manipulation transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-pop-active hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-pop-hover disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap";
 
     const variants = {
       primary: `bg-accent text-accent-foreground shadow-pop hover:shadow-pop-hover`,
@@ -53,7 +53,7 @@ export const Button = React.forwardRef(
           </>
         ) : (
           <>
-            {Icon && <Icon strokeWidth={2.5} className="h-5 w-5" />}
+            {Icon && <Icon strokeWidth={2.5} className="h-5 w-5" aria-hidden="true" />}
             {children}
           </>
         )}

@@ -3,7 +3,7 @@
  */
 
 import { APIError, VideoProcessRequest, VideoProcessResponse } from '@/types';
-import { withRetry, asyncWrapper } from './errors';
+import { withRetry } from './errors';
 
 /**
  * Generic API Request Handler

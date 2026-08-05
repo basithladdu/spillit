@@ -12,17 +12,13 @@ npm install
 ```
 
 ### 2. Configure Environment
-Create a `.env` file:
-```env
-VITE_MAPBOX_TOKEN=your_mapbox_token_here
-VITE_FIREBASE_API_KEY=your_firebase_key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+Copy `.env.example` to `.env.local`, then fill in the public/client-safe values for Supabase, Mapbox, Firebase, and image uploads. Never commit `.env.local`; Vite exposes `VITE_*` values to the browser bundle.
+
+```powershell
+Copy-Item .env.example .env.local
 ```
+
+The map and memory archive need valid `VITE_MAPBOX_TOKEN`, `VITE_SUPABASE_URL`, and `VITE_SUPABASE_ANON_KEY` values. Restart Vite after changing environment files.
 
 ### 3. Run Locally
 ```bash
@@ -72,7 +68,7 @@ src/
 | Path | Purpose |
 |------|---------|
 | `/` | Home - Map + live feed |
-| `/report/:id` | View individual spill |
+| `/memory/:id` | View an individual memory |
 | `/gallery` | Browse all spills |
 | `/leaderboard` | Top contributors |
 | `/login` | User login |

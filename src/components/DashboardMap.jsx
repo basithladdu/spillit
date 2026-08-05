@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Map, { Marker, Popup, Source, Layer } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Layers, Map as MapIcon, Navigation, Heart, MapPin } from 'lucide-react';
+import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
@@ -20,7 +21,7 @@ const VIBE_CONFIG = {
 
 const MarkerPin = ({ color, size = 32 }) => (
     <div style={{ transform: `translate(${-size / 2}px,${-size}px)`, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>
-        <svg height={size} viewBox="0 0 24 24" style={{ fill: color, stroke: 'white', strokeWidth: 2 }}>
+        <svg height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false" style={{ fill: color, stroke: 'white', strokeWidth: 2 }}>
             <path d="M20.2,15.7L20.2,15.7c1.1-1.6,1.8-3.6,1.8-5.7c0-5.6-4.5-10-10-10S2,4.5,2,10c0,2,0.6,3.9,1.6,5.4c0,0.1,0.1,0.2,0.2,0.3
   c0,0,0.1,0.1,0.1,0.2c0.2,0.3,0.4,0.6,0.7,0.9c2.6,3.1,7.4,7.6,7.4,7.6s4.8-4.5,7.4-7.5c0.2-0.3,0.5-0.6,0.7-0.9
   C20.1,15.8,20.2,15.8,20.2,15.7z"/>
@@ -38,7 +39,7 @@ const PopupContent = ({ issue }) => {
             
             {issue.imageUrl && (
                 <div className="w-full h-32 relative overflow-hidden">
-                    <img src={issue.imageUrl} className="w-full h-full object-cover" alt="Memory" />
+                    <img src={getOptimizedImageUrl(issue.imageUrl, 640)} width="640" height="256" loading="lazy" decoding="async" className="w-full h-full object-cover" alt={issue.caption ? `Memory photo: ${issue.caption.slice(0, 80)}` : 'Memory photo'} />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f13] to-transparent"></div>
                 </div>
             )}
@@ -49,7 +50,7 @@ const PopupContent = ({ issue }) => {
                         {type}
                     </span>
                     <div className="flex items-center gap-1 text-[#ff7ec9]">
-                        <Heart size={12} className="fill-current" />
+                        <Heart size={12} className="fill-current" aria-hidden="true" />
                         <span className="text-xs font-black">{issue.upvotes || 0}</span>
                     </div>
                 </div>
@@ -60,7 +61,7 @@ const PopupContent = ({ issue }) => {
 
                 <div className="pt-3 border-t border-white/5 flex items-center justify-between text-[10px] text-slate-500 font-bold uppercase tracking-wider">
                     <div className="flex items-center gap-1">
-                        <MapPin size={10} className="text-[#a78bfa]" />
+                        <MapPin size={10} className="text-[#a78bfa]" aria-hidden="true" />
                         <span className="truncate w-24">{issue.address?.split(',')[0]}</span>
                     </div>
                     <Link to={`/memory/${issue.id}`} className="text-[#ff7ec9] hover:underline">View</Link>
@@ -73,6 +74,7 @@ const PopupContent = ({ issue }) => {
 const DashboardMap = ({ issues }) => {
     const [showHeatmap, setShowHeatmap] = useState(false);
     const [selectedIssue, setSelectedIssue] = useState(null);
+    const [mapError, setMapError] = useState('');
     const [mapStyle, setMapStyle] = useState('dark-v11');
     const [viewState, setViewState] = useState({
         latitude: DEFAULT_CENTER.lat,
@@ -147,7 +149,7 @@ const DashboardMap = ({ issues }) => {
     };
 
     return (
-        <div className="h-full w-full relative z-0">
+        <div className="h-full w-full relative z-0" role="region" aria-label="Operations memory map">
             <div className="absolute top-6 left-6 z-[400] flex flex-col gap-3">
                 <button
                     type="button"
@@ -177,6 +179,9 @@ const DashboardMap = ({ issues }) => {
             <Map
                 {...viewState}
                 onMove={evt => setViewState(evt.viewState)}
+                onError={(event) => setMapError(event?.error?.status === 401
+                    ? 'The map is temporarily unavailable. You can still review memories from the dashboard.'
+                    : 'The dashboard map could not load right now.')}
                 mapboxAccessToken={MAPBOX_TOKEN}
                 style={{ width: '100%', height: '100%' }}
                 mapStyle={currentMapStyle.style}
@@ -216,6 +221,12 @@ const DashboardMap = ({ issues }) => {
                     </Popup>
                 )}
             </Map>
+
+            {mapError && (
+                <div role="alert" aria-live="assertive" className="absolute inset-0 z-20 flex items-center justify-center bg-[#0f0f13]/95 p-6 text-center text-sm text-slate-300">
+                    <p className="max-w-sm">{mapError}</p>
+                </div>
+            )}
 
             <style>{`
                 .mapboxgl-popup-content { background: transparent !important; box-shadow: none !important; padding: 0 !important; }

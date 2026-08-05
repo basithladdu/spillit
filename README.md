@@ -8,7 +8,7 @@ Welcome to **Spill It** – a playful, anonymous platform where anyone can share
 3. **Free Expression**: Add a custom color, a short message, and optionally who you're sending it to.
 4. **Community Feed**: Browse, upvote, and explore spills on a beautiful, fast map interface.
 5. **User Accounts**: Optional signup/login to track your spills and contribution history.
-6. **Real-time Updates**: Live feeds powered by Firebase with instant notifications.
+6. **Live Updates**: Memory feed updates are read from Supabase and degrade gracefully when the service is unavailable.
 7. **Mobile Friendly**: Beautiful, responsive design that works perfectly on any device.
 
 ## Getting Started
@@ -22,6 +22,7 @@ Spill what's on your mind – a moment, an observation, a broken thing, a beauti
 - Node.js (v16 or higher)
 - npm or yarn
 - A Mapbox account (free tier available)
+- A Supabase project with a browser-safe URL and anon key
 
 ### Quick Start
 1. **Clone the Repository**
@@ -36,10 +37,11 @@ Spill what's on your mind – a moment, an observation, a broken thing, a beauti
    ```
 
 3. **Configure Environment**
-   Create a `.env` file based on `.env.example` and add your keys:
-   ```env
-   VITE_MAPBOX_TOKEN=your_token_here
+   Copy `.env.example` to `.env.local` and add the browser-safe values required by the app:
+   ```powershell
+   Copy-Item .env.example .env.local
    ```
+   At minimum, configure `VITE_MAPBOX_TOKEN`, `VITE_SUPABASE_URL`, and `VITE_SUPABASE_ANON_KEY`. Restart Vite after editing environment files. Never put server secrets in `VITE_*` variables.
 
 4. **Run Development Server**
    ```bash
@@ -48,7 +50,8 @@ Spill what's on your mind – a moment, an observation, a broken thing, a beauti
 
 ## Technologies
 - **Frontend**: React 19, Tailwind CSS, Lucide Icons
-- **Backend**: Firebase (Firestore, Auth, Storage)
+- **Data and feed**: Supabase
+- **Auth and storage helpers**: Firebase
 - **AI/ML**: Roboflow, Cloudinary (Video Processing)
 - **Maps**: Mapbox GL JS
 

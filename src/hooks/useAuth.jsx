@@ -2,6 +2,26 @@ import React, { useContext, useEffect, useState } from 'react';
 import { supabase } from '../utils/supabase';
 import { AuthContext } from '../context/AuthContext';
 
+const getStoredUser = () => {
+  try {
+    const saved = localStorage.getItem('spillit_user');
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    try { localStorage.removeItem('spillit_user'); } catch { /* Storage unavailable. */ }
+    return null;
+  }
+};
+
+const clearStoredUser = () => {
+  try { localStorage.removeItem('spillit_user'); } catch { /* Storage unavailable. */ }
+};
+
+const saveStoredUser = (user) => {
+  try { localStorage.setItem('spillit_user', JSON.stringify(user)); } catch { /* Storage unavailable. */ }
+};
+
+// The hook and provider intentionally share this module so consumers have one auth entry point.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
@@ -11,10 +31,7 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('spillit_user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [currentUser, setCurrentUser] = useState(getStoredUser);
   const [loading, setLoading] = useState(true);
 
   // Register user with email/password
@@ -42,7 +59,7 @@ export function AuthProvider({ children }) {
 
   // Logout user
   async function logout() {
-    localStorage.removeItem('spillit_user');
+    clearStoredUser();
     setCurrentUser(null);
     return supabase.auth.signOut();
   }
@@ -52,8 +69,11 @@ export function AuthProvider({ children }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setCurrentUser(session.user);
-        localStorage.setItem('spillit_user', JSON.stringify(session.user));
+        saveStoredUser(session.user);
       }
+      setLoading(false);
+    }).catch(() => {
+      // Auth initialization can fail offline; let the public app remain usable.
       setLoading(false);
     });
 
@@ -61,9 +81,9 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setCurrentUser(session.user);
-        localStorage.setItem('spillit_user', JSON.stringify(session.user));
+        saveStoredUser(session.user);
       } else {
-        localStorage.removeItem('spillit_user');
+        clearStoredUser();
         setCurrentUser(null);
       }
       setLoading(false);

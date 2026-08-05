@@ -118,8 +118,8 @@ function LocationVerifier({ file, onLocationVerified, className = '', initialLat
 
   if (!MAPBOX_TOKEN) {
     return (
-      <div className={`flex h-full w-full items-center justify-center bg-muted p-6 text-center text-sm text-muted-foreground ${className}`}>
-        Map unavailable — add <code className="mx-1">VITE_MAPBOX_TOKEN</code> to enable location picking.
+      <div role="alert" className={`flex h-full w-full items-center justify-center bg-muted p-6 text-center text-sm text-muted-foreground ${className}`}>
+        Location picking is temporarily unavailable. You can still choose a location manually.
       </div>
     );
   }
@@ -127,7 +127,7 @@ function LocationVerifier({ file, onLocationVerified, className = '', initialLat
   return (
     <div className={`relative h-full w-full overflow-hidden rounded-xl bg-gray-900 ${className}`}>
       {(isLocating || loadingAddress) && (
-        <div className="pointer-events-auto absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+        <div role="status" aria-busy="true" aria-atomic="true" aria-label={loadingAddress ? 'Finding address' : 'Finding your location'} className="pointer-events-auto absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
           <Loader2 className="animate-spin text-white drop-shadow-lg" size={32} aria-hidden />
           <span className="sr-only">Locating…</span>
         </div>
@@ -145,6 +145,11 @@ function LocationVerifier({ file, onLocationVerified, className = '', initialLat
       <Map
         {...viewState}
         onMove={(evt) => setViewState(evt.viewState)}
+        onError={(event) => {
+          setLocationError(event?.error?.status === 401
+            ? 'The map is temporarily unavailable. You can still choose a location manually.'
+            : 'The location map could not load right now.');
+        }}
         onClick={(evt) => {
           const { lng, lat } = evt.lngLat;
           updateLocation(lat, lng);

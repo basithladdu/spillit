@@ -1,7 +1,7 @@
 /**
  * Memory Processor Configuration
  *
- * All sensitive values are loaded from environment variables.
+ * Browser-safe values are loaded from environment variables.
  * See .env.example for required configuration.
  */
 
@@ -15,7 +15,9 @@ export const VIDEO_PROCESSOR_CONFIG = {
     // Backend Configuration
     backend: {
         baseUrl: import.meta.env.VITE_VIDEO_PROCESSOR_BASE_URL || 'https://api.spillit.app',
-        apiKey: import.meta.env.VITE_VIDEO_PROCESSOR_API_KEY || '77-spill-it-77',
+        // Keep server credentials out of the browser bundle. The processor
+        // should authenticate this request server-side when it is wired in.
+        apiKey: '',
     },
 
     // Processing Configuration

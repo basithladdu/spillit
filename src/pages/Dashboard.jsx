@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import * as XLSX from 'xlsx';
 import {
   Search, Filter, Trash2, Layers,
   ArrowUpDown, X, MapPin,
@@ -65,6 +64,8 @@ const DistributionBar = ({ label, count, total, color }) => {
 function Dashboard() {
   const [memories, setMemories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [stats, setStats] = useState({ total: 0, byVibe: {}, byStatus: {} });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -74,14 +75,19 @@ function Dashboard() {
   const [selectedMemory, setSelectedMemory] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
+    let active = true;
     const fetchMemories = async () => {
+      setLoadError(false);
       const { data, error } = await supabase
         .from('memories')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(200);
+
+      if (!active) return;
       
       if (!error && data) {
         const vibeCounts = {};
@@ -94,6 +100,9 @@ function Dashboard() {
 
         setMemories(data);
         setStats({ total: data.length, byVibe: vibeCounts, byStatus: statusCounts });
+      } else if (error) {
+        console.error('[Dashboard] Failed to load memories:', error.message);
+        setLoadError(true);
       }
       setLoading(false);
     };
@@ -108,9 +117,10 @@ function Dashboard() {
       .subscribe();
 
     return () => {
+      active = false;
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [retryCount]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -170,7 +180,9 @@ function Dashboard() {
     return 0;
   });
 
-  const handleExport = () => {
+  const handleExport = async () => {
+    if (exporting) return;
+    setExporting(true);
     const dataToExport = filteredData.map(item => ({
       Memory_ID: item.id,
       Caption: item.caption,
@@ -180,16 +192,40 @@ function Dashboard() {
       Image: item.image_url
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Spillit Memories");
-    XLSX.writeFile(workbook, "Spillit_Archive_Export.xlsx");
+    try {
+      const XLSX = await import('xlsx');
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Spillit Memories");
+      XLSX.writeFile(workbook, "Spillit_Archive_Export.xlsx");
+    } catch {
+      toast.error('Could not prepare the archive export. Try again.');
+    } finally {
+      setExporting(false);
+    }
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-[var(--spillit-bg)] flex items-center justify-center">
+    <div className="min-h-screen bg-[var(--spillit-bg)] flex items-center justify-center" role="status" aria-busy="true" aria-atomic="true" aria-label="Loading operations dashboard">
       <div className="w-12 h-12 border-4 border-[var(--spillit-primary)] border-t-transparent rounded-full animate-spin shadow-[0_0_20px_var(--spillit-glow-primary)]"></div>
     </div>
+  );
+
+  if (loadError) return (
+    <main className="flex min-h-screen items-center justify-center bg-background px-6">
+      <section role="alert" aria-live="assertive" className="w-full max-w-md rounded-2xl border-2 border-foreground bg-card p-8 text-center shadow-pop">
+        <p className="heading-font mb-3 text-xs font-black uppercase tracking-[0.2em] text-accent">Operations paused</p>
+        <h1 className="heading-font mb-3 text-3xl font-black">The dashboard needs a retry.</h1>
+        <p className="mb-6 text-sm leading-relaxed text-muted-foreground">We couldn’t load the moderation queue. Try again when the connection is ready.</p>
+        <button
+          type="button"
+          onClick={() => { setLoading(true); setRetryCount((count) => count + 1); }}
+          className="rounded-full border-2 border-foreground bg-accent px-6 py-3 text-sm font-black uppercase tracking-widest text-white shadow-pop transition-transform hover:-translate-y-0.5"
+        >
+          Try again
+        </button>
+      </section>
+    </main>
   );
 
   return (
@@ -204,7 +240,7 @@ function Dashboard() {
         <div className="mb-12 flex flex-col md:flex-row justify-between items-end gap-6">
           <div>
             <div className="flex items-center gap-3 mb-4">
-               <Shield size={20} className="text-[var(--spillit-primary)]" />
+               <Shield size={20} className="text-[var(--spillit-primary)]" aria-hidden="true" />
                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Control Center</span>
             </div>
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-none heading-font">
@@ -218,17 +254,20 @@ function Dashboard() {
           <button
             type="button"
             onClick={handleExport}
-            className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all shadow-xl"
+            disabled={exporting}
+            aria-busy={exporting}
+            aria-label={exporting ? 'Preparing archive export' : 'Export archive as spreadsheet'}
+            className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all shadow-xl disabled:cursor-wait disabled:opacity-60"
           >
-            <Download size={18} /> Export Archive
+            <Download size={18} aria-hidden="true" /> {exporting ? 'Preparing…' : 'Export Archive'}
           </button>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <StatCard title="Total Spills" value={stats.total} icon={<Layers size={20} />} accentColor="var(--spillit-primary)" delay={0} />
-          <StatCard title="Total Love" value={memories.reduce((acc, m) => acc + (m.upvotes || 0), 0)} icon={<Heart size={20} />} accentColor="var(--spillit-secondary)" delay={0.1} />
-          <StatCard title="Live Pins" value={stats.byStatus.live || stats.total} icon={<MapPin size={20} />} accentColor="#4ade80" delay={0.2} />
+          <StatCard title="Total Love" value={memories.reduce((acc, m) => acc + (m.upvotes || 0), 0)} icon={<Heart size={20} aria-hidden="true" />} accentColor="var(--spillit-secondary)" delay={0.1} />
+          <StatCard title="Live Pins" value={stats.byStatus.live || stats.total} icon={<MapPin size={20} aria-hidden="true" />} accentColor="#4ade80" delay={0.2} />
           
           <Motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
@@ -243,9 +282,11 @@ function Dashboard() {
         {/* Controls Toolbar */}
         <div className="bg-white/2 backdrop-blur-xl border border-white/5 rounded-[40px] p-4 mb-8 flex flex-col lg:flex-row gap-4 justify-between items-center shadow-2xl">
           <div className="relative w-full lg:w-1/3 group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-white transition-colors" size={18} />
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-white transition-colors" size={18} aria-hidden="true" />
             <input
               type="text"
+              aria-label="Search memories by ID or caption"
+              autoComplete="off"
               placeholder="Search by ID or caption..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -257,7 +298,7 @@ function Dashboard() {
             <button
               type="button"
               onClick={() => setShowFilters(!showFilters)}
-              aria-expanded={showFilters}
+              aria-pressed={showFilters}
               className={`flex items-center gap-2 px-6 py-3.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all shrink-0 ${showFilters ? 'bg-white text-black border-white' : 'bg-white/5 text-slate-400 border-white/5 hover:bg-white/10'}`}
             >
               <Filter size={14} /> Filter View
@@ -286,20 +327,27 @@ function Dashboard() {
         <div className="bg-white/2 backdrop-blur-3xl border border-white/5 rounded-[40px] overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
+              <caption className="sr-only">Spill It memory moderation archive</caption>
               <thead>
                 <tr className="bg-white/5 text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] border-b border-white/5">
-                  <th className="p-6 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('id')}>
-                    <div className="flex items-center gap-2">Spill ID <ArrowUpDown size={12} /></div>
+                  <th scope="col" className="p-6" aria-sort={sortConfig.key === 'id' ? sortConfig.direction === 'asc' ? 'ascending' : 'descending' : 'none'}>
+                    <button type="button" onClick={() => handleSort('id')} className="flex items-center gap-2 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--spillit-primary)]">
+                      Spill ID <ArrowUpDown size={12} aria-hidden="true" />
+                    </button>
                   </th>
-                  <th className="p-6">Content</th>
-                  <th className="p-6 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('upvotes')}>
-                    <div className="flex items-center gap-2">Hearts <ArrowUpDown size={12} /></div>
+                  <th scope="col" className="p-6">Content</th>
+                  <th scope="col" className="p-6" aria-sort={sortConfig.key === 'upvotes' ? sortConfig.direction === 'asc' ? 'ascending' : 'descending' : 'none'}>
+                    <button type="button" onClick={() => handleSort('upvotes')} className="flex items-center gap-2 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--spillit-primary)]">
+                      Hearts <ArrowUpDown size={12} aria-hidden="true" />
+                    </button>
                   </th>
-                  <th className="p-6">Status</th>
-                  <th className="p-6 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('ts')}>
-                    <div className="flex items-center gap-2">Created <ArrowUpDown size={12} /></div>
+                  <th scope="col" className="p-6">Status</th>
+                  <th scope="col" className="p-6" aria-sort={sortConfig.key === 'ts' ? sortConfig.direction === 'asc' ? 'ascending' : 'descending' : 'none'}>
+                    <button type="button" onClick={() => handleSort('ts')} className="flex items-center gap-2 hover:text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--spillit-primary)]">
+                      Created <ArrowUpDown size={12} aria-hidden="true" />
+                    </button>
                   </th>
-                  <th className="p-6 text-right">Actions</th>
+                  <th scope="col" className="p-6 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
@@ -318,19 +366,19 @@ function Dashboard() {
                         <td className="p-6">
                            <div className="flex items-center gap-4">
                               <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border border-white/10">
-                                 <img src={getOptimizedImageUrl(memory.image_url, 100)} className="w-full h-full object-cover" alt="thumb" />
+                                 <img src={getOptimizedImageUrl(memory.image_url, 100)} width="100" height="100" loading="lazy" decoding="async" className="w-full h-full object-cover" alt={`Memory thumbnail: ${memory.caption || 'untitled'}`} />
                               </div>
                               <div className="min-w-0">
                                  <p className="text-white font-bold truncate max-w-xs italic mb-1">&quot;{memory.caption}&quot;</p>
                                  <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                    <MapPin size={10} className="text-[var(--spillit-primary)]" /> {memory.address?.split(',')[0]}
+                                    <MapPin size={10} className="text-[var(--spillit-primary)]" aria-hidden="true" /> {memory.address?.split(',')[0]}
                                  </div>
                               </div>
                            </div>
                         </td>
                         <td className="p-6">
                            <div className="flex items-center gap-2 text-[var(--spillit-primary)] font-black text-lg">
-                              <Heart size={18} fill="currentColor" /> {memory.upvotes || 0}
+                              <Heart size={18} fill="currentColor" aria-hidden="true" /> {memory.upvotes || 0}
                            </div>
                         </td>
                         <td className="p-6">
@@ -342,9 +390,9 @@ function Dashboard() {
                            {memory.created_at ? new Date(memory.created_at).toLocaleDateString() : 'N/A'}
                         </td>
                         <td className="p-6 text-right">
-                           <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all">
-                              <button onClick={() => setSelectedMemory(memory)} className="p-3 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 rounded-2xl transition-all"><Eye size={18} /></button>
-                              <button onClick={() => setDeleteId(memory.id)} className="p-3 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-2xl transition-all"><Trash2 size={18} /></button>
+                      <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all">
+                                 <button type="button" onClick={() => setSelectedMemory(memory)} aria-label={`View memory: ${memory.caption || 'untitled'}`} className="p-3 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 rounded-2xl transition-all"><Eye size={18} aria-hidden /></button>
+                              <button type="button" onClick={() => setDeleteId(memory.id)} aria-label={`Delete memory: ${memory.caption || 'untitled'}`} className="p-3 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-2xl transition-all"><Trash2 size={18} aria-hidden /></button>
                            </div>
                         </td>
                       </tr>
@@ -375,7 +423,7 @@ function Dashboard() {
              >
                 {/* Media Left */}
                 <div className="w-full md:w-3/5 relative bg-black">
-                   <img src={selectedMemory.image_url} className="w-full h-full object-cover" alt="Memory" />
+                   <img src={getOptimizedImageUrl(selectedMemory.image_url, 800)} width="800" height="600" className="w-full h-full object-cover" alt={selectedMemory.caption ? `Memory photo: ${selectedMemory.caption.slice(0, 80)}` : 'Memory photo'} />
                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
                    <div className="absolute bottom-10 left-10 right-10 flex justify-between items-end">
                       <div className="space-y-4">
@@ -393,7 +441,7 @@ function Dashboard() {
                       <div className="px-5 py-2 rounded-full border border-white/10 text-[10px] font-black tracking-widest uppercase text-slate-500 bg-white/5">
                         <Hash size={12} className="inline mr-1" /> {selectedMemory.id}
                       </div>
-                      <button onClick={() => setSelectedMemory(null)} className="p-3 text-slate-500 hover:text-white transition-colors"><X size={24} /></button>
+                      <button type="button" onClick={() => setSelectedMemory(null)} aria-label="Close memory details" className="p-3 text-slate-500 hover:text-white transition-colors"><X size={24} aria-hidden /></button>
                    </div>
 
                    <div className="space-y-10 flex-1">
@@ -404,11 +452,11 @@ function Dashboard() {
 
                       <div className="grid grid-cols-2 gap-4">
                          <div className="p-5 bg-white/5 rounded-3xl border border-white/5">
-                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"><Heart size={10} /> Love</p>
+                                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"><Heart size={10} aria-hidden="true" /> Love</p>
                             <p className="text-xl font-black text-[var(--spillit-primary)]">{selectedMemory.upvotes || 0}</p>
                          </div>
                          <div className="p-5 bg-white/5 rounded-3xl border border-white/5">
-                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"><MapPin size={10} /> Spot</p>
+                                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5"><MapPin size={10} aria-hidden="true" /> Spot</p>
                             <p className="text-sm font-bold truncate text-white">{selectedMemory.address?.split(',')[0]}</p>
                          </div>
                       </div>
@@ -445,13 +493,13 @@ function Dashboard() {
                className="max-w-md w-full bg-[#0a0a0c] border border-red-500/30 p-12 rounded-[40px] text-center shadow-[0_0_100px_rgba(239,68,68,0.2)]"
              >
                 <div className="w-20 h-20 bg-red-500/10 rounded-[32px] flex items-center justify-center text-red-500 mb-8 mx-auto border border-red-500/20">
-                   <Trash2 size={32} />
+                   <Trash2 size={32} aria-hidden="true" />
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-4 heading-font uppercase tracking-widest">Erase Memory?</h3>
                 <p className="text-slate-500 text-sm leading-relaxed mb-10">This will permanently remove this spill from the global archive. This action cannot be undone.</p>
                 <div className="flex flex-col gap-3">
-                   <button onClick={handleDelete} className="w-full py-4 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 transition-all text-sm uppercase tracking-widest shadow-lg shadow-red-600/30">Confirm Erase</button>
-                   <button onClick={() => setDeleteId(null)} className="w-full py-4 bg-white/5 text-slate-400 font-bold rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest">Cancel</button>
+                   <button type="button" onClick={handleDelete} className="w-full py-4 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 transition-all text-sm uppercase tracking-widest shadow-lg shadow-red-600/30">Confirm Erase</button>
+                   <button type="button" onClick={() => setDeleteId(null)} className="w-full py-4 bg-white/5 text-slate-400 font-bold rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest">Cancel</button>
                 </div>
              </Motion.div>
           </div>

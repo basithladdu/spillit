@@ -1,10 +1,54 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { X, MapPin, Share2, ExternalLink, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getOptimizedImageUrl } from '../utils/imageOptimizer';
+import { timeAgo } from '../utils/format';
 
 const MemoryCard = ({ summaryData, setShowSummary }) => {
+    const dialogRef = useRef(null);
+    const returnFocusRef = useRef(null);
+
+    useEffect(() => {
+        const dialog = dialogRef.current;
+        if (!dialog) return undefined;
+
+        returnFocusRef.current = document.activeElement;
+        const focusable = () => [...dialog.querySelectorAll('button, a[href]')]
+            .filter((element) => !element.disabled);
+        focusable()[0]?.focus();
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                setShowSummary(false);
+                return;
+            }
+            if (event.key !== 'Tab') return;
+            const elements = focusable();
+            if (elements.length === 0) return;
+            const first = elements[0];
+            const last = elements[elements.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            document.removeEventListener('keydown', handleKeyDown);
+            returnFocusRef.current?.focus?.();
+            returnFocusRef.current = null;
+        };
+    }, [setShowSummary]);
+
     if (!summaryData) return null;
 
     const handleShare = async () => {
@@ -16,12 +60,17 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
                     text: summaryData.caption,
                     url: url,
                 });
-            } catch {
-                // Share cancelled or failed silently
+                return;
+            } catch (error) {
+                if (error?.name === 'AbortError') return;
             }
-        } else {
+        }
+
+        try {
             await navigator.clipboard.writeText(url);
             toast.success('Link copied to clipboard');
+        } catch {
+            toast.error('Could not copy the link. Please copy it from your address bar.');
         }
     };
 
@@ -39,6 +88,7 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
                 />
 
                 <motion.div
+                    ref={dialogRef}
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="memory-summary-title"
@@ -49,25 +99,27 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
                 >
                     {/* Header with Success Badge */}
                     <div className="absolute top-6 left-6 z-10 flex items-center gap-2 bg-white border-2 border-foreground px-4 py-2 rounded-full shadow-pop">
-                        <CheckCircle2 size={16} className="text-accent" strokeWidth={3} />
+                        <CheckCircle2 size={16} className="text-accent" strokeWidth={3} aria-hidden="true" />
                         <span id="memory-pinned-title" className="text-[10px] font-black text-foreground uppercase tracking-widest heading-font">Memory Pinned</span>
                     </div>
                     
                     <button
                         type="button"
                         onClick={() => setShowSummary(false)}
-                        aria-label="Close"
+                        aria-label="Close memory pinned summary"
                         className="absolute top-6 right-6 z-10 p-2 bg-white border-2 border-foreground rounded-full text-foreground hover:bg-muted transition-all shadow-pop"
                     >
-                        <X size={20} strokeWidth={3} />
+                        <X size={20} strokeWidth={3} aria-hidden="true" />
                     </button>
 
                     {/* Content Image */}
                     <div className="relative h-72 w-full border-b-2 border-foreground">
                         <img 
-                            src={summaryData.imageUrl} 
+                            src={getOptimizedImageUrl(summaryData.imageUrl, 640)}
+                            width="640"
+                            height="288"
                             className="w-full h-full object-cover" 
-                            alt="Spilled Memory" 
+                            alt={`Memory photo: ${(summaryData.caption || 'Spilled memory').trim().slice(0, 80)}`}
                         />
                     </div>
 
@@ -77,8 +129,14 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
                                 &quot;{summaryData.caption}&quot;
                             </p>
                             <div className="flex items-center gap-2 text-slate-400 font-bold uppercase tracking-tighter text-[10px]">
-                                <MapPin size={16} className="text-accent" strokeWidth={3} />
+                                <MapPin size={16} className="text-accent" strokeWidth={3} aria-hidden="true" />
                                 <span>{summaryData.address || "A secret location"}</span>
+                                {(summaryData.created_at || summaryData.ts) && (
+                                  <>
+                                    <span aria-hidden="true">·</span>
+                                    <span>{timeAgo(summaryData.created_at || summaryData.ts)}</span>
+                                  </>
+                                )}
                             </div>
                         </div>
 
@@ -99,13 +157,13 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
                                 onClick={handleShare}
                                 className="w-full py-4 rounded-full bg-accent text-white font-black flex items-center justify-center gap-3 border-2 border-foreground shadow-pop hover:shadow-pop-hover hover:-translate-y-1 transition-all uppercase tracking-widest text-sm"
                             >
-                                <Share2 size={18} strokeWidth={3} /> Share Memory
+                                <Share2 size={18} strokeWidth={3} aria-hidden="true" /> Share Memory
                             </button>
                             <Link 
                                 to={`/memory/${summaryData.id}`}
                                 className="w-full py-4 rounded-full bg-white border-2 border-foreground text-foreground font-black flex items-center justify-center gap-3 hover:bg-muted transition-all shadow-pop uppercase tracking-widest text-sm"
                             >
-                                <ExternalLink size={18} strokeWidth={3} /> View Full Spill
+                                <ExternalLink size={18} strokeWidth={3} aria-hidden="true" /> View Full Spill
                             </Link>
                         </div>
                         

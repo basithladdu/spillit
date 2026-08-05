@@ -1,0 +1,19 @@
+{
+  "name": "Spill It \u2014 Map your memories anonymously",
+  "short_name": "Spill It",
+  "description": "Pin anonymous memories to the places where they happened.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#C2185B",
+  "background_color": "#FFF5F9",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

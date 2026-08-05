@@ -67,7 +67,7 @@ const MarkerPopup = ({ issue = {} }) => {
         </div>
 
         <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-black/40 border border-white/10 text-slate-500`}>
-           <Map size={14} />
+          <Map size={14} aria-hidden="true" />
         </div>
       </div>
 
@@ -82,7 +82,7 @@ const MarkerPopup = ({ issue = {} }) => {
           <div className="bg-white/[0.03] rounded-2xl p-3 border border-white/5">
             <div className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1.5">Spot</div>
             <div className="flex items-center gap-1.5">
-               <MapPin size={10} className="text-[#a78bfa]" />
+          <MapPin size={10} className="text-[#a78bfa]" aria-hidden="true" />
                <span className="text-[10px] font-bold text-slate-200 truncate">{issue.placeName?.split(',')[0] || 'Somewhere'}</span>
             </div>
           </div>
@@ -103,7 +103,7 @@ const MarkerPopup = ({ issue = {} }) => {
            
            <div className="flex items-center gap-3">
               <div className="flex items-center gap-1 text-[#ff7ec9]">
-                 <Heart size={14} className="fill-current" />
+          <Heart size={14} className="fill-current" aria-hidden="true" />
                  <span className="text-xs font-black">{(issue.upvotes || 0)}</span>
               </div>
            </div>

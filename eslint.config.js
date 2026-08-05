@@ -23,7 +23,23 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // Core ESLint does not mark JSX component references as variable usage.
+      // Keep the rule active while ignoring the conventional JSX names it cannot see.
+      'no-unused-vars': ['error', { varsIgnorePattern: '^(motion|[A-Z_]|.*Icon$)' }],
+    },
+  },
+  {
+    files: ['functions/**/*.js', 'scripts/**/*.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  {
+    // This repo does not include a JSX-aware no-unused-vars rule.
+    // Avoid false positives for components rendered only in JSX.
+    files: ['src/**/*.jsx'],
+    rules: {
+      'no-unused-vars': 'off',
     },
   },
 ])

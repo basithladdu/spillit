@@ -65,7 +65,7 @@ function Register() {
           {/* Header */}
           <div className="text-center mb-10">
             <div className="w-20 h-20 rounded-full bg-secondary border-2 border-foreground flex items-center justify-center text-white mx-auto mb-6 shadow-pop">
-              <UserPlus size={32} strokeWidth={2.5} />
+              <UserPlus size={32} strokeWidth={2.5} aria-hidden="true" />
             </div>
             <h1 className="heading-font text-4xl font-bold text-foreground mb-2">Join Spill It</h1>
             <p className="text-muted-foreground text-sm">Start pinning your memories to the map.</p>
@@ -79,7 +79,7 @@ function Register() {
               animate={{ opacity: 1, height: 'auto' }}
               className="mb-6 p-4 rounded-xl bg-red-50 border-2 border-red-400 flex items-center gap-3 text-red-700 text-sm font-bold"
             >
-              <AlertCircle size={16} className="shrink-0" />
+              <AlertCircle size={16} className="shrink-0" aria-hidden="true" />
               {errors.general}
             </motion.div>
           )}
@@ -92,10 +92,15 @@ function Register() {
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} strokeWidth={2.5} />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} strokeWidth={2.5} aria-hidden="true" />
                 <input
                   id="email"
+                  name="email"
                   type="email"
+                  autoComplete="username"
+                  inputMode="email"
+                  aria-invalid={Boolean(errors.email)}
+                  aria-describedby={errors.email ? 'register-email-error' : undefined}
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
                   className={`w-full bg-input border-2 ${errors.email ? 'border-red-400' : 'border-border'} rounded-xl py-3.5 pl-12 pr-4 text-foreground placeholder-muted-foreground outline-none focus:border-secondary focus:shadow-focus transition-all`}
@@ -103,7 +108,7 @@ function Register() {
                   required
                 />
               </div>
-              {errors.email && <p className="text-red-500 text-xs font-bold">{errors.email}</p>}
+              {errors.email && <p id="register-email-error" className="text-red-500 text-xs font-bold">{errors.email}</p>}
             </div>
 
             {/* Password */}
@@ -112,10 +117,14 @@ function Register() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} strokeWidth={2.5} />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} strokeWidth={2.5} aria-hidden="true" />
                 <input
                   id="password"
+                  name="password"
                   type="password"
+                  autoComplete="new-password"
+                  aria-invalid={Boolean(errors.password)}
+                  aria-describedby={errors.password ? 'register-password-error' : undefined}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); clearError('password'); }}
                   className={`w-full bg-input border-2 ${errors.password ? 'border-red-400' : 'border-border'} rounded-xl py-3.5 pl-12 pr-4 text-foreground placeholder-muted-foreground outline-none focus:border-secondary focus:shadow-focus transition-all`}
@@ -123,18 +132,20 @@ function Register() {
                   required
                 />
               </div>
-              {errors.password && <p className="text-red-500 text-xs font-bold">{errors.password}</p>}
+              {errors.password && <p id="register-password-error" className="text-red-500 text-xs font-bold">{errors.password}</p>}
             </div>
 
             {/* Submit */}
             <button
               type="submit"
               disabled={loading}
+              aria-busy={loading}
+              aria-label={loading ? 'Creating account' : undefined}
               className="w-full mt-2 py-4 rounded-full bg-secondary text-white border-2 border-foreground font-bold shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active disabled:opacity-50 flex items-center justify-center gap-3 heading-font uppercase tracking-widest transition-all"
             >
               {loading
                 ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                : <><span>Create Account</span><ArrowRight size={18} strokeWidth={2.5} /></>
+                : <><span>Create Account</span><ArrowRight size={18} strokeWidth={2.5} aria-hidden="true" /></>
               }
             </button>
           </form>

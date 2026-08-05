@@ -1,5 +1,5 @@
-import { Suspense, lazy } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Suspense, lazy, useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -7,6 +7,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { PageSpinner } from "./components/UI/PageStatus";
 import "./App.css";
 
 // Lazy load pages
@@ -22,20 +23,70 @@ const Help = lazy(() => import("./pages/Help"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Profile = lazy(() => import("./pages/Profile"));
 
-const PageLoader = () => (
-  <div
-    className="flex items-center justify-center min-h-screen bg-background"
-    role="status"
-    aria-label="Loading page"
-  >
-    <div className="w-8 h-8 rounded-full border-2 border-accent/30 border-t-accent animate-spin" aria-hidden />
-  </div>
-);
+const PageLoader = () => <PageSpinner label="Loading page" />;
+
+function RouteTitle() {
+  const { pathname } = useLocation();
+  const titles = [
+    [/^\/$/, 'Spill It — Map Your Memories Anonymously'],
+    [/^\/login$/, 'Log in — Spill It'],
+    [/^\/register$/, 'Create an account — Spill It'],
+    [/^\/gallery$/, 'Memory gallery — Spill It'],
+    [/^\/leaderboard$/, 'Hall of fame — Spill It'],
+    [/^\/about$/, 'About — Spill It'],
+    [/^\/help$/, 'Help — Spill It'],
+    [/^\/dashboard$/, 'Operations dashboard — Spill It'],
+    [/^\/profile$/, 'Your profile — Spill It'],
+    [/^\/memory\//, 'Memory detail — Spill It'],
+  ];
+  const title = titles.find(([pattern]) => pattern.test(pathname))?.[1] ?? 'Spill It — Anonymous memories';
+
+  const descriptions = [
+    [/^\/$/, 'Pin a memory to the place where it happened, share it anonymously, and discover what others felt there.'],
+    [/^\/gallery$/, 'Browse anonymous memories, places, and moments shared on the Spill It map.'],
+    [/^\/leaderboard$/, 'Explore the most loved anonymous memories shared on Spill It.'],
+    [/^\/about$/, 'Learn about Spill It, an anonymous map for memories, stories, and moments.'],
+    [/^\/help$/, 'Find answers about posting memories, anonymity, locations, and community guidelines on Spill It.'],
+    [/^\/(login|register)$/, 'Join Spill It to manage your anonymous memories and discover moments on the map.'],
+  ];
+  const description = descriptions.find(([pattern]) => pattern.test(pathname))?.[1]
+    ?? 'Spill It is a location-based memory sharing app for anonymous stories and moments.';
+  const displayTitle = title
+    .replace(/\u00e2\u20ac\u201d/g, '—')
+    .replace(/\u00e2\u20ac\u2122/g, '’');
+
+  useEffect(() => {
+    document.title = displayTitle;
+    const robotsTag = document.querySelector('meta[name="robots"]');
+    const isPrivateRoute = /^\/(dashboard|profile|login|register)(\/|$)/.test(pathname);
+    robotsTag?.setAttribute('content', isPrivateRoute ? 'noindex, nofollow' : 'index, follow');
+    const descriptionTag = document.querySelector('meta[name="description"]');
+    descriptionTag?.setAttribute('content', description);
+    const canonicalTag = document.querySelector('link[rel="canonical"]');
+    const canonicalPath = pathname === '/' ? '/' : pathname.replace(/\/$/, '');
+    const canonicalUrl = `https://spillit.app${canonicalPath}`;
+    canonicalTag?.setAttribute('href', canonicalUrl);
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', title);
+    document.querySelector('meta[property="og:description"]')?.setAttribute('content', description);
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonicalUrl);
+    document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', title);
+    document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', description);
+  }, [description, displayTitle, pathname, title]);
+
+  return <span className="sr-only" aria-live="polite" aria-atomic="true">{displayTitle}</span>;
+}
 
 function App() {
   return (
     <AuthProvider>
       <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <RouteTitle />
+        <a
+          href="#main-content"
+          className="fixed left-4 top-4 z-[2000] -translate-y-24 rounded-full border-2 border-foreground bg-accent px-5 py-3 text-sm font-black text-white shadow-pop transition-transform focus:translate-y-0 focus:outline-none focus:ring-4 focus:ring-accent/40"
+        >
+          Skip to main content
+        </a>
         <Navbar />
 
         <Suspense fallback={<PageLoader />}>
@@ -46,7 +97,7 @@ function App() {
             {/* All other pages get the standard padded content wrapper + Footer */}
             <Route path="/*" element={
               <>
-                <div className="flex-1 pt-16">
+                <div id="main-content" tabIndex="-1" className="flex-1 pt-16 outline-none">
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
@@ -67,6 +118,8 @@ function App() {
         </Suspense>
 
         <ToastContainer
+          role="alert"
+          ariaLabel="Spill It notifications"
           position="bottom-right"
           autoClose={3000}
           hideProgressBar={false}

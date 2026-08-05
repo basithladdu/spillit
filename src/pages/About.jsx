@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Heart, Lightbulb, Users, Camera, MapPin, Ghost, Code, Mail, Instagram } from 'lucide-react';
+import { Heart, Lightbulb, Users, Camera, MapPin, Ghost, Code, Mail, ArrowUpRight, Linkedin } from 'lucide-react';
 
 const About = () => {
   const fadeUp = {
@@ -21,7 +21,7 @@ const About = () => {
 
           <motion.div {...fadeUp}>
             <div className="w-24 h-24 rounded-full bg-accent border-2 border-foreground flex items-center justify-center text-white mx-auto mb-8 shadow-pop">
-              <Heart size={36} strokeWidth={2.5} fill="currentColor" />
+          <Heart size={36} strokeWidth={2.5} fill="currentColor" aria-hidden="true" />
             </div>
             <h1 className="heading-font text-6xl md:text-7xl font-bold mb-4 text-foreground">
               Spill <span className="text-accent italic">It</span>
@@ -86,6 +86,38 @@ const About = () => {
           </div>
         </motion.div>
 
+        {/* ── Maker note ── */}
+        <motion.div {...fadeUp} className="mb-16">
+          <div className="bg-foreground text-white border-2 border-foreground rounded-2xl p-8 md:p-10 shadow-pop overflow-hidden relative">
+            <div className="absolute -right-16 -top-16 w-48 h-48 rounded-full bg-accent opacity-30 blur-2xl" />
+            <div className="relative z-10 grid md:grid-cols-[1.2fr_0.8fr] gap-8 items-end">
+              <div>
+                <p className="heading-font text-xs uppercase tracking-[0.22em] text-tertiary mb-3">Made by a builder who notices places</p>
+                <h2 className="heading-font text-3xl md:text-4xl font-bold mb-4">Hi, I&apos;m Basith.</h2>
+                <p className="text-white/75 leading-relaxed max-w-xl">
+                  I&apos;m the founder of devit. and a product engineer from Kurnool, Andhra Pradesh. I build practical software for people, places and public systems — and Spill It is the softer side of that work: a home for the moments that usually disappear.
+                </p>
+                <p className="text-white/60 leading-relaxed max-w-xl mt-3">
+                  Alongside devit., I serve as COO at Blindersoe.
+                </p>
+                <div className="flex flex-wrap gap-2 mt-6">
+                  {['Founder · devit.', 'Product engineer', 'Kurnool, AP'].map((tag) => (
+                    <span key={tag} className="px-3 py-1.5 rounded-full border border-white/20 bg-white/10 text-xs font-bold tracking-wide">{tag}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-white/10 border border-white/15 rounded-2xl p-5">
+                <p className="text-xs uppercase tracking-[0.18em] text-white/50 mb-3">A few things I&apos;ve shipped</p>
+                <ul className="space-y-3 text-sm text-white/80">
+                  <li><span className="text-tertiary font-bold">1st place</span> · Safe School Monitor Hackathon</li>
+                  <li><span className="text-tertiary font-bold">2nd runner-up</span> · AP AI Innovation Hackathon</li>
+                  <li><span className="text-tertiary font-bold">Public systems</span> · ITI, tobacco-free education and Anganwadi tools</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* ── Contact ── */}
         <motion.div {...fadeUp} className="text-center pb-16">
           <div className="w-12 h-12 rounded-full bg-tertiary border-2 border-foreground flex items-center justify-center mx-auto mb-6 shadow-pop">
@@ -100,15 +132,23 @@ const About = () => {
               href="mailto:workwithdevit@gmail.com"
               className="flex items-center gap-2 px-6 py-3 bg-foreground text-white border-2 border-foreground rounded-full font-bold shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all heading-font uppercase tracking-widest text-sm"
             >
-              <Mail size={16} strokeWidth={2.5} /> Contact Us
+              <Mail size={16} strokeWidth={2.5} aria-hidden="true" /> Contact Us
             </a>
             <a
-              href="https://instagram.com/devit.company"
+              href="https://www.linkedin.com/in/basithladoo/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-6 py-3 bg-card border-2 border-foreground text-foreground rounded-full font-bold shadow-pop hover:bg-muted hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all heading-font uppercase tracking-widest text-sm"
             >
-              <Instagram size={16} strokeWidth={2.5} /> Instagram
+              <Linkedin size={16} strokeWidth={2.5} /> LinkedIn
+            </a>
+            <a
+              href="https://basith.wedevit.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-6 py-3 bg-tertiary border-2 border-foreground text-foreground rounded-full font-bold shadow-pop hover:bg-muted hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all heading-font uppercase tracking-widest text-sm"
+            >
+              <ArrowUpRight size={16} strokeWidth={2.5} /> See my work
             </a>
           </div>
         </motion.div>

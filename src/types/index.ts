@@ -16,7 +16,8 @@ export interface Memory {
   userId: string;
   upvotes: number;
   upvotedBy?: string[];
-  ts: FirebaseFirestore.Timestamp;
+  ts?: string;
+  created_at?: string;
   status?: 'live' | 'archived';
   colorChoice?: string;
   vibe?: string;
@@ -36,8 +37,8 @@ export interface User {
   uid: string;
   email: string;
   displayName?: string;
-  createdAt: FirebaseFirestore.Timestamp;
-  updatedAt: FirebaseFirestore.Timestamp;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface LocationData {

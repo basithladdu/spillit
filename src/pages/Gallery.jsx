@@ -122,6 +122,18 @@ function Gallery() {
   const totalPages = Math.ceil(filteredMemories.length / itemsPerPage);
   const currentData = filteredMemories.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (totalPages <= 1) return;
+      const tag = event.target?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+      if (event.key === 'ArrowLeft') setCurrentPage((p) => Math.max(1, p - 1));
+      if (event.key === 'ArrowRight') setCurrentPage((p) => Math.min(totalPages, p + 1));
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [totalPages]);
+
   if (loading) return <PageSpinner label="Loading archive" />;
 
   if (loadError) return (

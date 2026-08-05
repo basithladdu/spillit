@@ -6,8 +6,9 @@
   --color-foreground: #4A4A68;
   --color-muted: #F8F9FE;
   --color-muted-foreground: #A0A0C0;
-  --color-accent: #FF85B3;
-  --color-secondary: #B19CFF;
+  --color-accent: #C2185B;
+  --color-accent-foreground: #FFFFFF;
+  --color-secondary: #6D5BD0;
   --color-tertiary: #FFD275;
   --color-quaternary: #7EE7CE;
   --color-border: #FFD6E8;
@@ -20,14 +21,14 @@
   --pg-foreground: #4A4A68;
   --pg-muted: #F8F9FE;
   --pg-muted-foreground: #A0A0C0;
-  --pg-accent: #FF85B3;
-  --pg-secondary: #B19CFF;
+  --pg-accent: #C2185B;
+  --pg-secondary: #6D5BD0;
   --pg-tertiary: #FFD275;
   --pg-quaternary: #7EE7CE;
   --pg-border: #FFD6E8;
   --pg-input: #FFFFFF;
   --pg-card: #FFFFFF;
-  --pg-ring: #FF85B3;
+  --pg-ring: #C2185B;
 
   /* Glass Effects */
   --spillit-bg: #FFF5F9;
@@ -35,8 +36,8 @@
   --spillit-border: rgba(255, 133, 179, 0.2);
   --spillit-text-main: #4A4A68;
   --spillit-text-muted: #8E8EA8;
-  --spillit-primary: #FF85B3;
-  --spillit-secondary: #B19CFF;
+  --spillit-primary: #C2185B;
+  --spillit-secondary: #6D5BD0;
   --spillit-accent: #7EE7CE;
   --spillit-glow-primary: rgba(255, 133, 179, 0.2);
   --spillit-glow-secondary: rgba(177, 156, 255, 0.2);
@@ -134,7 +135,8 @@ body::before {
 
 /* Focus states for accessibility */
 *:focus-visible {
-  outline: none;
+  outline: 3px solid var(--pg-accent);
+  outline-offset: 3px;
   border-color: var(--pg-accent);
   box-shadow: 4px 4px 0px 0px var(--pg-accent);
 }
@@ -198,8 +200,38 @@ body::before {
   background: var(--pg-secondary);
 }
 
+/* Small, low-cost entrance motion for shared sections. */
+@keyframes spill-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mobile-fade-up {
+  animation: spill-fade-up 0.55s ease-out both;
+}
+
+@media (max-width: 768px) {
+  body { overflow-x: hidden; }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-fade-up {
+    animation-duration: 0.4s;
+  }
+}
+
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
   *,
   *::before,
   *::after {

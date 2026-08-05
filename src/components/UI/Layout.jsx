@@ -13,7 +13,7 @@ export const Container = ({ children, className = "" }) => (
  * Section with generous vertical spacing
  */
 export const Section = ({ children, className = "", decorative = false }) => (
-  <section className={`py-24 px-4 relative ${className}`}>
+  <section className={`py-24 px-4 relative mobile-fade-up ${className}`}>
     {decorative && <SectionDecorations />}
     <Container>{children}</Container>
   </section>
@@ -87,6 +87,8 @@ export const FeaturesSection = ({ features, className = "" }) => (
         className="absolute inset-0 w-full h-full pointer-events-none hidden lg:block"
         viewBox="0 0 1200 400"
         preserveAspectRatio="none"
+        aria-hidden="true"
+        focusable="false"
       >
         <defs>
           <style>{`

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import {
   X, Send, Camera, CircleCheck, MapPin, Ghost, User,
@@ -7,7 +7,7 @@ import {
 import { supabase } from '../utils/supabase';
 import { useAuth } from '../hooks/useAuth';
 import imageCompression from 'browser-image-compression';
-import LocationVerifier from './LocationVerifier';
+const LocationVerifier = lazy(() => import('./LocationVerifier'));
 
 const MEMORY_TYPES = [
   { label: 'Moment',  icon: Flame,  color: 'bg-accent   text-white', active: 'border-accent'   },
@@ -31,12 +31,12 @@ const Toast = ({ message, type, onClose }) => (
       }`}
     >
       {type === 'error'
-        ? <CircleX className="w-5 h-5 text-red-500 shrink-0" />
-        : <Sparkles className="w-5 h-5 text-quaternary shrink-0" />
+        ? <CircleX className="w-5 h-5 text-red-500 shrink-0" aria-hidden="true" />
+        : <Sparkles className="w-5 h-5 text-quaternary shrink-0" aria-hidden="true" />
       }
       <span className="flex-1">{message}</span>
-      <button type="button" onClick={onClose} aria-label="Dismiss notification" className="shrink-0 hover:opacity-60 transition-opacity">
-        <X className="w-4 h-4" />
+<button type="button" onClick={onClose} aria-label="Dismiss notification" className="shrink-0 p-1.5 rounded-full hover:opacity-60 transition-opacity">
+        <X className="w-4 h-4" aria-hidden="true" />
       </button>
     </div>
   </Motion.div>
@@ -47,6 +47,11 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
   const { currentUser } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
+  const toastTimeoutRef = useRef(null);
+  const closeTimeoutRef = useRef(null);
+  const modalRef = useRef(null);
+  const returnFocusRef = useRef(null);
+  const isSubmittingRef = useRef(false);
   const [formData, setFormData] = useState({
     caption: '',
     image: null,
@@ -56,11 +61,92 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
     anonymous: true,
     type: 'Moment',
   });
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+  useEffect(() => {
+    isSubmittingRef.current = isSubmitting;
+  }, [isSubmitting]);
+
+  useEffect(() => {
+    if (!formData.image) {
+      setPreviewUrl(null);
+      return undefined;
+    }
+
+    const nextPreviewUrl = URL.createObjectURL(formData.image);
+    setPreviewUrl(nextPreviewUrl);
+    return () => URL.revokeObjectURL(nextPreviewUrl);
+  }, [formData.image]);
+
+  useEffect(() => {
+    if (!show) return undefined;
+
+    returnFocusRef.current = document.activeElement;
+    const modal = modalRef.current;
+    const getFocusable = () => modal
+      ? [...modal.querySelectorAll('button, input, textarea, select, [href], [tabindex]:not([tabindex="-1"])')]
+        .filter((element) => !element.disabled)
+      : [];
+    getFocusable()[0]?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && !isSubmittingRef.current) onClose();
+      if (event.key !== 'Tab') return;
+
+      const focusable = getFocusable();
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+      returnFocusRef.current?.focus();
+      returnFocusRef.current = null;
+    };
+  }, [show, onClose]);
 
   const showToast = (message, type = 'error') => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast(null);
+      toastTimeoutRef.current = null;
+    }, 4000);
   };
+
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0] ?? null;
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      event.target.value = '';
+      showToast('Please choose an image file.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      event.target.value = '';
+      showToast('That image is too large. Please choose one under 10 MB.');
+      return;
+    }
+    setFormData(p => ({ ...p, image: file }));
+  };
+
+  useEffect(() => () => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+  }, []);
 
   const handleLocationVerified = ({ lat, lng, address }) =>
     setFormData(p => ({ ...p, lat, lng, address }));
@@ -72,6 +158,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
     if (!formData.caption.trim()) return showToast('Write something — even one word!');
 
     setIsSubmitting(true);
+    let uploadedFilePath = null;
     try {
       const { lat, lng, address, anonymous, caption, type } = formData;
       let publicUrl = null;
@@ -90,10 +177,15 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
         const filePath = `spills/${fileName}`;
+        uploadedFilePath = filePath;
 
         const { error: uploadError } = await supabase.storage
           .from('images')
-          .upload(filePath, imageFile);
+          .upload(filePath, imageFile, {
+            cacheControl: '31536000',
+            contentType: imageFile.type || formData.image.type || 'image/jpeg',
+            upsert: false,
+          });
 
         if (uploadError) throw uploadError;
 
@@ -125,8 +217,15 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
       showToast('Memory pinned! 📍', 'success');
       onSuccess({ id: newDoc.id, ...formData, imageUrl: publicUrl });
       setFormData({ caption: '', image: null, lat: null, lng: null, address: '', anonymous: true, type: 'Moment' });
-      setTimeout(() => onClose(), 1500);
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = setTimeout(() => {
+        onClose();
+        closeTimeoutRef.current = null;
+      }, 1500);
     } catch (err) {
+      if (uploadedFilePath) {
+        await supabase.storage.from('images').remove([uploadedFilePath]).catch(() => {});
+      }
       console.error('Supabase Error:', err);
       showToast(err.message || 'Something went wrong. Try again?');
     } finally {
@@ -154,9 +253,11 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
             />
 
             <Motion.div
+              ref={modalRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="spill-modal-title"
+              aria-describedby="spill-modal-description"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -167,15 +268,25 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
 
               {/* ── LEFT: MAP HALF ── */}
               <div className="w-full h-52 md:h-auto md:w-1/2 shrink-0 relative overflow-hidden border-b-2 md:border-b-0 md:border-r-2 border-foreground bg-muted">
-                <LocationVerifier
-                  file={formData.image}
-                  onLocationVerified={handleLocationVerified}
-                  initialLat={formData.lat}
-                  initialLng={formData.lng}
-                />
+                <Suspense fallback={(
+                  <div className="flex h-full min-h-52 items-center justify-center bg-muted px-6 text-center" role="status">
+                    <div>
+                      <MapPin className="mx-auto mb-3 h-8 w-8 text-accent" aria-hidden="true" />
+                      <p className="text-sm font-black uppercase tracking-wider text-foreground">Preparing the map</p>
+                      <p className="mt-1 text-xs font-medium text-foreground/60">Your location picker will appear in a moment.</p>
+                    </div>
+                  </div>
+                )}>
+                  <LocationVerifier
+                    file={formData.image}
+                    onLocationVerified={handleLocationVerified}
+                    initialLat={formData.lat}
+                    initialLng={formData.lng}
+                  />
+                </Suspense>
                 {/* label */}
                 <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-background border-2 border-foreground rounded-full px-3 py-1 shadow-pop pointer-events-none">
-                  <MapPin className="w-3.5 h-3.5 text-accent" strokeWidth={2.5} />
+                      <MapPin className="w-3.5 h-3.5 text-accent" strokeWidth={2.5} aria-hidden="true" />
                   <span className="heading-font text-[10px] uppercase tracking-widest text-foreground">
                     {formData.address ? formData.address.split(',')[0] : 'The Spot'}
                   </span>
@@ -191,17 +302,17 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                     <h2 id="spill-modal-title" className="heading-font text-2xl font-black text-foreground leading-tight">
                       Spill a Memory
                     </h2>
-                    <p className="text-slate-500 text-sm mt-0.5 font-bold">
+                    <p id="spill-modal-description" className="text-slate-500 text-sm mt-0.5 font-bold">
                       Where did it happen?
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={onClose}
-                    aria-label="Close"
+                    aria-label="Close spill memory form"
                     className="w-9 h-9 flex items-center justify-center rounded-full border-2 border-foreground text-foreground hover:bg-secondary hover:text-white hover:-translate-x-0.5 hover:-translate-y-0.5 shadow-pop hover:shadow-pop-hover active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active transition-all"
                   >
-                    <X className="w-4 h-4" strokeWidth={2.5} />
+                    <X className="w-4 h-4" strokeWidth={2.5} aria-hidden="true" />
                   </button>
                 </div>
 
@@ -237,12 +348,14 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                       {formData.image ? (
                         <>
                           <img
-                            src={URL.createObjectURL(formData.image)}
-                            alt="preview"
+                            src={previewUrl}
+                            width="640"
+                            height="480"
+                            alt="Selected image preview"
                             className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-50 transition-opacity"
                           />
                           <div className="relative z-10 flex items-center gap-2 bg-background border-2 border-accent rounded-full px-4 py-1.5 shadow-pop">
-                            <CircleCheck className="w-4 h-4 text-accent" strokeWidth={2.5} />
+                            <CircleCheck className="w-4 h-4 text-accent" strokeWidth={2.5} aria-hidden="true" />
                             <span className="heading-font text-xs font-bold text-foreground uppercase tracking-wide">
                               Photo added
                             </span>
@@ -250,7 +363,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                         </>
                       ) : (
                         <div className="flex flex-col items-center gap-2 text-muted-foreground group-hover:text-accent transition-colors">
-                          <Camera className="w-7 h-7 group-hover:scale-110 transition-transform" strokeWidth={2.5} />
+                            <Camera className="w-7 h-7 group-hover:scale-110 transition-transform" strokeWidth={2.5} aria-hidden="true" />
                           <span className="heading-font text-xs font-bold uppercase tracking-widest">
                             Add a photo
                           </span>
@@ -262,7 +375,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                         accept="image/*"
                         capture="environment"
                         className="hidden"
-                        onChange={e => setFormData(p => ({ ...p, image: e.target.files[0] ?? null }))}
+                        onChange={handleImageChange}
                       />
                     </label>
                   </div>
@@ -278,6 +391,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                           key={label}
                           type="button"
                           onClick={() => setFormData(p => ({ ...p, type: label }))}
+                          aria-pressed={formData.type === label}
                           className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border-2 transition-all
                             ${formData.type === label
                               ? `${active} shadow-pop -translate-x-0.5 -translate-y-0.5`
@@ -297,22 +411,32 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
 
                   {/* ── Story textarea ── */}
                   <div>
-                    <label className="heading-font text-xs font-bold uppercase tracking-widest text-foreground block mb-2">
-                      Your story
-                    </label>
+                    <div className="mb-2 flex items-center justify-between">
+                      <label htmlFor="spill-story" className="heading-font text-xs font-bold uppercase tracking-widest text-foreground">
+                        Your story
+                      </label>
+                      <span className={`text-[10px] font-bold tabular-nums ${formData.caption.length > 480 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                        {formData.caption.length}/500
+                      </span>
+                    </div>
                     <textarea
+                      id="spill-story"
                       value={formData.caption}
-                      onChange={e => setFormData(p => ({ ...p, caption: e.target.value }))}
+                      onChange={e => setFormData(p => ({ ...p, caption: e.target.value.slice(0, 500) }))}
                       placeholder="What happened here? Be as honest as you want..."
                       rows={4}
+                      maxLength={500}
+                      aria-describedby="spill-story-hint"
                       className="w-full bg-white border-2 border-foreground rounded-xl px-4 py-3 text-foreground text-sm placeholder-slate-400 resize-none outline-none focus:border-accent focus:shadow-focus transition-all font-medium"
                     />
+                    <p id="spill-story-hint" className="mt-1.5 text-[10px] text-muted-foreground">One word is enough — keep it under 500 characters.</p>
                   </div>
 
                   {/* ── Anonymous toggle ── */}
                   <button
                     type="button"
                     onClick={() => setFormData(p => ({ ...p, anonymous: !p.anonymous }))}
+                    aria-pressed={formData.anonymous}
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl border-2 transition-all
                       ${formData.anonymous
                         ? 'border-accent bg-accent/5 shadow-pop -translate-x-0.5 -translate-y-0.5'
@@ -323,8 +447,8 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                       ${formData.anonymous ? 'bg-accent' : 'bg-muted'}`}
                     >
                       {formData.anonymous
-                        ? <Ghost className="w-5 h-5 text-white" strokeWidth={2.5} />
-                        : <User className="w-5 h-5 text-foreground" strokeWidth={2.5} />
+                        ? <Ghost className="w-5 h-5 text-white" strokeWidth={2.5} aria-hidden="true" />
+                        : <User className="w-5 h-5 text-foreground" strokeWidth={2.5} aria-hidden="true" />
                       }
                     </div>
                     <div className="text-left flex-1">
@@ -357,6 +481,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                     onClick={handleSubmit}
                     disabled={isSubmitting}
                     aria-busy={isSubmitting}
+                    aria-label={isSubmitting ? 'Publishing memory' : undefined}
                     className="w-full flex items-center justify-center gap-3 py-4 rounded-full bg-accent text-white border-2 border-foreground heading-font font-bold text-sm uppercase tracking-widest shadow-pop hover:shadow-pop-hover hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-pop-active transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting
