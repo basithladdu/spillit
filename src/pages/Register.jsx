@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, AlertCircle, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 function Register() {
   const [email, setEmail] = useState('');
@@ -33,7 +34,11 @@ function Register() {
     }
     setLoading(true);
     try {
-      await register(email, password);
+      const data = await register(email, password);
+      setLoading(false);
+      if (!data?.session) {
+        toast.info('Check your email to confirm your account, then log in.');
+      }
     } catch (error) {
       setLoading(false);
       const message = error?.message?.toLowerCase() ?? '';

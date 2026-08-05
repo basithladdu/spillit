@@ -1,5 +1,11 @@
 export const getOptimizedImageUrl = (url, width = 1280) => {
     if (!url) return '';
+
+    if (url.includes('supabase.co/storage/v1/object/public/')) {
+        const renderUrl = url.replace('/object/public/', '/render/image/public/');
+        return `${renderUrl}?width=${width}&quality=80&resize=contain`;
+    }
+
     if (!url.includes('cloudinary.com')) return url;
 
     // Split the URL to insert transformations
@@ -14,6 +20,10 @@ export const getOptimizedImageUrl = (url, width = 1280) => {
 };
 
 export const getOptimizedImageSrcSet = (url, widths = [320, 640, 960]) => {
-    if (!url?.includes('cloudinary.com')) return undefined;
+    if (!url) return undefined;
+    if (url.includes('supabase.co/storage/v1/object/public/')) {
+        return widths.map((width) => `${getOptimizedImageUrl(url, width)} ${width}w`).join(', ');
+    }
+    if (!url.includes('cloudinary.com')) return undefined;
     return widths.map((width) => `${getOptimizedImageUrl(url, width)} ${width}w`).join(', ');
 };
