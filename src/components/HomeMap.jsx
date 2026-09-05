@@ -99,6 +99,7 @@ function MapUnavailable({ message = 'The map is temporarily unavailable. You can
         <AlertCircle size={32} color={T.accent} className="mx-auto mb-4" strokeWidth={2} aria-hidden="true" />
         <h2 className="heading-font text-xl font-bold mb-2" style={{ color: T.ink }}>Map unavailable</h2>
         <p className="text-sm leading-relaxed" style={{ color: T.muted }}>{message}</p>
+        <Link to="/gallery" className="inline-flex min-h-11 items-center justify-center mt-5 px-5 rounded-full border-2 border-foreground text-sm font-bold text-accent">Browse memories</Link>
       </div>
     </div>
   );

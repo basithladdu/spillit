@@ -2,7 +2,7 @@
 export function PageSpinner({ label = 'Loading' }) {
   return (
     <div
-      className="flex min-h-screen items-center justify-center bg-background"
+      className="flex min-h-[calc(100svh-8rem)] items-center justify-center bg-background"
       role="status"
       aria-busy="true"
       aria-atomic="true"
@@ -25,16 +25,16 @@ export function FetchErrorPanel({
   onRetry,
 }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-6">
+    <main className="flex min-h-[calc(100svh-8rem)] items-center justify-center bg-background px-6">
       <section
         role="alert"
         aria-live="assertive"
-        className="w-full max-w-md rounded-2xl border-2 border-foreground bg-card p-8 text-center shadow-pop"
+        className="w-full max-w-md rounded-2xl border-2 border-foreground bg-card p-6 md:p-8 text-center"
       >
         <p className="heading-font mb-3 text-xs font-black uppercase tracking-[0.2em] text-accent">
           {eyebrow}
         </p>
-        <h1 className="heading-font mb-3 text-3xl font-black">{title}</h1>
+        <h1 className="heading-font mb-3 text-2xl md:text-3xl font-black">{title}</h1>
         <p className="mb-6 text-sm leading-relaxed text-muted-foreground">{message}</p>
         <button
           type="button"

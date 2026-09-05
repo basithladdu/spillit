@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Map, { Marker, NavigationControl } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import axios from 'axios';
+import { isValidCoord } from '../utils/format';
 import EXIF from 'exif-js';
 import { MapPin, Layers, Loader2, Heart } from 'lucide-react';
 
@@ -16,58 +17,71 @@ const convertDMSToDD = (dms, ref) => {
 
 function LocationVerifier({ file, onLocationVerified, className = '', initialLat, initialLng }) {
   const [viewState, setViewState] = useState({
-    latitude: initialLat || DEFAULT_CENTER.lat,
-    longitude: initialLng || DEFAULT_CENTER.lng,
-    zoom: initialLat ? 16 : 4,
+    latitude: isValidCoord(initialLat, initialLng) ? Number(initialLat) : DEFAULT_CENTER.lat,
+    longitude: isValidCoord(initialLat, initialLng) ? Number(initialLng) : DEFAULT_CENTER.lng,
+    zoom: isValidCoord(initialLat, initialLng) ? 16 : 4,
   });
   const [marker, setMarker] = useState(
-    initialLat && initialLng ? { lat: initialLat, lng: initialLng } : null,
+    isValidCoord(initialLat, initialLng) ? { lat: Number(initialLat), lng: Number(initialLng) } : null,
   );
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/streets-v12');
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
   const mapRef = useRef(null);
+  const addressRequest = useRef(0);
+
+  useEffect(() => () => { addressRequest.current += 1; }, []);
 
   const fetchAddress = useCallback(async (lat, lng) => {
+    const request = ++addressRequest.current;
     setLoadingAddress(true);
     try {
       const res = await axios.get(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+        { timeout: 8000 },
       );
       const addr = res.data.display_name || 'Address not found';
-      onLocationVerified?.({ lat, lng, address: addr });
+      if (request === addressRequest.current) onLocationVerified?.({ lat, lng, address: addr, addressOnly: true });
     } catch {
-      onLocationVerified?.({ lat, lng, address: 'Address not found' });
+      if (request === addressRequest.current) onLocationVerified?.({ lat, lng, address: '', addressOnly: true });
     } finally {
-      setLoadingAddress(false);
+      if (request === addressRequest.current) setLoadingAddress(false);
     }
   }, [onLocationVerified]);
 
   const updateLocation = useCallback((lat, lng) => {
+    if (!isValidCoord(lat, lng)) return;
+    onLocationVerified?.({ lat, lng, address: '' });
     setMarker({ lat, lng });
     setLocationError('');
     setViewState((prev) => ({ ...prev, latitude: lat, longitude: lng, zoom: 16 }));
     fetchAddress(lat, lng);
-  }, [fetchAddress]);
+  }, [fetchAddress, onLocationVerified]);
 
   useEffect(() => {
-    if (initialLat && initialLng && (!marker || marker.lat !== initialLat)) {
-      setMarker({ lat: initialLat, lng: initialLng });
+    if (!isValidCoord(initialLat, initialLng)) {
+      if (marker) setMarker(null);
+      return;
+    }
+    if (isValidCoord(initialLat, initialLng) && (!marker || marker.lat !== Number(initialLat) || marker.lng !== Number(initialLng))) {
+      setMarker({ lat: Number(initialLat), lng: Number(initialLng) });
       setViewState((prev) => ({
         ...prev,
-        latitude: initialLat,
-        longitude: initialLng,
+        latitude: Number(initialLat),
+        longitude: Number(initialLng),
         zoom: 16,
       }));
     }
   }, [initialLat, initialLng, marker]);
 
   useEffect(() => {
-    if (!file) return;
+    if (!file) { setIsLocating(false); return; }
 
+    let active = true;
     setIsLocating(true);
     EXIF.getData(file, function () {
+      if (!active) return;
       const lat = EXIF.getTag(this, 'GPSLatitude');
       const lng = EXIF.getTag(this, 'GPSLongitude');
       const latRef = EXIF.getTag(this, 'GPSLatitudeRef');
@@ -79,6 +93,7 @@ function LocationVerifier({ file, onLocationVerified, className = '', initialLat
       }
       setIsLocating(false);
     });
+    return () => { active = false; };
   }, [file, updateLocation]);
 
   const handleUseCurrentLocation = () => {
@@ -110,7 +125,7 @@ function LocationVerifier({ file, onLocationVerified, className = '', initialLat
 
   const toggleMapStyle = () => {
     setMapStyle((prev) =>
-      prev.includes('streets')
+      prev === 'mapbox://styles/mapbox/streets-v12'
         ? 'mapbox://styles/mapbox/satellite-streets-v12'
         : 'mapbox://styles/mapbox/streets-v12',
     );
@@ -119,7 +134,7 @@ function LocationVerifier({ file, onLocationVerified, className = '', initialLat
   if (!MAPBOX_TOKEN) {
     return (
       <div role="alert" className={`flex h-full w-full items-center justify-center bg-muted p-6 text-center text-sm text-muted-foreground ${className}`}>
-        Location picking is temporarily unavailable. You can still choose a location manually.
+        Map unavailable. Enter coordinates in the form.
       </div>
     );
   }
@@ -147,7 +162,7 @@ function LocationVerifier({ file, onLocationVerified, className = '', initialLat
         onMove={(evt) => setViewState(evt.viewState)}
         onError={(event) => {
           setLocationError(event?.error?.status === 401
-            ? 'The map is temporarily unavailable. You can still choose a location manually.'
+            ? 'The map is temporarily unavailable. Enter coordinates in the form.'
             : 'The location map could not load right now.');
         }}
         onClick={(evt) => {
@@ -168,7 +183,7 @@ function LocationVerifier({ file, onLocationVerified, className = '', initialLat
             onDragEnd={onMarkerDragEnd}
           >
             <div className="group relative cursor-grab active:cursor-grabbing">
-              <div className="flex h-12 w-12 animate-bounce items-center justify-center rounded-full border-4 border-foreground bg-accent shadow-pop">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border-4 border-foreground bg-accent shadow-pop">
                 <Heart size={24} className="fill-current text-white" strokeWidth={3} aria-hidden />
               </div>
               <div className="absolute -bottom-1 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 bg-foreground" aria-hidden />
@@ -184,7 +199,7 @@ function LocationVerifier({ file, onLocationVerified, className = '', initialLat
           <button
             type="button"
             onClick={handleUseCurrentLocation}
-            className="pointer-events-auto flex animate-bounce items-center gap-2 rounded-full bg-secondary px-4 py-2 text-xs font-bold text-white shadow-lg transition hover:scale-105"
+            className="pointer-events-auto flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-xs font-bold text-white shadow-lg transition hover:scale-105"
           >
             <MapPin size={14} aria-hidden />
             Locate Me

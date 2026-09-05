@@ -1,10 +1,11 @@
-import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import {
   X, Send, Camera, CircleCheck, MapPin, Ghost, User,
   Flame, Heart, Laugh, Lock, CircleX, Sparkles
 } from 'lucide-react';
 import { supabase } from '../utils/supabase';
+import { isValidCoord } from '../utils/format';
 import { useAuth } from '../hooks/useAuth';
 import imageCompression from 'browser-image-compression';
 const LocationVerifier = lazy(() => import('./LocationVerifier'));
@@ -50,7 +51,6 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
   const toastTimeoutRef = useRef(null);
-  const closeTimeoutRef = useRef(null);
   const modalRef = useRef(null);
   const returnFocusRef = useRef(null);
   const isSubmittingRef = useRef(false);
@@ -147,18 +147,20 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
 
   useEffect(() => () => {
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
   }, []);
 
-  const handleLocationVerified = ({ lat, lng, address }) =>
-    setFormData(p => ({ ...p, lat, lng, address }));
+  const handleLocationVerified = useCallback(({ lat, lng, address, addressOnly = false }) =>
+    setFormData(p => addressOnly && (!isValidCoord(p.lat, p.lng) || Number(p.lat) !== lat || Number(p.lng) !== lng)
+      ? p : ({ ...p, lat, lng, address })), []);
 
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
-    if (!formData.lat || !formData.lng) return showToast('We need to know the spot!');
+    if (isSubmittingRef.current) return;
+    if (!isValidCoord(formData.lat, formData.lng)) return showToast('We need to know the spot!');
     if (!formData.caption.trim()) return showToast('Write something — even one word!');
 
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     let uploadedFilePath = null;
     try {
@@ -202,10 +204,10 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
       const { data: newDoc, error: insertError } = await supabase
         .from('memories')
         .insert([{
-          caption,
+          caption: caption.trim(),
           type,
-          lat,
-          lng,
+          lat: Number(lat),
+          lng: Number(lng),
           address,
           image_url: publicUrl,
           user_id: anonymous || !currentUser ? null : currentUser.id,
@@ -215,15 +217,14 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
         .single();
 
       if (insertError) throw insertError;
+      if (!newDoc?.id) throw new Error('The service did not confirm this memory. Please check the archive before retrying.');
+      uploadedFilePath = null;
 
-      showToast('Memory pinned! 📍', 'success');
-      onSuccess({ id: newDoc.id, ...formData, imageUrl: publicUrl, created_at: newDoc.created_at ?? new Date().toISOString() });
+      showToast('Memory pinned!', 'success');
+      onSuccess({ ...newDoc, imageUrl: publicUrl });
+      onClose();
       setFormData({ caption: '', image: null, lat: null, lng: null, address: '', anonymous: true, type: 'Moment' });
-      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = setTimeout(() => {
-        onClose();
-        closeTimeoutRef.current = null;
-      }, 1500);
+
     } catch (err) {
       if (uploadedFilePath) {
         await supabase.storage.from('images').remove([uploadedFilePath]).catch(() => {});
@@ -231,6 +232,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
       console.error('Supabase Error:', err);
       showToast(err.message || 'Something went wrong. Try again?');
     } finally {
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -270,7 +272,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
             >
 
               {/* ── LEFT: MAP HALF ── */}
-              <div className="w-full h-52 md:h-auto md:w-1/2 shrink-0 relative overflow-hidden border-b-2 md:border-b-0 md:border-r-2 border-foreground bg-muted">
+              <div className="w-full h-44 md:h-auto md:w-1/2 shrink-0 relative overflow-hidden border-b-2 md:border-b-0 md:border-r-2 border-foreground bg-muted">
                 <Suspense fallback={(
                   <div className="flex h-full min-h-52 items-center justify-center bg-muted px-6 text-center" role="status">
                     <div>
@@ -297,7 +299,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
               </div>
 
               {/* ── RIGHT: FORM HALF ── */}
-              <div className="w-full md:w-1/2 flex flex-col overflow-hidden">
+              <div className="w-full md:w-1/2 min-h-0 flex flex-col overflow-hidden">
 
                 {/* header */}
                 <div className="px-6 py-5 border-b-2 border-foreground flex items-start justify-between shrink-0 bg-background">
@@ -325,6 +327,22 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                   onSubmit={handleSubmit}
                   className="flex-1 overflow-y-auto px-6 py-6 space-y-5"
                 >
+
+                  <fieldset className="space-y-2">
+                    <legend className="heading-font text-xs font-bold uppercase tracking-widest">Location coordinates</legend>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[['lat', 'Latitude', 90], ['lng', 'Longitude', 180]].map(([key, label, limit]) => (
+                        <label key={key} className="text-xs font-bold text-foreground">
+                          {label}
+                          <input type="number" step="any" min={-limit} max={limit} aria-label={label}
+                            value={formData[key] ?? ''}
+                            onChange={event => setFormData(previous => ({ ...previous, [key]: event.target.value, address: '' }))}
+                            className="mt-1 w-full min-h-11 rounded-lg border-2 border-border bg-white px-3 text-sm" />
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Pick a point on the map or enter coordinates. This spot will be public.</p>
+                  </fieldset>
 
                   {/* ── Photo upload (optional) ── */}
                   <div>
@@ -381,7 +399,7 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                         type="file"
                         accept="image/*"
                         capture="environment"
-                        className="hidden"
+                        className="sr-only"
                         onChange={handleImageChange}
                       />
                     </label>
@@ -440,12 +458,13 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                     <p id="spill-story-hint" className="mt-1.5 text-[10px] text-muted-foreground">One word is enough — keep it under 500 characters.</p>
                   </div>
 
-                  {/* ── Anonymous toggle ── */}
+                  {/* Account linking is optional; names are not displayed on memories. */}
+                  {currentUser && (
                   <button
                     type="button"
                     onClick={() => setFormData(p => ({ ...p, anonymous: !p.anonymous }))}
-                    aria-pressed={formData.anonymous}
-                    aria-label={formData.anonymous ? 'Post anonymously' : 'Post with your username visible'}
+                    aria-pressed={!formData.anonymous}
+                    aria-label="Save this memory to my account"
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl border-2 transition-all
                       ${formData.anonymous
                         ? 'border-accent bg-accent/5 shadow-pop -translate-x-0.5 -translate-y-0.5'
@@ -462,12 +481,12 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                     </div>
                     <div className="text-left flex-1">
                       <p className="heading-font text-sm font-black text-foreground">
-                        {formData.anonymous ? 'Anonymous' : 'Public'}
+                        {formData.anonymous ? 'Not linked to my account' : 'Save to my account'}
                       </p>
                       <p className="text-xs text-slate-500 font-bold">
                         {formData.anonymous
-                          ? 'Your identity stays hidden'
-                          : 'Your username will be shown'
+                          ? 'This memory will not appear in your profile stats.'
+                          : 'Linked to your account; your name is not displayed.'
                         }
                       </p>
                     </div>
@@ -478,6 +497,9 @@ const SpillMemoryModal = ({ show, onClose, onSuccess }) => {
                       <div className="w-4 h-4 rounded-full bg-white border border-foreground/20 shadow" />
                     </div>
                   </button>
+
+                  )}
+                  <p className="text-xs text-muted-foreground">Your story, photo and chosen location will be public. Avoid private addresses or identifying details.</p>
 
                   {/* spacer so submit button doesn't cover last field on mobile */}
                   <div className="h-20 md:h-2" />

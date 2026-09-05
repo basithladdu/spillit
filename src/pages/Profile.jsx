@@ -4,11 +4,13 @@ import { useAuth } from '../hooks/useAuth';
 import { User, AtSign, Mail, Save, Camera, Map, Ghost } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
-import { PageSpinner } from '../components/UI/PageStatus';
+import { PageSpinner, FetchErrorPanel } from '../components/UI/PageStatus';
 
 function Profile() {
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [updating, setUpdating] = useState(false);
   const [profile, setProfile] = useState({
     username: '',
@@ -26,38 +28,17 @@ function Profile() {
     }
 
     const fetchProfile = async () => {
+      setLoading(true);
+      setLoadError(false);
       try {
-        const [{ data, error: profileError }, { data: memories }] = await Promise.all([
+        const [{ data, error: profileError }, { data: memories, error: memoriesError }] = await Promise.all([
           supabase.from('profiles').select('*').eq('id', currentUser.id).maybeSingle(),
           supabase.from('memories').select('upvotes').eq('user_id', currentUser.id),
         ]);
 
+        if (profileError || memoriesError) throw profileError || memoriesError;
         if (active) {
-          if (data) {
-            setProfile({
-              username: data.username || '',
-              full_name: data.full_name || '',
-              bio: data.bio || '',
-              avatar_url: data.avatar_url || ''
-            });
-          } else if (!profileError || profileError.code === 'PGRST116') {
-            const defaultUsername = (currentUser.email?.split('@')[0] || `spiller_${currentUser.id.slice(0, 6)}`)
-              .replace(/[^a-z0-9_]/gi, '')
-              .slice(0, 20) || `spiller_${currentUser.id.slice(0, 6)}`;
-            const { data: created } = await supabase
-              .from('profiles')
-              .insert({ id: currentUser.id, username: defaultUsername.toLowerCase() })
-              .select()
-              .single();
-            if (created) {
-              setProfile({
-                username: created.username || defaultUsername,
-                full_name: '',
-                bio: '',
-                avatar_url: ''
-              });
-            }
-          }
+          setProfile({ username: data?.username || '', full_name: data?.full_name || '', bio: data?.bio || '', avatar_url: data?.avatar_url || '' });
         }
         if (memories && active) {
           setMemoryStats({
@@ -67,6 +48,7 @@ function Profile() {
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
+        if (active) setLoadError(true);
       } finally {
         if (active) setLoading(false);
       }
@@ -74,7 +56,7 @@ function Profile() {
 
     fetchProfile();
     return () => { active = false; };
-  }, [currentUser]);
+  }, [currentUser, retryCount]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -102,6 +84,7 @@ function Profile() {
   };
 
   if (loading) return <PageSpinner label="Loading profile" />;
+  if (loadError) return <FetchErrorPanel title="Profile unavailable" onRetry={() => setRetryCount(count => count + 1)} />;
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-12">
@@ -132,7 +115,7 @@ function Profile() {
             <Ghost size={40} className="mx-auto mb-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
             <h2 className="heading-font text-xl font-bold text-foreground mb-2">No memories spilled yet</h2>
             <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-              Drop your first pin on the map — it will show up in your stats here.
+              Choose “Save to my account” when posting to include a memory in these stats. Unlinked memories are not counted.
             </p>
             <Link
               to="/"

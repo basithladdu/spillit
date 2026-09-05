@@ -52,9 +52,11 @@ export function distanceKm(lat1, lng1, lat2, lng2) {
 }
 
 export function isValidCoord(lat, lng) {
+  const present = (value) => (typeof value === 'number' || typeof value === 'string') && String(value).trim() !== '';
+  if (!present(lat) || !present(lng)) return false;
   const a = Number(lat);
   const b = Number(lng);
-  return Number.isFinite(a) && Number.isFinite(b) && !(a === 0 && b === 0);
+  return Number.isFinite(a) && Number.isFinite(b) && Math.abs(a) <= 90 && Math.abs(b) <= 180;
 }
 
 /** Basic email shape check for client-side form validation. */

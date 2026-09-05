@@ -2,24 +2,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { supabase } from '../utils/supabase';
 import { AuthContext } from '../context/AuthContext';
 
-const getStoredUser = () => {
-  try {
-    const saved = localStorage.getItem('spillit_user');
-    return saved ? JSON.parse(saved) : null;
-  } catch {
-    try { localStorage.removeItem('spillit_user'); } catch { /* Storage unavailable. */ }
-    return null;
-  }
-};
-
-const clearStoredUser = () => {
-  try { localStorage.removeItem('spillit_user'); } catch { /* Storage unavailable. */ }
-};
-
-const saveStoredUser = (user) => {
-  try { localStorage.setItem('spillit_user', JSON.stringify(user)); } catch { /* Storage unavailable. */ }
-};
-
 // The hook and provider intentionally share this module so consumers have one auth entry point.
 // eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
@@ -31,7 +13,7 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(getStoredUser);
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Register user with email/password
@@ -59,9 +41,9 @@ export function AuthProvider({ children }) {
 
   // Logout user
   async function logout() {
-    clearStoredUser();
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
     setCurrentUser(null);
-    return supabase.auth.signOut();
   }
 
   async function resetPassword(email) {
@@ -72,31 +54,26 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setCurrentUser(session.user);
-        saveStoredUser(session.user);
-      }
+    let active = true;
+    let authChanged = false;
+    // Supabase owns session persistence; the old display cache is not a session.
+    try { localStorage.removeItem('spillit_user'); } catch { /* Storage unavailable. */ }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      authChanged = true;
+      setCurrentUser(session?.user ?? null);
+      setLoading(false);
+    });
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!active || authChanged) return;
+      setCurrentUser(error ? null : data?.session?.user ?? null);
       setLoading(false);
     }).catch(() => {
-      // Auth initialization can fail offline; let the public app remain usable.
+      if (!active || authChanged) return;
+      setCurrentUser(null);
       setLoading(false);
     });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setCurrentUser(session.user);
-        saveStoredUser(session.user);
-      } else {
-        clearStoredUser();
-        setCurrentUser(null);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => { active = false; subscription.unsubscribe(); };
   }, []);
 
   const value = {

@@ -4,12 +4,15 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
-const unavailableError = new Error('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.local.');
+const unavailableError = new Error('The memory service is unavailable. Please try again later.');
 
 const createUnavailableQuery = () => {
   const query = {
     select: () => query,
     insert: () => query,
+    upsert: () => query,
+    not: () => query,
+    maybeSingle: () => Promise.resolve({ data: null, error: unavailableError }),
     update: () => query,
     delete: () => query,
     eq: () => query,
@@ -24,6 +27,8 @@ const createUnavailableQuery = () => {
 
 const createUnavailableClient = () => ({
   auth: {
+    resetPasswordForEmail: async () => ({ data: null, error: unavailableError }),
+    updateUser: async () => ({ data: null, error: unavailableError }),
     signUp: async () => ({ data: null, error: unavailableError }),
     signInWithPassword: async () => ({ data: null, error: unavailableError }),
     signInWithOAuth: async () => ({ data: null, error: unavailableError }),

@@ -2,14 +2,16 @@
 
 Welcome to **Spill It** – a playful, anonymous platform where anyone can share what they see in the world with a photo, a color, and a message. No forms, no categories, no judgment.
 
+For the current audit, verified checks, and service blockers, read [PRODUCT_READINESS.md](PRODUCT_READINESS.md). Historical civic/video deployment summaries do not establish readiness for this memory app.
+
 ## Core Features
 1. **Mapbox Integration**: Interactive, real-time map showing spills from across the community with live feeds.
-2. **Anonymous Spilling**: Snap and upload photos with automatic location tagging – share what you see without revealing who you are.
+2. **Anonymous Spilling**: Snap and upload photos with a chosen map point or coordinates – share what you see without revealing who you are.
 3. **Free Expression**: Add a custom color, a short message, and optionally who you're sending it to.
 4. **Community Feed**: Browse, upvote, and explore spills on a beautiful, fast map interface.
-5. **User Accounts**: Optional signup/login to track your spills and contribution history.
+5. **User Accounts**: Optional signup/login to view stats for memories explicitly linked to your account.
 6. **Live Updates**: Memory feed updates are read from Supabase and degrade gracefully when the service is unavailable.
-7. **Mobile Friendly**: Beautiful, responsive design that works perfectly on any device.
+7. **Mobile Friendly**: Responsive map, archive, and posting surfaces.
 
 ## Getting Started
 Spill what's on your mind – a moment, an observation, a broken thing, a beautiful moment.
@@ -19,7 +21,7 @@ Spill what's on your mind – a moment, an observation, a broken thing, a beauti
 ## Developer Setup
 
 ### Prerequisites
-- Node.js (v16 or higher)
+- Node.js 20.19+ or 22.12+ (Vite 7)
 - npm or yarn
 - A Mapbox account (free tier available)
 - A Supabase project with a browser-safe URL and anon key
@@ -51,8 +53,8 @@ Spill what's on your mind – a moment, an observation, a broken thing, a beauti
 ## Technologies
 - **Frontend**: React 19, Tailwind CSS, Lucide Icons
 - **Data and feed**: Supabase
-- **Auth and storage helpers**: Firebase
-- **AI/ML**: Roboflow, Cloudinary (Video Processing)
+- **Authentication and image storage**: Supabase
+- **Legacy code**: Firebase functions and civic video-processing code remain in the repository but are not the memory app backend.
 - **Maps**: Mapbox GL JS
 
 ## License

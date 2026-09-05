@@ -239,14 +239,6 @@ const OnboardingTour = ({ onComplete, onSpill }) => {
 };
 
 /* ── Shared feed pieces ── */
-const LiveIndicator = () => (
-  <span
-    className="home-live-dot"
-    aria-hidden="true"
-    style={{ width: 8, height: 8, borderRadius: '50%', background: T.live, display: 'inline-block' }}
-  />
-);
-
 const FeedEmpty = ({ compact = false }) => (
   <div className={`flex flex-col items-center justify-center text-center gap-3 ${compact ? 'py-8' : 'py-12'}`}>
     <Ghost size={compact ? 32 : 36} color={T.faint} strokeWidth={1.5} aria-hidden="true" />
@@ -364,9 +356,8 @@ const LiveFeedHeader = ({ onClose, showClose = false }) => (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-          <LiveIndicator />
           <p className="heading-font" style={{ fontSize: showClose ? 13 : 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em', color: T.ink }}>
-            Live Spills
+            Recent Spills
           </p>
         </div>
         <p style={{ fontSize: 10, color: T.muted }}>Real stories, real places.</p>
@@ -487,15 +478,15 @@ function Home() {
   }, []);
 
   useEffect(() => {
-    const lat = Number(searchParams.get('lat'));
-    const lng = Number(searchParams.get('lng'));
+    const lat = searchParams.get('lat');
+    const lng = searchParams.get('lng');
     const memoryId = searchParams.get('memory');
 
     if (isValidCoord(lat, lng)) {
       setViewState((v) => ({
         ...v,
-        latitude: lat,
-        longitude: lng,
+        latitude: Number(lat),
+        longitude: Number(lng),
         zoom: Math.max(v.zoom, 14),
         transitionDuration: 1400,
       }));
@@ -615,7 +606,7 @@ function Home() {
   }, [showFeed]);
 
   return (
-    <main id="main-content" tabIndex="-1" className="relative w-full h-screen overflow-hidden outline-none" style={{ background: T.canvas }}>
+    <main id="main-content" tabIndex="-1" className="relative w-full h-[100svh] overflow-hidden outline-none" style={{ background: T.canvas }}>
 
       {/* Desktop hero */}
       <div className="pointer-events-none hidden lg:flex flex-col gap-4 absolute top-20 left-6 z-[850] max-w-xs">
@@ -650,7 +641,7 @@ function Home() {
       </div>
 
       {/* Desktop live feed */}
-      <div className="hidden xl:flex pointer-events-none absolute top-20 bottom-6 right-6 z-[850] w-72 flex-col">
+      <div className="hidden xl:flex pointer-events-auto absolute top-20 bottom-6 right-6 z-[850] w-72 flex-col">
         <div style={panel()} className="h-full flex flex-col overflow-hidden">
           <LiveFeedHeader />
           <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
@@ -693,10 +684,10 @@ function Home() {
 
       {/* Mobile top bar */}
       <div className="lg:hidden absolute top-16 left-0 right-0 z-[840] px-4 pt-2 flex items-center justify-between gap-3 pointer-events-none">
-        <div style={pill({ display: 'flex', alignItems: 'center', gap: 8, background: T.surface })} className="pointer-events-auto">
+        <div style={pill({ display: 'flex', alignItems: 'center', gap: 8, background: T.surface })} className="pointer-events-auto min-h-11 px-3">
           <Flame size={12} color={T.accent} strokeWidth={3} aria-hidden />
           <span className="heading-font" style={{ fontSize: 12, fontWeight: 900, color: T.ink, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            {loading ? '…' : `${memories.length} Spills`}
+            {loading ? 'Loading…' : feedError ? 'Feed unavailable' : `${memories.length} recent spills`}
           </span>
         </div>
         <button
@@ -704,13 +695,13 @@ function Home() {
           ref={feedTriggerRef}
           onClick={() => setShowFeed(true)}
           style={pill({ display: 'flex', alignItems: 'center', gap: 8, background: T.surface })}
-          className="pointer-events-auto"
+          className="pointer-events-auto min-h-11 px-3"
           aria-expanded={showFeed}
           aria-controls="mobile-live-feed"
         >
           <MapIcon size={12} color={T.ink} strokeWidth={2.5} aria-hidden />
           <span className="heading-font" style={{ fontSize: 12, fontWeight: 900, color: T.ink, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Live Feed
+            Recent Spills
           </span>
         </button>
       </div>
@@ -835,6 +826,7 @@ function Home() {
         show={showForm}
         onClose={() => setShowForm(false)}
         onSuccess={(d) => {
+          setAllMemories((previous) => ({ ...previous, [d.id]: d }));
           setSummaryData(d);
           setShowSummary(true);
           if (isValidCoord(d.lat, d.lng)) {

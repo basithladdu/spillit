@@ -95,7 +95,7 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
                     initial={{ scale: 0.9, opacity: 0, y: 20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                    className="relative w-full max-w-lg bg-white border-2 border-foreground rounded-[40px] shadow-pop overflow-hidden"
+                    className="relative w-full max-w-lg bg-white border-2 border-foreground rounded-[40px] shadow-pop max-h-[90svh] overflow-y-auto"
                 >
                     {/* Header with Success Badge */}
                     <div className="absolute top-6 left-6 z-10 flex items-center gap-2 bg-white border-2 border-foreground px-4 py-2 rounded-full shadow-pop">
@@ -113,7 +113,7 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
                     </button>
 
                     {/* Content Image */}
-                    <div className="relative h-72 w-full border-b-2 border-foreground bg-muted">
+                    <div className="relative h-28 md:h-48 w-full border-b-2 border-foreground bg-muted">
                         {summaryData.imageUrl ? (
                           <img
                             src={getOptimizedImageUrl(summaryData.imageUrl, 640)}
@@ -136,7 +136,7 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
                             </p>
                             <div className="flex items-center gap-2 text-slate-400 font-bold uppercase tracking-tighter text-[10px]">
                                 <MapPin size={16} className="text-accent" strokeWidth={3} aria-hidden="true" />
-                                <span>{summaryData.address || "A secret location"}</span>
+                                <span>{summaryData.address || "Pinned coordinates"}</span>
                                 {(summaryData.created_at || summaryData.ts) && (
                                   <>
                                     <span aria-hidden="true">·</span>
@@ -149,7 +149,7 @@ const MemoryCard = ({ summaryData, setShowSummary }) => {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="bg-muted border-2 border-foreground p-4 rounded-3xl text-center shadow-pop">
                                 <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Visibility</p>
-                                <p className="text-sm text-foreground font-black">{summaryData.anonymous ? 'Anonymous' : 'Public'}</p>
+                                <p className="text-sm text-foreground font-black">Public memory</p>
                             </div>
                             <div className="bg-muted border-2 border-foreground p-4 rounded-3xl text-center shadow-pop">
                                 <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Memory ID</p>

@@ -7,13 +7,13 @@ const FAQS = [
   {
     id: 'post',
     question: 'How do I post a memory?',
-    answer: "Tap Spill Something on the map. Add a photo, write your memory, and we'll pin it to your location. No account required.",
+    answer: "Tap Spill Something on the map. Write your memory, optionally add a photo, and choose a point on the map or enter coordinates. No account required.",
     icon: MapPin,
   },
   {
     id: 'anonymous',
     question: 'How do I stay anonymous?',
-    answer: "Anonymity is our core. You don't need an account to spill. Your identity is never attached to your memory — just the moment.",
+    answer: "You can post without an account. Signed-in users can choose to link a memory to their account. Names are not displayed on memories, but your story, photo and location are public.",
     icon: Ghost,
   },
   {
@@ -47,7 +47,7 @@ const FAQS = [
       <>
         No — posting is anonymous without signing in.{' '}
         <Link to="/register" className="font-bold text-accent hover:underline">Create an account</Link>
-        {' '}only if you want a profile or to manage your own spills later.
+        {' '}if you want a profile, account-linked memory stats, or to upvote.
       </>
     ),
     icon: KeyRound,

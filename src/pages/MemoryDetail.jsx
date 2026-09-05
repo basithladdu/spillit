@@ -74,6 +74,8 @@ function MemoryDetail() {
             setNearbyMemories(sorted.slice(0, 4));
           }
         }
+      } catch {
+        if (active) setFetchError(true);
       } finally {
         if (active) setLoading(false);
       }
@@ -151,14 +153,16 @@ function MemoryDetail() {
       const upvotedBy  = memory.upvoted_by || [];
       const removing   = hasUpvoted;
       const newList    = removing ? upvotedBy.filter(u => u !== currentUser.id) : [...upvotedBy, currentUser.id];
-      const newUpvotes = (memory.upvotes || 0) + (removing ? -1 : 1);
-      const { error } = await supabase.from('memories').update({ upvotes: newUpvotes, upvoted_by: newList }).eq('id', id);
+      const newUpvotes = Math.max(0, (memory.upvotes || 0) + (removing ? -1 : 1));
+      const { data: saved, error } = await supabase.from('memories').update({ upvotes: newUpvotes, upvoted_by: newList }).eq('id', id).select('upvotes, upvoted_by').single();
       if (error) {
         toast.error('Could not save your upvote. Try again.');
       } else {
-        setMemory(p => ({ ...p, upvotes: newUpvotes, upvoted_by: newList }));
+        setMemory(p => ({ ...p, ...saved }));
         setHasUpvoted(!removing);
       }
+    } catch {
+      toast.error('Could not save your upvote. Try again.');
     } finally { setIsUpvoting(false); }
   };
 
@@ -231,7 +235,7 @@ function MemoryDetail() {
     <div className="min-h-screen bg-background text-foreground pb-24">
 
       {/* ── Hero image ── */}
-      <div className="relative h-[40vh] md:h-[60vh] w-full overflow-hidden bg-muted">
+      <div className={`relative w-full overflow-hidden bg-muted ${memory.image_url ? 'h-[35svh] md:h-[50svh]' : 'h-28'}`}>
         {memory.image_url ? (
           <img
             src={getOptimizedImageUrl(memory.image_url, 1920)}
@@ -317,7 +321,7 @@ function MemoryDetail() {
           </div>
 
           {/* Caption */}
-          <blockquote className="heading-font text-xl md:text-2xl font-bold italic text-foreground leading-relaxed mb-8 border-l-4 border-accent pl-5">
+          <blockquote className="heading-font text-xl md:text-2xl font-bold italic text-foreground leading-relaxed mb-8 border-l-4 border-accent pl-5 break-words">
             "{memory.caption || 'No story provided.'}"
           </blockquote>
 
